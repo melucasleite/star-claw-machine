@@ -42,7 +42,7 @@ The machine is stocked with 15 plushies, dealt from ten animals (bears, cats, do
 | Peach  | 100    | 2       |
 | Cherry | 250    | 1       |
 
-A perfect reel (never leaving the bar) is worth x1.5, and back-to-back catches build a streak up to x3. You have 5 hearts: a grab that comes up empty costs half a heart, and losing the reel or dropping the plushie costs a whole one. Clearing the machine pays 500 plus 100 per heart left. The top 5 scores are kept in `localStorage`.
+A perfect reel (never leaving the bar) is worth x1.5, and back-to-back catches build a streak up to x3. You have 5 hearts: a grab that comes up empty costs half a heart, and losing the reel or dropping the plushie costs a whole one. Every successful grab heals half a heart, up to the full 5. Cashing out with QUIT & SAVE pays 25 points per half heart you have left. Clearing the machine pays 500 plus 100 per heart left. The top 5 scores are kept in `localStorage`.
 
 ## Formatting
 

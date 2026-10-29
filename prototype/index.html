@@ -176,6 +176,15 @@
       #hearts.hurt {
         animation: hurt 0.6s ease-out;
       }
+      #hearts.heal {
+        animation: heal 0.6s ease-out;
+      }
+      @keyframes heal {
+        30% {
+          transform: scale(1.15);
+          filter: brightness(1.4);
+        }
+      }
       @keyframes hurt {
         0%,
         50% {
@@ -679,6 +688,8 @@
         streakMax: 3,
         clearBonus: 500,
         heartBonus: 100,
+        catchHeal: 0.5,
+        cashOutPerHalf: 25,
       };
 
       // Colour is the tier: it sets the reel difficulty and the points. `count` is how many get stocked.
@@ -1919,6 +1930,7 @@
           <p>Grab plushies, win the reel, drop them in the chute.</p>
           ${tiersHtml()}
           <p>Missed grab: -&frac12; ${heartSvg("inline")} &nbsp; Lost reel or dropped: -1 ${heartSvg("inline")}</p>
+          <p>Every catch: +&frac12; ${heartSvg("inline")} &nbsp; Cash out: +${RULES.cashOutPerHalf} per &frac12; ${heartSvg("inline")} left</p>
           <h2>HIGH SCORES</h2>
           ${boardHtml()}
           <button class="btn big" type="button" data-action="play">${TOUCH ? "TAP TO PLAY" : "PLAY (SPACE)"}</button>`);
@@ -1931,8 +1943,8 @@
           ? `<h1 class="win">MACHINE CLEARED!</h1><p>Every plushie found a home. Clear bonus +${fmt(r.bonus)}</p>`
           : r.quit
             ? r.highscore
-              ? `<h1 class="win">CASHED OUT!</h1><p class="hey">and it's a highscore</p>`
-              : `<h1 class="win">CASHED OUT</h1><p>Run over. Not quite enough for the list this time.</p>`
+              ? `<h1 class="win">CASHED OUT!</h1><p class="hey">and it's a highscore</p><p>Hearts bonus +${fmt(r.bonus)}</p>`
+              : `<h1 class="win">CASHED OUT</h1><p>Hearts bonus +${fmt(r.bonus)}. Not quite enough for the list this time.</p>`
             : r.highscore
               ? `<h1 class="lost">YOU LOST THE GAME,</h1><p class="hey">but hey this is a highscore</p>`
               : `<h1 class="lost">YOU LOST THE GAME</h1>`;
@@ -1983,9 +1995,9 @@
         quit: {
           title: "CASH OUT?",
           text: () =>
-            `End the run now and keep your ${fmt(game.score)} points for the high score list.`,
+            `End the run now and keep your ${fmt(game.score)} points, plus ${fmt(cashOutBonus())} for the hearts you have left.`,
           yes: "CASH OUT",
-          run: () => gameOver("quit"),
+          run: () => gameOver("quit", cashOutBonus()),
         },
       };
       let pendingConfirm = null;
@@ -2080,11 +2092,18 @@
         );
         game.score += pts;
         game.streak++;
-        if (game.turn) game.turn.prizes++;
+        // The first prize of a grab heals half a heart, up to the full five.
+        let healed = false;
+        if (game.turn && game.turn.prizes++ === 0 && game.lives < RULES.lives) {
+          game.lives = Math.min(RULES.lives, game.lives + RULES.catchHeal);
+          healed = true;
+          flashHearts("heal");
+        }
         const tags = [
           `${plush.tier.name} ${plush.animal.name}`.toUpperCase(),
           perfect && "PERFECT x1.5",
           mult > 1 && `STREAK x${mult}`,
+          healed && `+&frac12; ${heartSvg("inline")}`,
         ].filter(Boolean);
         popup(`+${fmt(pts)}`, tags.join(" · "), plush.tier.css);
         const [px, py] = popupPoint();
@@ -2102,11 +2121,19 @@
           why,
           "#f7a8b8",
         );
-        heartsEl.classList.remove("hurt");
-        void heartsEl.offsetWidth;
-        heartsEl.classList.add("hurt");
+        flashHearts("hurt");
         renderHud();
       }
+
+      function flashHearts(kind) {
+        heartsEl.classList.remove("hurt", "heal");
+        void heartsEl.offsetWidth;
+        heartsEl.classList.add(kind);
+      }
+
+      // Cashing out pays for the hearts you didn't spend.
+      const cashOutBonus = () =>
+        Math.round(game.lives / 0.5) * RULES.cashOutPerHalf;
 
       function endTurn() {
         const turn = game.turn;
@@ -2159,6 +2186,10 @@
           game.mg = null;
           game.turn = null;
           setState("home", "Cashed out.");
+          game.score += bonus;
+          if (bonus)
+            popup("CASHED OUT", `HEARTS +${fmt(bonus)}`, "#ffd75e", true);
+          bumpScore();
         }
         game.result = {
           cleared,
