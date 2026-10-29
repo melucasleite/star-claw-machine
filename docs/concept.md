@@ -12,24 +12,19 @@ Claw machines feel rigged because they usually are: most cabinets pay out on a t
 
 ## Player flow
 
-1. **Insert credit.** The marquee lights up and the carriage screen shows "CAST!".
-2. **Aim (up to 20 s).** Steer the gantry with the joystick. The screen shows the prize tier under the claw, read from a zone map of the prize bed.
-3. **Drop.** Press REEL. The claw starts descending and the minigame starts.
-4. **Reel (about 6–10 s).** Hold REEL to lift the green catch bar and release to let it fall. Keep the fish inside the bar to fill the progress meter.
-5. **Close.** The claw closes when the meter fills (a **Perfect** grip), when the meter runs out (the weakest grip), or when time runs out (grip set by how full the meter is).
-6. **Lift and return.** The grip holds at the earned strength all the way to the chute. A Perfect grip gets a small boost at the top so the prize doesn't slip.
+1. **Insert credit.** The marquee lights up and the carriage screen shows "ALIGN".
+2. **Aim.** Steer the gantry with the joystick (arrow keys in the prototype). A ring on the prize bed shows where the claw will land.
+3. **Drop and grab.** Press REEL (Space). The claw drops until it hits something, closes, and lifts. Whether it picks anything up is down to the physics: where you aimed, how the bear is lying, and the claw's opening grip.
+4. **Reel (up to 10 s).** If a teddy bear comes up with the claw, the minigame starts on the carriage screen. The bear moves up and down the track. Hold REEL to lift the green bar and release it to let the bar fall, keeping the bear inside the bar.
+5. **The meter is the grip.** The meter drives the claw's grip strength **live**. If the meter drops, the prongs loosen and the bear can slip out while you're still playing.
+6. **Outcome.**
+   - **Meter full:** full grip, and the claw carries the bear to the chute.
+   - **Meter empty:** the claw goes limp and the bear drops.
+   - **Time runs out:** the claw carries the bear home at whatever grip the meter left, so it may still slip on the way.
 
 ## Grip mapping
 
-| Meter at close         | Claw coil duty | Feel                                          |
-| ---------------------- | -------------- | --------------------------------------------- |
-| 0–29 %                 | 25 %           | Limp, and drops almost anything               |
-| 30–69 %                | 25 → 70 %      | Linear ramp                                   |
-| 70–99 %                | 70 → 90 %      | Solid grip on most plush                      |
-| 100 % (Perfect)        | 100 %          | Full grip, plus a "PERFECT!" flourish         |
-| Treasure chest grabbed | +10 %          | Bonus stacks on top of the above, up to 100 % |
-
-The operator sets the exact curve per machine (see `docs/minigame.md`). Because the grip is earned openly, there is no payout timer.
+`torque = 1.5 + 26.5 × meter` in prototype units. The bear weighs 20 N and each prong is about 1.4 units long. At the starting meter (35 %), the grip holds a well-centred bear but not one hanging by a paw. On the cabinet, this value is the claw coil's PWM duty cycle. Because the grip is earned openly, there is no payout timer.
 
 ## Visual direction
 

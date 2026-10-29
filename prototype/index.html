@@ -3,395 +3,1142 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>START CLAW Minigame</title>
+    <title>START CLAW</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap"
+      rel="stylesheet"
+    />
     <style>
       :root {
         --wood: #7a4e2d;
         --wood-dark: #3a2a1a;
         --teal: #1f6f6b;
         --mustard: #d9a521;
-        --water: #2a6fdb;
-        --catch: #5ee05e;
-        --bg: #f3e9d8;
-        --ink: #2b1d10;
+        --bg: #2b1d14;
+        --ink: #fff4dc;
       }
-      * {
-        box-sizing: border-box;
-      }
+      html,
       body {
         margin: 0;
-        min-height: 100vh;
+        height: 100%;
+        overflow: hidden;
         background: var(--bg);
         color: var(--ink);
-        font-family: "Courier New", monospace;
+        font-family: "Press Start 2P", monospace;
+      }
+      #stage {
+        position: fixed;
+        inset: 0;
+      }
+      #hud {
+        position: fixed;
+        top: 16px;
+        right: 16px;
         display: flex;
         flex-direction: column;
         align-items: center;
-        gap: 16px;
-        padding: 24px 16px;
-        user-select: none;
-      }
-      h1 {
-        margin: 0;
-        color: var(--mustard);
-        background: var(--teal);
-        padding: 8px 20px;
-        border: 4px solid var(--wood-dark);
-        letter-spacing: 4px;
-      }
-      .rig {
-        display: flex;
-        gap: 24px;
-        align-items: flex-start;
-        flex-wrap: wrap;
-        justify-content: center;
+        gap: 12px;
       }
       .carriage {
         background: var(--wood);
         border: 4px solid var(--wood-dark);
-        border-radius: 14px;
-        padding: 24px 40px;
+        border-radius: 12px;
+        padding: 14px 22px;
       }
       .bezel {
         background: var(--mustard);
         border: 3px solid var(--wood-dark);
-        border-radius: 8px;
-        padding: 10px;
+        border-radius: 6px;
+        padding: 6px;
       }
-      canvas {
+      #screen {
         display: block;
-        image-rendering: pixelated;
         width: 170px;
         height: 320px;
+        image-rendering: pixelated;
         touch-action: none;
       }
-      .panel {
-        width: 260px;
-        display: flex;
-        flex-direction: column;
-        gap: 12px;
+      #status {
+        max-width: 230px;
+        min-height: 4.8em;
+        font-size: 10px;
+        line-height: 1.6;
+        text-align: center;
       }
-      .panel label {
-        font-weight: bold;
+      #score {
+        position: fixed;
+        top: 16px;
+        left: 16px;
+        font-size: 12px;
+        color: var(--mustard);
       }
-      select,
-      button {
-        font: inherit;
-        padding: 8px;
-        border: 3px solid var(--wood-dark);
-        background: #fff8e8;
+      #help {
+        position: fixed;
+        left: 16px;
+        bottom: 16px;
+        font-size: 10px;
+        line-height: 2;
+        opacity: 0.85;
       }
-      button {
-        background: var(--mustard);
-        border-radius: 999px;
-        font-weight: bold;
-        font-size: 18px;
-        padding: 14px;
-        cursor: pointer;
-      }
-      .shaft {
-        position: relative;
-        height: 120px;
-        background: #cfe6f2;
-        border: 3px solid var(--wood-dark);
-      }
-      .claw {
-        position: absolute;
-        left: 50%;
-        top: 0;
-        width: 2px;
-        background: #333;
-        transform: translateX(-50%);
-      }
-      .claw::after {
-        content: "🦀";
-        position: absolute;
-        bottom: -14px;
-        left: -9px;
-        font-size: 18px;
-      }
-      #result {
-        min-height: 3em;
-        white-space: pre-line;
+      @media (max-width: 700px) {
+        #hud {
+          top: auto;
+          right: 8px;
+          bottom: 8px;
+          transform: scale(0.65);
+          transform-origin: bottom right;
+        }
+        #help {
+          display: none;
+        }
       }
     </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js",
+          "cannon-es": "https://cdn.jsdelivr.net/npm/cannon-es@0.20.0/dist/cannon-es.js"
+        }
+      }
+    </script>
   </head>
   <body>
-    <h1>START CLAW</h1>
-    <div class="rig">
+    <div id="stage"></div>
+    <div id="score">PRIZES 0</div>
+    <div id="hud">
       <div class="carriage">
         <div class="bezel">
           <canvas id="screen" width="170" height="320"></canvas>
         </div>
       </div>
-      <div class="panel">
-        <label for="tier">Prize zone under claw</label>
-        <select id="tier">
-          <option value="common">Common: plush veggie (smooth)</option>
-          <option value="uncommon" selected>
-            Uncommon: plush fish (mixed)
-          </option>
-          <option value="rare">Rare: chest plush (dart)</option>
-          <option value="legendary">Legendary: featured (dart + sinker)</option>
-        </select>
-        <button id="reel">REEL</button>
-        <small
-          >Press REEL to drop, then hold REEL, Space, or the screen to lift the
-          bar.</small
-        >
-        <div class="shaft"><div class="claw" id="claw"></div></div>
-        <div id="result"></div>
-      </div>
+      <div id="status">Restocking bears...</div>
+    </div>
+    <div id="help">
+      ARROWS move claw<br />SPACE drop<br />HOLD SPACE reel<br />R restock
     </div>
 
-    <script>
-      const TIERS = {
-        common: { behaviors: ["smooth"], difficulty: 25, barHeight: 0.3 },
-        uncommon: { behaviors: ["mixed"], difficulty: 50, barHeight: 0.26 },
-        rare: { behaviors: ["dart"], difficulty: 75, barHeight: 0.22 },
-        legendary: {
-          behaviors: ["dart", "sinker"],
-          difficulty: 95,
-          barHeight: 0.18,
-        },
+    <script type="module">
+      import * as THREE from "three";
+      import * as CANNON from "cannon-es";
+
+      // ---------- tuning ----------
+
+      // Interior is x,z in [-4, 4], floor top at y = 0. The chute is the -x/+z corner.
+      const CHUTE = { x: -2.9, z: 2.9, edge: 1.8 };
+      const CLAW = {
+        topY: 7.4,
+        minY: 1.5,
+        reach: 3.1,
+        moveSpeed: 3.2,
+        dropSpeed: 3.2,
+        liftSpeed: 2.2,
+        openAngle: 0.6,
+        closedAngle: -0.22,
+        openTorque: 14,
+        kp: 120,
+        kd: 6,
+        closeTime: 1.1,
+        topPause: 0.5,
+        releaseTime: 1.4,
       };
-      const P = {
+      // Prong torque. The reel meter (0..1) maps onto this range while the bear is in the air.
+      const GRIP = { min: 1.5, max: 28 };
+      const gripAt = (p) => GRIP.min + (GRIP.max - GRIP.min) * p;
+
+      const MG = {
         gravity: 2.2,
         lift: 3.4,
         bounce: 0.35,
-        fillRate: 0.32,
+        fillRate: 0.3,
         drainRate: 0.15,
         startProgress: 0.35,
-        timeLimit: 9,
-        treasureChance: 0.25,
-        treasureHold: 1.2,
+        timeLimit: 10,
       };
 
-      const cv = document.getElementById("screen");
-      const ctx = cv.getContext("2d");
-      const W = cv.width;
-      const H = cv.height;
-      const TRACK = { x: 14, y: 12, w: 110, h: H - 24 };
-      const METER = { x: 136, y: 12, w: 20, h: H - 24 };
+      const BEAR_TYPES = [
+        {
+          name: "Cocoa",
+          color: 0x8b5a2b,
+          behaviors: ["smooth"],
+          difficulty: 30,
+          barHeight: 0.3,
+          weight: 4,
+        },
+        {
+          name: "Honey",
+          color: 0xc98a3c,
+          behaviors: ["mixed"],
+          difficulty: 50,
+          barHeight: 0.27,
+          weight: 4,
+        },
+        {
+          name: "Blossom",
+          color: 0xe89bb5,
+          behaviors: ["mixed", "floater"],
+          difficulty: 60,
+          barHeight: 0.25,
+          weight: 3,
+        },
+        {
+          name: "Snow",
+          color: 0xf1e3c8,
+          behaviors: ["dart"],
+          difficulty: 75,
+          barHeight: 0.22,
+          weight: 2,
+        },
+        {
+          name: "Goldie",
+          color: 0xf2c14e,
+          behaviors: ["dart", "sinker"],
+          difficulty: 95,
+          barHeight: 0.18,
+          weight: 1,
+        },
+      ];
 
-      const reelBtn = document.getElementById("reel");
-      const tierSel = document.getElementById("tier");
-      const clawEl = document.getElementById("claw");
-      const resultEl = document.getElementById("result");
+      // ---------- renderer / camera ----------
 
-      let state = "idle";
-      let held = false;
-      let g;
+      const renderer = new THREE.WebGLRenderer({ antialias: true });
+      renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+      renderer.shadowMap.enabled = true;
+      renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+      renderer.toneMapping = THREE.ACESFilmicToneMapping;
+      document.getElementById("stage").appendChild(renderer.domElement);
 
-      // positions are normalised: 0 = bottom of track, 1 = top
-      function newRound() {
-        const tier = TIERS[tierSel.value];
-        g = {
-          tier,
+      const scene = new THREE.Scene();
+      scene.background = new THREE.Color(0x2b1d14);
+
+      const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 1, 200);
+      const CAM_TARGET = new THREE.Vector3(0, 3.4, 0.4);
+      camera.position.copy(CAM_TARGET).add(new THREE.Vector3(30, 25, 30));
+      camera.lookAt(CAM_TARGET);
+
+      function resize() {
+        const w = innerWidth;
+        const h = innerHeight;
+        renderer.setSize(w, h);
+        // Leave room for the HUD on the right, and fit the cabinet in whichever axis is tighter.
+        const hudPx = w > 700 ? 260 : 0;
+        const halfH = Math.max(9.6, (7.6 * h) / (w - hudPx));
+        const halfW = (halfH * w) / h;
+        const shift = (hudPx / 2 / w) * halfW * 2;
+        camera.left = -halfW + shift;
+        camera.right = halfW + shift;
+        camera.top = halfH;
+        camera.bottom = -halfH;
+        camera.updateProjectionMatrix();
+      }
+      addEventListener("resize", resize);
+      resize();
+
+      scene.add(new THREE.HemisphereLight(0xfff1d6, 0x5a3b22, 1.1));
+      const sun = new THREE.DirectionalLight(0xffe2b0, 2.2);
+      sun.position.set(8, 20, 12);
+      sun.target.position.set(0, 2, 0);
+      sun.castShadow = true;
+      sun.shadow.mapSize.set(2048, 2048);
+      Object.assign(sun.shadow.camera, {
+        left: -10,
+        right: 10,
+        top: 12,
+        bottom: -10,
+        near: 1,
+        far: 60,
+      });
+      sun.shadow.bias = -0.0005;
+      scene.add(sun, sun.target);
+      const lamp = new THREE.PointLight(0xffd59a, 25, 14, 2);
+      lamp.position.set(0, 9, 0);
+      scene.add(lamp);
+
+      const std = (color, roughness = 0.7, metalness = 0) =>
+        new THREE.MeshStandardMaterial({ color, roughness, metalness });
+      const M = {
+        walnut: std(0x6b4226, 0.7),
+        walnutDark: std(0x3a2a1a, 0.8),
+        teal: std(0x1f6f6b, 0.6),
+        mustard: std(0xd9a521, 0.45, 0.2),
+        felt: std(0x2f8f86, 1),
+        brass: std(0xc9a24a, 0.35, 0.8),
+        black: std(0x161616, 0.5),
+        red: std(0xc0392b, 0.4),
+        pit: new THREE.MeshBasicMaterial({ color: 0x080604 }),
+        glass: new THREE.MeshPhysicalMaterial({
+          color: 0xd8f3f0,
+          transparent: true,
+          opacity: 0.1,
+          roughness: 0.05,
+          depthWrite: false,
+          side: THREE.DoubleSide,
+        }),
+        acrylic: new THREE.MeshPhysicalMaterial({
+          color: 0xbfe8ff,
+          transparent: true,
+          opacity: 0.35,
+          roughness: 0.1,
+          depthWrite: false,
+        }),
+      };
+
+      function box(
+        w,
+        h,
+        d,
+        mat,
+        x,
+        y,
+        z,
+        { cast = true, receive = true } = {},
+      ) {
+        const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat);
+        m.position.set(x, y, z);
+        m.castShadow = cast;
+        m.receiveShadow = receive;
+        scene.add(m);
+        return m;
+      }
+
+      // ---------- physics world ----------
+
+      const world = new CANNON.World({ gravity: new CANNON.Vec3(0, -20, 0) });
+      world.broadphase = new CANNON.SAPBroadphase(world);
+      world.solver.iterations = 20;
+
+      const G_STATIC = 1;
+      const G_PRIZE = 2;
+      const G_CLAW = 4;
+      const mats = {
+        static: new CANNON.Material("static"),
+        prize: new CANNON.Material("prize"),
+        claw: new CANNON.Material("claw"),
+      };
+      const contact = (a, b, friction) =>
+        world.addContactMaterial(
+          new CANNON.ContactMaterial(a, b, { friction, restitution: 0 }),
+        );
+      contact(mats.prize, mats.static, 0.5);
+      contact(mats.prize, mats.prize, 0.4);
+      contact(mats.prize, mats.claw, 0.9);
+      contact(mats.claw, mats.static, 0.3);
+
+      const floorMeshes = [];
+      function addStaticBox(cx, cy, cz, hx, hy, hz, mat) {
+        const body = new CANNON.Body({
+          type: CANNON.Body.STATIC,
+          material: mats.static,
+          collisionFilterGroup: G_STATIC,
+          collisionFilterMask: G_PRIZE | G_CLAW,
+        });
+        body.addShape(new CANNON.Box(new CANNON.Vec3(hx, hy, hz)));
+        body.position.set(cx, cy, cz);
+        world.addBody(body);
+        if (mat)
+          return box(hx * 2, hy * 2, hz * 2, mat, cx, cy, cz, {
+            cast: mat !== M.acrylic,
+          });
+      }
+
+      // ---------- cabinet ----------
+
+      const ground = new THREE.Mesh(
+        new THREE.PlaneGeometry(80, 80),
+        std(0x5a3a22, 0.9),
+      );
+      ground.rotation.x = -Math.PI / 2;
+      ground.position.y = -3.6;
+      ground.receiveShadow = true;
+      scene.add(ground);
+      const rug = new THREE.Mesh(
+        new THREE.CircleGeometry(9, 48),
+        std(0x8c3b2e, 1),
+      );
+      rug.rotation.x = -Math.PI / 2;
+      rug.position.set(0, -3.59, 3);
+      rug.receiveShadow = true;
+      scene.add(rug);
+
+      box(8.8, 3.4, 8.8, M.walnut, 0, -1.9, 0);
+      box(8.9, 0.25, 8.9, M.teal, 0, -0.32, 0);
+      box(2.2, 2.8, 2.2, M.pit, CHUTE.x, -1.53, CHUTE.z, { cast: false });
+      box(2.0, 1.3, 0.04, M.mustard, CHUTE.x, -1.9, 4.41);
+      box(1.8, 1.1, 0.05, M.black, CHUTE.x, -1.9, 4.42);
+
+      // Floor with a hole over the chute, plus the acrylic chute guard.
+      floorMeshes.push(addStaticBox(0, -0.1, -1.1, 4, 0.1, 2.9, M.felt));
+      floorMeshes.push(addStaticBox(1.1, -0.1, 2.9, 2.9, 0.1, 1.1, M.felt));
+      addStaticBox(-CHUTE.edge, 0.5, 2.9, 0.05, 0.5, 1.1, M.acrylic);
+      addStaticBox(-2.9, 0.5, CHUTE.edge, 1.1, 0.5, 0.05, M.acrylic);
+
+      // Walls: wood at the back and left, glass on the two sides facing the camera.
+      addStaticBox(-4.1, 4.65, 0, 0.1, 4.75, 4.2, M.walnut);
+      addStaticBox(0, 4.65, -4.1, 4.2, 4.75, 0.1, M.walnut);
+      addStaticBox(4.1, 4.65, 0, 0.1, 4.75, 4.2);
+      addStaticBox(0, 4.65, 4.1, 4.2, 4.75, 0.1);
+      const glassX = new THREE.Mesh(new THREE.PlaneGeometry(8, 9.4), M.glass);
+      glassX.rotation.y = Math.PI / 2;
+      glassX.position.set(4.0, 4.7, 0);
+      const glassZ = new THREE.Mesh(new THREE.PlaneGeometry(8, 9.4), M.glass);
+      glassZ.position.set(0, 4.7, 4.0);
+      scene.add(glassX, glassZ);
+      box(8.0, 0.3, 0.05, M.teal, 0, 3.0, -3.98);
+      box(0.05, 0.3, 8.0, M.teal, -3.98, 3.0, 0);
+
+      for (const sx of [-1, 1]) {
+        for (const sz of [-1, 1]) {
+          // Skip the post nearest the camera; it would split the playfield in half.
+          if (sx > 0 && sz > 0) continue;
+          box(0.35, 9.8, 0.35, M.walnut, 4.2 * sx, 4.7, 4.2 * sz);
+        }
+        box(8.75, 0.25, 0.3, M.teal, 0, 9.5, 4.2 * sx);
+        box(0.3, 0.25, 8.75, M.teal, 4.2 * sx, 9.5, 0);
+      }
+
+      // Marquee stands at the back so it never hides the playfield.
+      const marqueeCanvas = document.createElement("canvas");
+      marqueeCanvas.width = 1024;
+      marqueeCanvas.height = 176;
+      const marqueeTex = new THREE.CanvasTexture(marqueeCanvas);
+      marqueeTex.colorSpace = THREE.SRGBColorSpace;
+      function drawMarquee() {
+        const c = marqueeCanvas.getContext("2d");
+        c.fillStyle = "#1f6f6b";
+        c.fillRect(0, 0, 1024, 176);
+        c.strokeStyle = "#d9a521";
+        c.lineWidth = 12;
+        c.strokeRect(10, 10, 1004, 156);
+        c.font = '64px "Press Start 2P", monospace';
+        c.textAlign = "center";
+        c.textBaseline = "middle";
+        c.fillStyle = "#3a2a1a";
+        c.fillText("START CLAW", 518, 96);
+        c.fillStyle = "#ffd75e";
+        c.fillText("START CLAW", 512, 90);
+        c.font = "56px serif";
+        c.fillText("🧸", 80, 92);
+        c.fillText("🧸", 944, 92);
+        marqueeTex.needsUpdate = true;
+      }
+      drawMarquee();
+      box(8.8, 1.8, 0.3, M.walnut, 0, 10.6, -4.2);
+      const marquee = new THREE.Mesh(
+        new THREE.PlaneGeometry(8.2, 1.41),
+        new THREE.MeshBasicMaterial({ map: marqueeTex, toneMapped: false }),
+      );
+      marquee.position.set(0, 10.6, -4.04);
+      scene.add(marquee);
+
+      // Control panel with a joystick and the REEL button.
+      box(7.2, 0.6, 1.4, M.walnut, 0.6, -0.5, 5.1);
+      box(7.0, 0.06, 1.25, M.teal, 0.6, -0.17, 5.1);
+      const stick = new THREE.Group();
+      stick.position.set(-0.6, -0.13, 5.1);
+      const stickRod = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.05, 0.05, 0.55),
+        M.black,
+      );
+      stickRod.position.y = 0.27;
+      const stickBall = new THREE.Mesh(
+        new THREE.SphereGeometry(0.15, 16, 12),
+        M.red,
+      );
+      stickBall.position.y = 0.55;
+      stick.add(stickRod, stickBall);
+      stick.traverse((o) => (o.castShadow = true));
+      scene.add(stick);
+      const reelRing = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.46, 0.46, 0.08, 24),
+        M.brass,
+      );
+      reelRing.position.set(1.8, -0.12, 5.1);
+      const reelButton = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.38, 0.38, 0.2, 24),
+        M.mustard,
+      );
+      reelButton.position.set(1.8, -0.02, 5.1);
+      reelButton.castShadow = true;
+      scene.add(reelRing, reelButton);
+
+      // Gantry, carriage box and its screen.
+      for (const sx of [-1, 1])
+        box(0.12, 0.12, 8.0, M.brass, 3.95 * sx, 9.25, 0);
+      const bridge = box(8.0, 0.14, 0.18, M.brass, 0, 9.25, 0);
+      const screenCanvas = document.getElementById("screen");
+      const screenTex = new THREE.CanvasTexture(screenCanvas);
+      screenTex.colorSpace = THREE.SRGBColorSpace;
+      screenTex.magFilter = THREE.NearestFilter;
+      const carriage = new THREE.Group();
+      const carriageBox = new THREE.Mesh(
+        new THREE.BoxGeometry(1.2, 1.3, 1.0),
+        M.walnut,
+      );
+      carriageBox.castShadow = true;
+      const bezel = new THREE.Mesh(
+        new THREE.PlaneGeometry(0.66, 1.12),
+        M.mustard,
+      );
+      bezel.position.z = 0.505;
+      const screenFace = new THREE.Mesh(
+        new THREE.PlaneGeometry(0.52, 0.98),
+        new THREE.MeshBasicMaterial({ map: screenTex, toneMapped: false }),
+      );
+      screenFace.position.z = 0.51;
+      carriage.add(carriageBox, bezel, screenFace);
+      scene.add(carriage);
+      const cable = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.03, 0.03, 1),
+        M.black,
+      );
+      scene.add(cable);
+
+      // Alignment aid: a ring where the claw would land.
+      const marker = new THREE.Mesh(
+        new THREE.RingGeometry(0.28, 0.4, 32),
+        new THREE.MeshBasicMaterial({
+          color: 0xffd75e,
+          transparent: true,
+          opacity: 0.85,
+          depthWrite: false,
+        }),
+      );
+      marker.rotation.x = -Math.PI / 2;
+      scene.add(marker);
+      const raycaster = new THREE.Raycaster();
+      const DOWN = new THREE.Vector3(0, -1, 0);
+
+      // ---------- claw ----------
+
+      function meshFromBody(body, mat) {
+        const g = new THREE.Group();
+        body.shapes.forEach((s, i) => {
+          let geo;
+          if (s instanceof CANNON.Box) {
+            const e = s.halfExtents;
+            geo = new THREE.BoxGeometry(e.x * 2, e.y * 2, e.z * 2);
+          } else {
+            geo = new THREE.CylinderGeometry(
+              s.radiusTop,
+              s.radiusBottom,
+              s.height,
+              16,
+            );
+          }
+          const m = new THREE.Mesh(geo, mat);
+          m.position.copy(body.shapeOffsets[i]);
+          m.quaternion.copy(body.shapeOrientations[i]);
+          m.castShadow = true;
+          g.add(m);
+        });
+        scene.add(g);
+        return g;
+      }
+
+      // The hub is kinematic: we drive it like the gantry motors would.
+      const hub = new CANNON.Body({
+        type: CANNON.Body.KINEMATIC,
+        material: mats.claw,
+        collisionFilterGroup: G_CLAW,
+        collisionFilterMask: G_PRIZE,
+      });
+      hub.addShape(new CANNON.Cylinder(0.38, 0.38, 0.4, 12));
+      hub.position.set(CHUTE.x, CLAW.topY, CHUTE.z);
+      world.addBody(hub);
+      const hubMesh = meshFromBody(hub, M.brass);
+
+      // Three prongs on hinges, each driven by a torque-limited servo. The torque limit is the grip.
+      const prongs = [];
+      for (let i = 0; i < 3; i++) {
+        const phi = (i / 3) * Math.PI * 2 + Math.PI / 6;
+        const radial = new CANNON.Vec3(Math.cos(phi), 0, Math.sin(phi));
+        const axis = new CANNON.Vec3(-Math.sin(phi), 0, Math.cos(phi));
+        // Local frame: +x points outward, +z is the hinge axis.
+        const q0 = new CANNON.Quaternion().setFromAxisAngle(
+          new CANNON.Vec3(0, 1, 0),
+          -phi,
+        );
+        const pivot = new CANNON.Vec3(radial.x * 0.32, -0.15, radial.z * 0.32);
+        const body = new CANNON.Body({
+          mass: 0.25,
+          material: mats.claw,
+          collisionFilterGroup: G_CLAW,
+          collisionFilterMask: G_STATIC | G_PRIZE,
+          angularDamping: 0.4,
+        });
+        const zAxis = new CANNON.Vec3(0, 0, 1);
+        body.addShape(
+          new CANNON.Box(new CANNON.Vec3(0.06, 0.5, 0.09)),
+          new CANNON.Vec3(0.17, -0.47, 0),
+          new CANNON.Quaternion().setFromAxisAngle(zAxis, 0.35),
+        );
+        body.addShape(
+          new CANNON.Box(new CANNON.Vec3(0.06, 0.3, 0.1)),
+          new CANNON.Vec3(0.2, -1.15, 0),
+          new CANNON.Quaternion().setFromAxisAngle(zAxis, -0.65),
+        );
+        body.position.copy(hub.position.vadd(pivot));
+        body.quaternion.copy(q0);
+        world.addBody(body);
+        world.addConstraint(
+          new CANNON.HingeConstraint(hub, body, {
+            pivotA: pivot,
+            axisA: axis,
+            pivotB: new CANNON.Vec3(0, 0, 0),
+            axisB: zAxis,
+          }),
+        );
+        prongs.push({
+          body,
+          axis,
+          q0inv: q0.conjugate(),
+          mesh: meshFromBody(body, M.brass),
+          angle: 0,
+        });
+      }
+      const prongBodies = new Set(prongs.map((p) => p.body));
+
+      const claw = { closing: false, torque: CLAW.openTorque };
+
+      function prongAngle(p) {
+        const q = p.q0inv.mult(p.body.quaternion);
+        return 2 * Math.atan2(q.z, q.w);
+      }
+
+      function driveProngs() {
+        const target = claw.closing ? CLAW.closedAngle : CLAW.openAngle;
+        const limit = claw.closing ? claw.torque : CLAW.openTorque;
+        for (const p of prongs) {
+          p.angle = prongAngle(p);
+          const w = p.body.angularVelocity.dot(p.axis);
+          const tau = Math.max(
+            -limit,
+            Math.min(limit, CLAW.kp * (target - p.angle) - CLAW.kd * w),
+          );
+          p.body.torque.vadd(p.axis.scale(tau), p.body.torque);
+        }
+      }
+
+      // ---------- bears ----------
+
+      const sphereGeo = new THREE.SphereGeometry(1, 20, 14);
+      const bears = [];
+      const BEAR_PARTS = [
+        [0.42, 0, 0, 0],
+        [0.32, 0, 0.62, 0],
+        [0.12, 0.22, 0.9, 0],
+        [0.12, -0.22, 0.9, 0],
+        [0.15, 0.44, 0.12, 0.06],
+        [0.15, -0.44, 0.12, 0.06],
+        [0.17, 0.22, -0.38, 0.14],
+        [0.17, -0.22, -0.38, 0.14],
+      ];
+      const muzzleMat = std(0xf3dfc1, 0.95);
+
+      function pickType() {
+        const total = BEAR_TYPES.reduce((s, t) => s + t.weight, 0);
+        let r = Math.random() * total;
+        return BEAR_TYPES.find((t) => (r -= t.weight) < 0) ?? BEAR_TYPES[0];
+      }
+
+      function addBear(type, x, y, z) {
+        const body = new CANNON.Body({
+          mass: 1,
+          material: mats.prize,
+          collisionFilterGroup: G_PRIZE,
+          collisionFilterMask: G_STATIC | G_PRIZE | G_CLAW,
+          linearDamping: 0.15,
+          angularDamping: 0.3,
+        });
+        const group = new THREE.Group();
+        const fur = std(type.color, 0.95);
+        for (const [r, px, py, pz] of BEAR_PARTS) {
+          body.addShape(new CANNON.Sphere(r), new CANNON.Vec3(px, py, pz));
+          const m = new THREE.Mesh(sphereGeo, fur);
+          m.scale.setScalar(r);
+          m.position.set(px, py, pz);
+          m.castShadow = true;
+          m.receiveShadow = true;
+          group.add(m);
+        }
+        const deco = [
+          [muzzleMat, 0.13, 0, 0.55, 0.26],
+          [M.black, 0.05, 0, 0.6, 0.38],
+          [M.black, 0.04, 0.11, 0.7, 0.28],
+          [M.black, 0.04, -0.11, 0.7, 0.28],
+          [muzzleMat, 0.26, 0, -0.02, 0.24],
+        ];
+        for (const [mat, r, px, py, pz] of deco) {
+          const m = new THREE.Mesh(sphereGeo, mat);
+          m.scale.set(r, r, r * 0.6);
+          m.position.set(px, py, pz);
+          group.add(m);
+        }
+        body.position.set(x, y, z);
+        body.quaternion.setFromEuler(
+          Math.random() * 6.28,
+          Math.random() * 6.28,
+          Math.random() * 6.28,
+        );
+        world.addBody(body);
+        scene.add(group);
+        bears.push({ body, group, type });
+      }
+
+      function removeBear(bear) {
+        world.removeBody(bear.body);
+        scene.remove(bear.group);
+        bears.splice(bears.indexOf(bear), 1);
+      }
+
+      function restock() {
+        while (bears.length) removeBear(bears[0]);
+        const cells = [-2.7, -0.9, 0.9, 2.7];
+        for (const cx of cells) {
+          for (const cz of cells) {
+            if (cx < -CHUTE.edge && cz > CHUTE.edge) continue;
+            const j = () => (Math.random() - 0.5) * 0.6;
+            addBear(pickType(), cx + j(), 1.0 + Math.random() * 0.8, cz + j());
+          }
+        }
+        setState("settle", "Restocking bears...");
+      }
+
+      // ---------- input ----------
+
+      const keys = {};
+      const pressed = {};
+      const GAME_KEYS = [
+        "ArrowUp",
+        "ArrowDown",
+        "ArrowLeft",
+        "ArrowRight",
+        "Space",
+      ];
+      addEventListener("keydown", (e) => {
+        if (GAME_KEYS.includes(e.code)) e.preventDefault();
+        if (!e.repeat) pressed[e.code] = true;
+        keys[e.code] = true;
+        if (
+          e.code === "KeyR" &&
+          !e.repeat &&
+          (game.state === "aim" || game.state === "settle")
+        )
+          restock();
+      });
+      addEventListener("keyup", (e) => (keys[e.code] = false));
+      screenCanvas.addEventListener("pointerdown", (e) => {
+        e.preventDefault();
+        keys.Space = true;
+        pressed.Space = true;
+      });
+      addEventListener("pointerup", () => (keys.Space = false));
+
+      // ---------- game state ----------
+
+      const statusEl = document.getElementById("status");
+      const scoreEl = document.getElementById("score");
+      const game = { state: "settle", t: 0, held: null, mg: null, wins: 0 };
+
+      function setState(state, msg) {
+        game.state = state;
+        game.t = 0;
+        if (msg !== undefined) statusEl.textContent = msg;
+      }
+
+      const horizDist = (b) =>
+        Math.hypot(
+          b.position.x - hub.position.x,
+          b.position.z - hub.position.z,
+        );
+      const isHeld = (bear) =>
+        bears.includes(bear) &&
+        bear.body.position.y > 2.6 &&
+        horizDist(bear.body) < 1.4;
+
+      function findHeldBear() {
+        let best = null;
+        for (const b of bears) {
+          if (isHeld(b) && (!best || b.body.position.y > best.body.position.y))
+            best = b;
+        }
+        return best;
+      }
+
+      // The real cabinet stops the drop when the cable goes slack. Here: the hub bumps a prize,
+      // a prong hits the floor, or a prong is splayed open by what it landed on.
+      function dropBlocked() {
+        if (hub.position.y <= CLAW.minY) return true;
+        for (const c of world.contacts) {
+          const pair = [c.bi, c.bj];
+          if (pair.includes(hub)) return true;
+          const prong = pair.find((b) => prongBodies.has(b));
+          if (prong && pair.some((b) => b.type === CANNON.Body.STATIC))
+            return true;
+        }
+        return prongs.some((p) => p.angle > CLAW.openAngle + 0.25);
+      }
+
+      function steerTo(v, tx, tz, speed, dt) {
+        const dx = tx - hub.position.x;
+        const dz = tz - hub.position.z;
+        const d = Math.hypot(dx, dz);
+        if (d < 0.01) return true;
+        const s = Math.min(speed, d / dt);
+        v.x = (dx / d) * s;
+        v.z = (dz / d) * s;
+        return false;
+      }
+
+      function startReel(bear) {
+        const t = bear.type;
+        game.held = bear;
+        game.mg = {
+          type: t,
           barPos: 0,
           barVel: 0,
-          fishPos: tier.barHeight / 2,
+          fishPos: t.barHeight / 2,
           fishVel: 0,
           fishTarget: 0.5,
-          behavior: tier.behaviors[0],
-          progress: P.startProgress,
+          behavior: t.behaviors[0],
+          progress: MG.startProgress,
           t: 0,
-          treasure:
-            Math.random() < P.treasureChance
-              ? { pos: 0.2 + Math.random() * 0.6, held: 0, got: false }
-              : null,
           perfect: true,
+          result: null,
         };
+        setState(
+          "reel",
+          `Hooked ${t.name}! Hold SPACE to keep the bear in the green bar.`,
+        );
       }
 
-      function curve(p) {
-        if (p >= 1) return 1;
-        if (p < 0.3) return 0.25;
-        if (p < 0.7) return 0.25 + ((p - 0.3) / 0.4) * 0.45;
-        return 0.7 + ((p - 0.7) / 0.3) * 0.2;
+      function endReel(result, msg) {
+        game.mg.result = result;
+        if (result === "caught") claw.torque = GRIP.max;
+        if (result === "escaped") claw.closing = false;
+        setState("return", msg);
       }
 
-      function stepFish(dt) {
-        const d = g.tier.difficulty / 100;
-        if (g.tier.behaviors.length > 1 && Math.random() < dt * 0.5) {
-          g.behavior =
-            g.tier.behaviors[
-              Math.floor(Math.random() * g.tier.behaviors.length)
-            ];
+      function stepBear(mg, dt) {
+        const d = mg.type.difficulty / 100;
+        const list = mg.type.behaviors;
+        if (list.length > 1 && Math.random() < dt * 0.5) {
+          mg.behavior = list[Math.floor(Math.random() * list.length)];
         }
         const r = Math.random();
-        switch (g.behavior) {
+        switch (mg.behavior) {
           case "smooth":
-            g.fishTarget = 0.5 + 0.35 * Math.sin(g.t * (0.8 + d));
+            mg.fishTarget = 0.5 + 0.35 * Math.sin(mg.t * (0.8 + d));
             break;
           case "mixed":
-            if (r < dt * (1 + 2 * d)) g.fishTarget = Math.random();
+            if (r < dt * (1 + 2 * d)) mg.fishTarget = Math.random();
             break;
           case "dart":
-            if (r < dt * (1.5 + 3 * d)) g.fishTarget = Math.random();
+            if (r < dt * (1.5 + 3 * d)) mg.fishTarget = Math.random();
             break;
           case "sinker":
-            g.fishTarget = Math.max(0, g.fishTarget - dt * 0.3);
-            if (r < dt * 1.5) g.fishTarget = Math.min(1, g.fishPos + 0.3);
+            mg.fishTarget = Math.max(0, mg.fishTarget - dt * 0.3);
+            if (r < dt * 1.5) mg.fishTarget = Math.min(1, mg.fishPos + 0.3);
             break;
           case "floater":
-            g.fishTarget = Math.min(1, g.fishTarget + dt * 0.3);
-            if (r < dt * 1.5) g.fishTarget = Math.max(0, g.fishPos - 0.3);
+            mg.fishTarget = Math.min(1, mg.fishTarget + dt * 0.3);
+            if (r < dt * 1.5) mg.fishTarget = Math.max(0, mg.fishPos - 0.3);
             break;
         }
-        const speed = g.behavior === "dart" ? 6 + 6 * d : 2.5 + 3 * d;
-        g.fishVel += (g.fishTarget - g.fishPos) * speed * dt * 6;
-        g.fishVel *= Math.pow(0.02, dt);
-        g.fishPos = Math.min(1, Math.max(0, g.fishPos + g.fishVel * dt));
+        const speed = mg.behavior === "dart" ? 6 + 6 * d : 2.5 + 3 * d;
+        mg.fishVel += (mg.fishTarget - mg.fishPos) * speed * dt * 6;
+        mg.fishVel *= Math.pow(0.02, dt);
+        mg.fishPos = Math.min(1, Math.max(0, mg.fishPos + mg.fishVel * dt));
       }
 
-      function update(dt) {
-        g.t += dt;
-        g.barVel += (held ? P.lift : -P.gravity) * dt;
-        g.barPos += g.barVel * dt;
-        const top = 1 - g.tier.barHeight;
-        if (g.barPos < 0) {
-          g.barPos = 0;
-          g.barVel = -g.barVel * P.bounce;
-        } else if (g.barPos > top) {
-          g.barPos = top;
-          g.barVel = 0;
+      function stepReel(dt) {
+        const mg = game.mg;
+        mg.t += dt;
+        mg.barVel += (keys.Space ? MG.lift : -MG.gravity) * dt;
+        mg.barPos += mg.barVel * dt;
+        const top = 1 - mg.type.barHeight;
+        if (mg.barPos < 0) {
+          mg.barPos = 0;
+          mg.barVel = -mg.barVel * MG.bounce;
+        } else if (mg.barPos > top) {
+          mg.barPos = top;
+          mg.barVel = 0;
         }
-        stepFish(dt);
+        stepBear(mg, dt);
+        const inBar =
+          mg.fishPos >= mg.barPos &&
+          mg.fishPos <= mg.barPos + mg.type.barHeight;
+        mg.progress += (inBar ? MG.fillRate : -MG.drainRate) * dt;
+        if (!inBar) mg.perfect = false;
+        mg.progress = Math.min(1, Math.max(0, mg.progress));
+        claw.torque = gripAt(mg.progress);
 
-        const inBar = (y) => y >= g.barPos && y <= g.barPos + g.tier.barHeight;
-        if (inBar(g.fishPos)) {
-          g.progress += P.fillRate * dt;
-        } else {
-          g.progress -= P.drainRate * dt;
-          g.perfect = false;
-        }
-        if (g.treasure && !g.treasure.got && inBar(g.treasure.pos)) {
-          g.treasure.held += dt;
-          if (g.treasure.held >= P.treasureHold) g.treasure.got = true;
-        }
-        g.progress = Math.min(1, Math.max(0, g.progress));
-        clawEl.style.height = Math.min(100, (g.t / P.timeLimit) * 100) + "px";
-
-        if (g.progress >= 1 || g.progress <= 0 || g.t >= P.timeLimit) finish();
+        if (!isHeld(game.held))
+          endReel("slipped", "It slipped out of the claw!");
+        else if (mg.progress >= 1)
+          endReel(
+            "caught",
+            mg.perfect
+              ? "PERFECT! Full grip all the way home."
+              : "Reeled in! Full grip.",
+          );
+        else if (mg.progress <= 0)
+          endReel("escaped", "It got away! The claw went limp.");
+        else if (mg.t >= MG.timeLimit)
+          endReel(
+            "timeout",
+            `Time! Grip stuck at ${Math.round(mg.progress * 100)}%. Hold on...`,
+          );
       }
 
-      function finish() {
-        state = "done";
-        let grip = curve(g.progress) + (g.treasure?.got ? 0.1 : 0);
-        grip = Math.min(1, Math.max(0.25, grip));
-        const perfect = g.progress >= 1 && g.perfect;
-        const lines = [
-          g.progress >= 1
-            ? perfect
-              ? "PERFECT!"
-              : "Caught!"
-            : g.progress <= 0
-              ? "Escaped..."
-              : "Time!",
-          `Meter: ${Math.round(g.progress * 100)}%`,
-          g.treasure
-            ? g.treasure.got
-              ? "Treasure: +10% grip"
-              : "Treasure missed"
-            : "",
-          `Claw grip duty: ${Math.round(grip * 100)}%`,
-        ];
-        resultEl.textContent = lines.filter(Boolean).join("\n");
-        reelBtn.textContent = "REEL (again)";
-      }
-
-      function draw() {
-        ctx.fillStyle = "#14233d";
-        ctx.fillRect(0, 0, W, H);
-        // water track
-        ctx.fillStyle = "#2a6fdb";
-        ctx.fillRect(TRACK.x, TRACK.y, TRACK.w, TRACK.h);
-        ctx.fillStyle = "#4b8cf0";
-        for (let i = 0; i < 6; i++)
-          ctx.fillRect(TRACK.x, TRACK.y + 20 + i * 48, TRACK.w, 2);
-        const y = (n) => TRACK.y + TRACK.h - n * TRACK.h;
-
-        if (state === "idle") {
-          ctx.fillStyle = "#ffe28a";
-          ctx.font = "bold 20px monospace";
-          ctx.fillText("CAST!", 40, H / 2);
-        }
-        if (g) {
-          // catch bar
-          const bh = g.tier.barHeight * TRACK.h;
-          ctx.fillStyle = "rgba(94,224,94,0.55)";
-          ctx.fillRect(TRACK.x + 4, y(g.barPos) - bh, TRACK.w - 8, bh);
-          ctx.strokeStyle = "#5ee05e";
-          ctx.lineWidth = 2;
-          ctx.strokeRect(TRACK.x + 4, y(g.barPos) - bh, TRACK.w - 8, bh);
-          // treasure
-          if (g.treasure && !g.treasure.got) {
-            ctx.font = "16px serif";
-            ctx.fillText("💰", TRACK.x + 70, y(g.treasure.pos) + 6);
+      function tick(dt) {
+        game.t += dt;
+        const v = hub.velocity;
+        v.set(0, 0, 0);
+        switch (game.state) {
+          case "settle":
+            claw.closing = false;
+            if (game.t > 1.5)
+              setState(
+                "aim",
+                "Line up the claw with the arrow keys, then press SPACE.",
+              );
+            break;
+          case "aim": {
+            const ix = (keys.ArrowRight ? 1 : 0) - (keys.ArrowLeft ? 1 : 0);
+            const iz = (keys.ArrowDown ? 1 : 0) - (keys.ArrowUp ? 1 : 0);
+            const clampAxis = (pos, vel) =>
+              Math.max(
+                (-CLAW.reach - pos) / dt,
+                Math.min((CLAW.reach - pos) / dt, vel),
+              );
+            v.x = clampAxis(hub.position.x, ix * CLAW.moveSpeed);
+            v.z = clampAxis(hub.position.z, iz * CLAW.moveSpeed);
+            if (pressed.Space) setState("drop", "Dropping...");
+            break;
           }
-          // fish
-          ctx.font = "20px serif";
-          ctx.fillText("🐟", TRACK.x + 40, y(g.fishPos) + 8);
-          // meter
-          ctx.fillStyle = "#222";
-          ctx.fillRect(METER.x, METER.y, METER.w, METER.h);
-          const p = g.progress;
-          ctx.fillStyle = `hsl(${p * 120},80%,50%)`;
-          ctx.fillRect(
+          case "drop":
+            v.y = -Math.min(CLAW.dropSpeed, (hub.position.y - CLAW.minY) / dt);
+            if (game.t > 0.1 && dropBlocked()) setState("close", "Grabbing...");
+            break;
+          case "close":
+            claw.closing = true;
+            claw.torque = gripAt(MG.startProgress);
+            if (game.t > CLAW.closeTime) setState("lift", "Lifting...");
+            break;
+          case "lift":
+            v.y = Math.min(CLAW.liftSpeed, (CLAW.topY - hub.position.y) / dt);
+            if (hub.position.y >= CLAW.topY - 0.01) setState("top");
+            break;
+          case "top":
+            if (game.t > CLAW.topPause) {
+              const bear = findHeldBear();
+              if (bear) startReel(bear);
+              else setState("return", "Missed! Nothing in the claw.");
+            }
+            break;
+          case "reel":
+            stepReel(dt);
+            break;
+          case "return":
+            if (steerTo(v, CHUTE.x, CHUTE.z, CLAW.moveSpeed * 0.8, dt))
+              setState("release");
+            break;
+          case "release":
+            claw.closing = false;
+            if (game.t > CLAW.releaseTime) {
+              game.held = null;
+              game.mg = null;
+              setState(
+                "aim",
+                "Line up the claw with the arrow keys, then press SPACE.",
+              );
+            }
+            break;
+        }
+
+        for (const b of [...bears]) {
+          if (b.body.position.y < -1.5) {
+            game.wins++;
+            scoreEl.textContent = `PRIZES ${game.wins}`;
+            statusEl.textContent = `You won ${b.type.name}!`;
+            removeBear(b);
+          }
+        }
+        for (const k in pressed) delete pressed[k];
+      }
+
+      // ---------- carriage screen ----------
+
+      const sctx = screenCanvas.getContext("2d");
+      const SW = screenCanvas.width;
+      const SH = screenCanvas.height;
+      const TRACK = { x: 14, y: 12, w: 110, h: SH - 24 };
+      const METER = { x: 136, y: 12, w: 20, h: SH - 24 };
+      const IDLE_TEXT = {
+        settle: ["STOCKING"],
+        aim: ["ALIGN", "", "SPACE", "TO DROP"],
+        drop: ["DROP!"],
+        close: ["GRAB!"],
+        lift: ["UP UP"],
+        top: ["..."],
+        return: ["MISSED"],
+        release: ["OPEN"],
+      };
+
+      function drawScreen() {
+        const c = sctx;
+        c.fillStyle = "#14233d";
+        c.fillRect(0, 0, SW, SH);
+        c.fillStyle = "#2a6fdb";
+        c.fillRect(TRACK.x, TRACK.y, TRACK.w, TRACK.h);
+        c.fillStyle = "#4b8cf0";
+        for (let i = 0; i < 6; i++)
+          c.fillRect(TRACK.x, TRACK.y + 20 + i * 48, TRACK.w, 2);
+        c.fillStyle = "#222";
+        c.fillRect(METER.x, METER.y, METER.w, METER.h);
+        c.textAlign = "center";
+        const y = (n) => TRACK.y + TRACK.h - n * TRACK.h;
+        const mg = game.mg;
+
+        if (mg) {
+          const bh = mg.type.barHeight * TRACK.h;
+          c.fillStyle = "rgba(94,224,94,0.55)";
+          c.fillRect(TRACK.x + 4, y(mg.barPos) - bh, TRACK.w - 8, bh);
+          c.strokeStyle = "#5ee05e";
+          c.lineWidth = 2;
+          c.strokeRect(TRACK.x + 4, y(mg.barPos) - bh, TRACK.w - 8, bh);
+          c.font = "24px serif";
+          c.fillText("🧸", TRACK.x + TRACK.w / 2, y(mg.fishPos) + 9);
+          const p = mg.progress;
+          c.fillStyle = `hsl(${p * 120},80%,50%)`;
+          c.fillRect(
             METER.x + 2,
             METER.y + METER.h - p * METER.h,
             METER.w - 4,
             p * METER.h,
           );
-          if (state === "done" && g.progress >= 1 && g.perfect) {
-            ctx.fillStyle = "#ffe28a";
-            ctx.font = "bold 18px monospace";
-            ctx.fillText("PERFECT!", 20, 40);
+          // time remaining
+          c.fillStyle = "#ffd75e";
+          c.fillRect(
+            TRACK.x,
+            SH - 8,
+            TRACK.w * Math.max(0, 1 - mg.t / MG.timeLimit),
+            4,
+          );
+          if (mg.result) {
+            const label = {
+              caught: mg.perfect ? "PERFECT!" : "CAUGHT!",
+              slipped: "SLIPPED",
+              escaped: "ESCAPED",
+              timeout: "TIME!",
+            };
+            c.font = '12px "Press Start 2P", monospace';
+            c.fillStyle = "#3a2a1a";
+            c.fillText(label[mg.result], TRACK.x + TRACK.w / 2 + 2, 42);
+            c.fillStyle = "#ffd75e";
+            c.fillText(label[mg.result], TRACK.x + TRACK.w / 2, 40);
           }
+        } else {
+          c.font = '11px "Press Start 2P", monospace';
+          c.fillStyle = "#ffd75e";
+          const lines = IDLE_TEXT[game.state] ?? [];
+          lines.forEach((l, i) =>
+            c.fillText(l, TRACK.x + TRACK.w / 2, SH / 2 - 20 + i * 18),
+          );
         }
+        screenTex.needsUpdate = true;
       }
 
+      // ---------- render sync ----------
+
+      function sync() {
+        for (const b of bears) {
+          b.group.position.copy(b.body.position);
+          b.group.quaternion.copy(b.body.quaternion);
+        }
+        hubMesh.position.copy(hub.position);
+        for (const p of prongs) {
+          p.mesh.position.copy(p.body.position);
+          p.mesh.quaternion.copy(p.body.quaternion);
+        }
+        carriage.position.set(hub.position.x, 8.55, hub.position.z);
+        bridge.position.z = hub.position.z;
+        const cableTop = 7.9;
+        const cableBottom = hub.position.y + 0.2;
+        cable.scale.y = Math.max(0.01, cableTop - cableBottom);
+        cable.position.set(
+          hub.position.x,
+          (cableTop + cableBottom) / 2,
+          hub.position.z,
+        );
+
+        marker.visible = game.state === "aim";
+        if (marker.visible) {
+          raycaster.set(
+            new THREE.Vector3(
+              hub.position.x,
+              hub.position.y - 1.6,
+              hub.position.z,
+            ),
+            DOWN,
+          );
+          const hit = raycaster.intersectObjects(
+            [...floorMeshes, ...bears.map((b) => b.group)],
+            true,
+          )[0];
+          if (hit)
+            marker.position.set(
+              hub.position.x,
+              hit.point.y + 0.03,
+              hub.position.z,
+            );
+        }
+
+        const ix = (keys.ArrowRight ? 1 : 0) - (keys.ArrowLeft ? 1 : 0);
+        const iz = (keys.ArrowDown ? 1 : 0) - (keys.ArrowUp ? 1 : 0);
+        stick.rotation.set(iz * 0.35, 0, -ix * 0.35);
+        reelButton.position.y = keys.Space ? -0.07 : -0.02;
+      }
+
+      // ---------- loop ----------
+
+      const FIXED = 1 / 120;
+      let acc = 0;
       let last = performance.now();
-      function loop(now) {
-        const dt = Math.min(0.05, (now - last) / 1000);
+      function frame(now) {
+        acc += Math.min(0.1, (now - last) / 1000);
         last = now;
-        if (state === "playing") update(dt);
-        draw();
-        requestAnimationFrame(loop);
-      }
-      requestAnimationFrame(loop);
-
-      function press() {
-        if (state !== "playing") {
-          newRound();
-          resultEl.textContent = "";
-          reelBtn.textContent = "REEL (hold)";
-          state = "playing";
-          held = false;
-          return;
+        while (acc >= FIXED) {
+          tick(FIXED);
+          driveProngs();
+          world.step(FIXED);
+          acc -= FIXED;
         }
-        held = true;
-      }
-      function release() {
-        held = false;
+        sync();
+        drawScreen();
+        renderer.render(scene, camera);
+        requestAnimationFrame(frame);
       }
 
-      for (const el of [reelBtn, cv]) {
-        el.addEventListener("pointerdown", (e) => {
-          e.preventDefault();
-          press();
-        });
-      }
-      window.addEventListener("pointerup", release);
-      window.addEventListener("keydown", (e) => {
-        if (e.code !== "Space" || e.repeat) return;
-        e.preventDefault();
-        press();
-      });
-      window.addEventListener("keyup", (e) => {
-        if (e.code === "Space") release();
-      });
+      document.fonts.load('16px "Press Start 2P"').then(drawMarquee);
+      restock();
+      requestAnimationFrame(frame);
+
+      // Debug handle for playtesting from the console.
+      window.__claw = {
+        game,
+        hub,
+        bears,
+        prongs,
+        claw,
+        keys,
+        pressed,
+        CLAW,
+        GRIP,
+        MG,
+      };
     </script>
   </body>
 </html>

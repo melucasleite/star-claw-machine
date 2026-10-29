@@ -1,0 +1,397 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>START CLAW Minigame</title>
+    <style>
+      :root {
+        --wood: #7a4e2d;
+        --wood-dark: #3a2a1a;
+        --teal: #1f6f6b;
+        --mustard: #d9a521;
+        --water: #2a6fdb;
+        --catch: #5ee05e;
+        --bg: #f3e9d8;
+        --ink: #2b1d10;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        background: var(--bg);
+        color: var(--ink);
+        font-family: "Courier New", monospace;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 16px;
+        padding: 24px 16px;
+        user-select: none;
+      }
+      h1 {
+        margin: 0;
+        color: var(--mustard);
+        background: var(--teal);
+        padding: 8px 20px;
+        border: 4px solid var(--wood-dark);
+        letter-spacing: 4px;
+      }
+      .rig {
+        display: flex;
+        gap: 24px;
+        align-items: flex-start;
+        flex-wrap: wrap;
+        justify-content: center;
+      }
+      .carriage {
+        background: var(--wood);
+        border: 4px solid var(--wood-dark);
+        border-radius: 14px;
+        padding: 24px 40px;
+      }
+      .bezel {
+        background: var(--mustard);
+        border: 3px solid var(--wood-dark);
+        border-radius: 8px;
+        padding: 10px;
+      }
+      canvas {
+        display: block;
+        image-rendering: pixelated;
+        width: 170px;
+        height: 320px;
+        touch-action: none;
+      }
+      .panel {
+        width: 260px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+      .panel label {
+        font-weight: bold;
+      }
+      select,
+      button {
+        font: inherit;
+        padding: 8px;
+        border: 3px solid var(--wood-dark);
+        background: #fff8e8;
+      }
+      button {
+        background: var(--mustard);
+        border-radius: 999px;
+        font-weight: bold;
+        font-size: 18px;
+        padding: 14px;
+        cursor: pointer;
+      }
+      .shaft {
+        position: relative;
+        height: 120px;
+        background: #cfe6f2;
+        border: 3px solid var(--wood-dark);
+      }
+      .claw {
+        position: absolute;
+        left: 50%;
+        top: 0;
+        width: 2px;
+        background: #333;
+        transform: translateX(-50%);
+      }
+      .claw::after {
+        content: "🦀";
+        position: absolute;
+        bottom: -14px;
+        left: -9px;
+        font-size: 18px;
+      }
+      #result {
+        min-height: 3em;
+        white-space: pre-line;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>START CLAW</h1>
+    <div class="rig">
+      <div class="carriage">
+        <div class="bezel">
+          <canvas id="screen" width="170" height="320"></canvas>
+        </div>
+      </div>
+      <div class="panel">
+        <label for="tier">Prize zone under claw</label>
+        <select id="tier">
+          <option value="common">Common: plush veggie (smooth)</option>
+          <option value="uncommon" selected>
+            Uncommon: plush fish (mixed)
+          </option>
+          <option value="rare">Rare: chest plush (dart)</option>
+          <option value="legendary">Legendary: featured (dart + sinker)</option>
+        </select>
+        <button id="reel">REEL</button>
+        <small
+          >Press REEL to drop, then hold REEL, Space, or the screen to lift the
+          bar.</small
+        >
+        <div class="shaft"><div class="claw" id="claw"></div></div>
+        <div id="result"></div>
+      </div>
+    </div>
+
+    <script>
+      const TIERS = {
+        common: { behaviors: ["smooth"], difficulty: 25, barHeight: 0.3 },
+        uncommon: { behaviors: ["mixed"], difficulty: 50, barHeight: 0.26 },
+        rare: { behaviors: ["dart"], difficulty: 75, barHeight: 0.22 },
+        legendary: {
+          behaviors: ["dart", "sinker"],
+          difficulty: 95,
+          barHeight: 0.18,
+        },
+      };
+      const P = {
+        gravity: 2.2,
+        lift: 3.4,
+        bounce: 0.35,
+        fillRate: 0.32,
+        drainRate: 0.15,
+        startProgress: 0.35,
+        timeLimit: 9,
+        treasureChance: 0.25,
+        treasureHold: 1.2,
+      };
+
+      const cv = document.getElementById("screen");
+      const ctx = cv.getContext("2d");
+      const W = cv.width;
+      const H = cv.height;
+      const TRACK = { x: 14, y: 12, w: 110, h: H - 24 };
+      const METER = { x: 136, y: 12, w: 20, h: H - 24 };
+
+      const reelBtn = document.getElementById("reel");
+      const tierSel = document.getElementById("tier");
+      const clawEl = document.getElementById("claw");
+      const resultEl = document.getElementById("result");
+
+      let state = "idle";
+      let held = false;
+      let g;
+
+      // positions are normalised: 0 = bottom of track, 1 = top
+      function newRound() {
+        const tier = TIERS[tierSel.value];
+        g = {
+          tier,
+          barPos: 0,
+          barVel: 0,
+          fishPos: tier.barHeight / 2,
+          fishVel: 0,
+          fishTarget: 0.5,
+          behavior: tier.behaviors[0],
+          progress: P.startProgress,
+          t: 0,
+          treasure:
+            Math.random() < P.treasureChance
+              ? { pos: 0.2 + Math.random() * 0.6, held: 0, got: false }
+              : null,
+          perfect: true,
+        };
+      }
+
+      function curve(p) {
+        if (p >= 1) return 1;
+        if (p < 0.3) return 0.25;
+        if (p < 0.7) return 0.25 + ((p - 0.3) / 0.4) * 0.45;
+        return 0.7 + ((p - 0.7) / 0.3) * 0.2;
+      }
+
+      function stepFish(dt) {
+        const d = g.tier.difficulty / 100;
+        if (g.tier.behaviors.length > 1 && Math.random() < dt * 0.5) {
+          g.behavior =
+            g.tier.behaviors[
+              Math.floor(Math.random() * g.tier.behaviors.length)
+            ];
+        }
+        const r = Math.random();
+        switch (g.behavior) {
+          case "smooth":
+            g.fishTarget = 0.5 + 0.35 * Math.sin(g.t * (0.8 + d));
+            break;
+          case "mixed":
+            if (r < dt * (1 + 2 * d)) g.fishTarget = Math.random();
+            break;
+          case "dart":
+            if (r < dt * (1.5 + 3 * d)) g.fishTarget = Math.random();
+            break;
+          case "sinker":
+            g.fishTarget = Math.max(0, g.fishTarget - dt * 0.3);
+            if (r < dt * 1.5) g.fishTarget = Math.min(1, g.fishPos + 0.3);
+            break;
+          case "floater":
+            g.fishTarget = Math.min(1, g.fishTarget + dt * 0.3);
+            if (r < dt * 1.5) g.fishTarget = Math.max(0, g.fishPos - 0.3);
+            break;
+        }
+        const speed = g.behavior === "dart" ? 6 + 6 * d : 2.5 + 3 * d;
+        g.fishVel += (g.fishTarget - g.fishPos) * speed * dt * 6;
+        g.fishVel *= Math.pow(0.02, dt);
+        g.fishPos = Math.min(1, Math.max(0, g.fishPos + g.fishVel * dt));
+      }
+
+      function update(dt) {
+        g.t += dt;
+        g.barVel += (held ? P.lift : -P.gravity) * dt;
+        g.barPos += g.barVel * dt;
+        const top = 1 - g.tier.barHeight;
+        if (g.barPos < 0) {
+          g.barPos = 0;
+          g.barVel = -g.barVel * P.bounce;
+        } else if (g.barPos > top) {
+          g.barPos = top;
+          g.barVel = 0;
+        }
+        stepFish(dt);
+
+        const inBar = (y) => y >= g.barPos && y <= g.barPos + g.tier.barHeight;
+        if (inBar(g.fishPos)) {
+          g.progress += P.fillRate * dt;
+        } else {
+          g.progress -= P.drainRate * dt;
+          g.perfect = false;
+        }
+        if (g.treasure && !g.treasure.got && inBar(g.treasure.pos)) {
+          g.treasure.held += dt;
+          if (g.treasure.held >= P.treasureHold) g.treasure.got = true;
+        }
+        g.progress = Math.min(1, Math.max(0, g.progress));
+        clawEl.style.height = Math.min(100, (g.t / P.timeLimit) * 100) + "px";
+
+        if (g.progress >= 1 || g.progress <= 0 || g.t >= P.timeLimit) finish();
+      }
+
+      function finish() {
+        state = "done";
+        let grip = curve(g.progress) + (g.treasure?.got ? 0.1 : 0);
+        grip = Math.min(1, Math.max(0.25, grip));
+        const perfect = g.progress >= 1 && g.perfect;
+        const lines = [
+          g.progress >= 1
+            ? perfect
+              ? "PERFECT!"
+              : "Caught!"
+            : g.progress <= 0
+              ? "Escaped..."
+              : "Time!",
+          `Meter: ${Math.round(g.progress * 100)}%`,
+          g.treasure
+            ? g.treasure.got
+              ? "Treasure: +10% grip"
+              : "Treasure missed"
+            : "",
+          `Claw grip duty: ${Math.round(grip * 100)}%`,
+        ];
+        resultEl.textContent = lines.filter(Boolean).join("\n");
+        reelBtn.textContent = "REEL (again)";
+      }
+
+      function draw() {
+        ctx.fillStyle = "#14233d";
+        ctx.fillRect(0, 0, W, H);
+        // water track
+        ctx.fillStyle = "#2a6fdb";
+        ctx.fillRect(TRACK.x, TRACK.y, TRACK.w, TRACK.h);
+        ctx.fillStyle = "#4b8cf0";
+        for (let i = 0; i < 6; i++)
+          ctx.fillRect(TRACK.x, TRACK.y + 20 + i * 48, TRACK.w, 2);
+        const y = (n) => TRACK.y + TRACK.h - n * TRACK.h;
+
+        if (state === "idle") {
+          ctx.fillStyle = "#ffe28a";
+          ctx.font = "bold 20px monospace";
+          ctx.fillText("CAST!", 40, H / 2);
+        }
+        if (g) {
+          // catch bar
+          const bh = g.tier.barHeight * TRACK.h;
+          ctx.fillStyle = "rgba(94,224,94,0.55)";
+          ctx.fillRect(TRACK.x + 4, y(g.barPos) - bh, TRACK.w - 8, bh);
+          ctx.strokeStyle = "#5ee05e";
+          ctx.lineWidth = 2;
+          ctx.strokeRect(TRACK.x + 4, y(g.barPos) - bh, TRACK.w - 8, bh);
+          // treasure
+          if (g.treasure && !g.treasure.got) {
+            ctx.font = "16px serif";
+            ctx.fillText("💰", TRACK.x + 70, y(g.treasure.pos) + 6);
+          }
+          // fish
+          ctx.font = "20px serif";
+          ctx.fillText("🐟", TRACK.x + 40, y(g.fishPos) + 8);
+          // meter
+          ctx.fillStyle = "#222";
+          ctx.fillRect(METER.x, METER.y, METER.w, METER.h);
+          const p = g.progress;
+          ctx.fillStyle = `hsl(${p * 120},80%,50%)`;
+          ctx.fillRect(
+            METER.x + 2,
+            METER.y + METER.h - p * METER.h,
+            METER.w - 4,
+            p * METER.h,
+          );
+          if (state === "done" && g.progress >= 1 && g.perfect) {
+            ctx.fillStyle = "#ffe28a";
+            ctx.font = "bold 18px monospace";
+            ctx.fillText("PERFECT!", 20, 40);
+          }
+        }
+      }
+
+      let last = performance.now();
+      function loop(now) {
+        const dt = Math.min(0.05, (now - last) / 1000);
+        last = now;
+        if (state === "playing") update(dt);
+        draw();
+        requestAnimationFrame(loop);
+      }
+      requestAnimationFrame(loop);
+
+      function press() {
+        if (state !== "playing") {
+          newRound();
+          resultEl.textContent = "";
+          reelBtn.textContent = "REEL (hold)";
+          state = "playing";
+          held = false;
+          return;
+        }
+        held = true;
+      }
+      function release() {
+        held = false;
+      }
+
+      for (const el of [reelBtn, cv]) {
+        el.addEventListener("pointerdown", (e) => {
+          e.preventDefault();
+          press();
+        });
+      }
+      window.addEventListener("pointerup", release);
+      window.addEventListener("keydown", (e) => {
+        if (e.code !== "Space" || e.repeat) return;
+        e.preventDefault();
+        press();
+      });
+      window.addEventListener("keyup", (e) => {
+        if (e.code === "Space") release();
+      });
+    </script>
+  </body>
+</html>

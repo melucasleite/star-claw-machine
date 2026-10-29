@@ -1,6 +1,6 @@
 # Minigame spec
 
-Based on the Stardew Valley fishing bar and adapted for one button and a short window.
+Based on the Stardew Valley fishing bar, but the fish is a teddy bear, and the game only starts once the claw has actually lifted one.
 
 ## Screen layout (vertical, 170 × 320 px)
 
@@ -9,9 +9,9 @@ Based on the Stardew Valley fishing bar and adapted for one button and a short w
 │  water     │▓▓│ ← progress meter (red → green)
 │  track     │▓▓│
 │ ┌──────┐   │▓▓│
-│ │  🐟  │ ← catch bar (green), fish inside
+│ │  🧸  │ ← catch bar (green), bear inside
 │ └──────┘   │  │
-│      💰    │  │ ← optional treasure chest
+│ ▬▬▬▬▬      │  │ ← time left
 └────────────┴──┘
 ```
 
@@ -23,12 +23,12 @@ Based on the Stardew Valley fishing bar and adapted for one button and a short w
 | `gravity`       | 2.2     | Downward acceleration when not held         |
 | `lift`          | 3.4     | Upward acceleration while REEL is held      |
 | `bounce`        | 0.35    | Restitution when the bar hits the bottom    |
-| `fillRate`      | 0.32    | Progress gained per second with fish in bar |
+| `fillRate`      | 0.30    | Progress gained per second with bear in bar |
 | `drainRate`     | 0.15    | Progress lost per second otherwise          |
 | `startProgress` | 0.35    |                                             |
-| `timeLimit`     | 9 s     | Roughly matched to the claw drop and settle |
+| `timeLimit`     | 10 s    | The claw waits at the top while you reel    |
 
-## Fish behaviours (same names as Stardew Valley)
+## Bear behaviours (same names as Stardew Valley)
 
 | Behaviour | Movement                                          |
 | --------- | ------------------------------------------------- |
@@ -38,21 +38,23 @@ Based on the Stardew Valley fishing bar and adapted for one button and a short w
 | `sinker`  | Drifts toward the bottom with short bursts upward |
 | `floater` | Drifts toward the top with short dips downward    |
 
-## Prize tiers
+## Bears
 
-The prize bed is split into zones. The zone under the claw picks the fish.
+Each bear's colour sets how it moves and how hard it is to reel in. `weight` is how often that colour gets stocked.
 
-| Tier      | Prizes               | Behaviour         | Difficulty | barHeight |
-| --------- | -------------------- | ----------------- | ---------- | --------- |
-| Common    | Plush veggies        | `smooth`          | 25         | 0.30      |
-| Uncommon  | Plush fish           | `mixed`           | 50         | 0.26      |
-| Rare      | Treasure-chest plush | `dart`            | 75         | 0.22      |
-| Legendary | Featured item        | `dart` + `sinker` | 95         | 0.18      |
-
-## Treasure chest
-
-There is a 25 % chance per round that a chest appears. Keeping it inside the bar for 1.2 s in total grabs it, which adds a +10 % grip bonus and plays a chime.
+| Bear    | Behaviour           | Difficulty | barHeight | weight |
+| ------- | ------------------- | ---------- | --------- | ------ |
+| Cocoa   | `smooth`            | 30         | 0.30      | 4      |
+| Honey   | `mixed`             | 50         | 0.27      | 4      |
+| Blossom | `mixed` + `floater` | 60         | 0.25      | 3      |
+| Snow    | `dart`              | 75         | 0.22      | 2      |
+| Goldie  | `dart` + `sinker`   | 95         | 0.18      | 1      |
 
 ## Outcome
 
-`grip = curve(progress) + (treasure ? 0.10 : 0)`, clamped to [0.25, 1.0]. The firmware sends this to the claw coil as a PWM duty cycle.
+The meter is fed into the prong torque limit on every physics step: `torque = GRIP.min + (GRIP.max - GRIP.min) × progress`.
+
+- **Meter full:** the grip locks at max and the claw carries the bear to the chute.
+- **Meter empty:** the claw opens.
+- **Bear no longer held:** the round ends as "slipped".
+- **Time runs out:** the grip stays where the meter left it for the trip home.
