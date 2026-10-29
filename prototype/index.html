@@ -205,8 +205,6 @@
         topPause: 0.5,
         releaseTime: 1.4,
       };
-      // Aim assist: while dropping, the claw drifts onto the nearest bear within this many units.
-      const ASSIST = { radius: 1.6, speed: 2.4 };
       // Prong torque. The reel meter (0..1) maps onto this range while the bear is in the air.
       const GRIP = { min: 16, max: 34 };
       const gripAt = (p) => GRIP.min + (GRIP.max - GRIP.min) * p;
@@ -883,7 +881,6 @@
         t: 0,
         held: null,
         mg: null,
-        assist: null,
         wins: 0,
       };
 
@@ -924,19 +921,6 @@
             return true;
         }
         return prongs.some((p) => p.angle > CLAW.openAngle + 0.25);
-      }
-
-      function nearestBear(radius) {
-        let best = null;
-        let bestD = radius;
-        for (const b of bears) {
-          const d = horizDist(b.body);
-          if (d < bestD) {
-            best = b;
-            bestD = d;
-          }
-        }
-        return best;
       }
 
       function steerTo(v, tx, tz, speed, dt) {
@@ -1076,18 +1060,11 @@
               v.x = clampAxis(hub.position.x, ix * CLAW.moveSpeed);
               v.z = clampAxis(hub.position.z, iz * CLAW.moveSpeed);
             }
-            if (pressed.Space) {
-              game.assist = nearestBear(ASSIST.radius);
-              setState("drop", "Dropping...");
-            }
+            if (pressed.Space) setState("drop", "Dropping...");
             break;
           }
           case "drop":
             v.y = -Math.min(CLAW.dropSpeed, (hub.position.y - CLAW.minY) / dt);
-            if (game.assist) {
-              const p = game.assist.body.position;
-              steerTo(v, p.x, p.z, ASSIST.speed, dt);
-            }
             if (game.t > 0.1 && dropBlocked()) setState("close", "Grabbing...");
             break;
           case "close":
@@ -1294,7 +1271,6 @@
 
       // Debug handle for playtesting from the console.
       window.__claw = {
-        ASSIST,
         game,
         hub,
         bears,
