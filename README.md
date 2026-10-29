@@ -27,6 +27,8 @@ Open `prototype/index.html` in a browser. It loads three.js and cannon-es from a
 - **Hold Space** during the reel game to lift the green bar. Keep the bear in the bar to keep the grip strong.
 - **R** restocks the bears.
 
+On a phone: **drag** to move the claw, **tap** to drop, and **hold your finger down** to reel. The RESTOCK button refills the bears.
+
 ## Formatting
 
 ```bash
