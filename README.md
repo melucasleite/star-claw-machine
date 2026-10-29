@@ -22,12 +22,26 @@ The gantry carriage, the box that rides the rails and holds the claw motor, has 
 
 Open `prototype/index.html` in a browser. It loads three.js and cannon-es from a CDN, so you need to be online.
 
-- **Arrow keys** move the claw. Line it up using the yellow ring.
+- **Arrow keys** move the claw. There's no landing guide, so judge it by eye.
 - **Space** drops the claw. It grabs whatever the physics lets it grab.
-- **Hold Space** during the reel game to lift the green bar. Keep the bear in the bar to keep the grip strong.
-- **R** restocks the bears.
+- **Hold Space** during the reel game to lift the green bar. Keep the plushie in the bar to keep the grip strong.
+- **R** restocks the machine and starts a new run (it asks first).
 
-On a phone: **drag** to move the claw, **tap** to drop, and **hold your finger down** to reel. The RESTOCK button refills the bears.
+On a phone: **drag** to move the claw, **tap** to drop, and **hold your finger down** to reel. The RESTOCK button does the same as R.
+
+### Scoring
+
+The machine is stocked with 15 plushies (bears, cats, dogs, bunnies and axolotls). The animal sets the shape; the colour sets the reel difficulty and the points:
+
+| Colour | Points | Stocked |
+| ------ | ------ | ------- |
+| Mint   | 10     | 5       |
+| Sky    | 25     | 4       |
+| Lilac  | 50     | 3       |
+| Peach  | 100    | 2       |
+| Cherry | 250    | 1       |
+
+A perfect reel (never leaving the bar) is worth x1.5, and back-to-back catches build a streak up to x3. You have 5 hearts: a grab that comes up empty costs half a heart, and losing the reel or dropping the plushie costs a whole one. Clearing the machine pays 500 plus 100 per heart left. The top 5 scores are kept in `localStorage`.
 
 ## Formatting
 

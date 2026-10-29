@@ -20,6 +20,9 @@
         --wood-dark: #3a2a1a;
         --teal: #1f6f6b;
         --mustard: #d9a521;
+        --gold: #ffd75e;
+        --heart: #f7a8b8;
+        --danger: #f07470;
         --bg: #2b1d14;
         --ink: #fff4dc;
       }
@@ -49,7 +52,7 @@
         inset: 0;
       }
       #restock {
-        display: none;
+        display: block;
         font: inherit;
         font-size: 10px;
         padding: 10px 16px;
@@ -57,14 +60,15 @@
         background: var(--mustard);
         border: 3px solid var(--wood-dark);
         border-radius: 999px;
+        cursor: pointer;
+      }
+      body:not([data-mode="play"]) #restock {
+        visibility: hidden;
       }
       .touch-help {
         display: none;
       }
       @media (pointer: coarse) {
-        #restock {
-          display: block;
-        }
         .key-help {
           display: none;
         }
@@ -107,13 +111,93 @@
         line-height: 1.6;
         text-align: center;
       }
-      #score {
+
+      /* ---------- scoreboard ---------- */
+      #scoreboard {
         position: fixed;
         top: 16px;
         left: 16px;
-        font-size: 12px;
-        color: var(--mustard);
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        text-shadow: 2px 2px 0 var(--wood-dark);
       }
+      body[data-mode="title"] #scoreboard {
+        visibility: hidden;
+      }
+      #scoreboard .label {
+        font-size: 10px;
+        opacity: 0.8;
+      }
+      #score {
+        font-size: 30px;
+        color: var(--gold);
+        transform-origin: left center;
+        transition: transform 0.25s ease-out;
+      }
+      #score.bump {
+        transform: scale(1.12);
+        transition: none;
+      }
+      #scoreboard .meta {
+        display: flex;
+        gap: 14px;
+        font-size: 9px;
+        opacity: 0.85;
+      }
+      #streak {
+        font-size: 10px;
+        color: var(--gold);
+        min-height: 1em;
+      }
+      #hearts {
+        display: flex;
+        gap: 5px;
+      }
+      #hearts.hurt {
+        animation: hurt 0.6s ease-out;
+      }
+      @keyframes hurt {
+        0%,
+        50% {
+          opacity: 0.35;
+        }
+        25%,
+        100% {
+          opacity: 1;
+        }
+      }
+      .heart {
+        position: relative;
+        display: inline-block;
+        width: 21px;
+        height: 18px;
+        filter: drop-shadow(2px 2px 0 var(--wood-dark));
+      }
+      .heart svg {
+        display: block;
+        width: 21px;
+        height: 18px;
+        fill: var(--heart);
+      }
+      .heart svg.empty {
+        fill: rgba(255, 244, 220, 0.2);
+      }
+      .heart .fill {
+        position: absolute;
+        left: 0;
+        top: 0;
+        height: 100%;
+        overflow: hidden;
+      }
+      svg.inline {
+        display: inline-block;
+        width: 11px;
+        height: 10px;
+        fill: var(--heart);
+        vertical-align: -1px;
+      }
+
       #help {
         position: fixed;
         left: 16px;
@@ -122,9 +206,313 @@
         line-height: 2;
         opacity: 0.85;
       }
+      .legend {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 4px 12px;
+        margin-top: 6px;
+      }
+      .legend span {
+        white-space: nowrap;
+      }
+      .dot {
+        display: inline-block;
+        width: 10px;
+        height: 10px;
+        margin-right: 5px;
+        border-radius: 50%;
+        border: 2px solid var(--wood-dark);
+        vertical-align: -2px;
+      }
+
+      /* ---------- popups and confetti ---------- */
+      #popups {
+        position: fixed;
+        top: 22%;
+        left: calc(50% - 130px);
+        z-index: 10;
+        pointer-events: none;
+      }
+      .popup {
+        position: absolute;
+        left: 0;
+        top: 0;
+        transform: translateX(-50%);
+        text-align: center;
+        white-space: nowrap;
+        animation: float 2.2s ease-out forwards;
+        text-shadow: 3px 3px 0 var(--wood-dark);
+      }
+      .popup b {
+        display: block;
+        font-size: 32px;
+        font-weight: normal;
+      }
+      .popup small {
+        display: block;
+        margin-top: 10px;
+        font-size: 9px;
+        color: var(--ink);
+      }
+      .popup.big b {
+        font-size: 44px;
+      }
+      @keyframes float {
+        0% {
+          opacity: 0;
+          transform: translate(-50%, 10px) scale(0.7);
+        }
+        12% {
+          opacity: 1;
+          transform: translate(-50%, 0) scale(1.08);
+        }
+        22% {
+          transform: translate(-50%, 0) scale(1);
+        }
+        75% {
+          opacity: 1;
+        }
+        100% {
+          opacity: 0;
+          transform: translate(-50%, -46px) scale(1);
+        }
+      }
+      #fx {
+        position: fixed;
+        inset: 0;
+        z-index: 30;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+      }
+
+      /* ---------- overlays ---------- */
+      .overlay {
+        position: fixed;
+        inset: 0;
+        z-index: 20;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 16px;
+        background: rgba(30, 20, 12, 0.55);
+      }
+      .overlay[hidden] {
+        display: none;
+      }
+      .panel {
+        box-sizing: border-box;
+        width: min(440px, 100%);
+        max-height: calc(100dvh - 40px);
+        overflow: auto;
+        padding: 22px 20px;
+        text-align: center;
+        background: var(--teal);
+        border: 4px solid var(--wood-dark);
+        border-radius: 14px;
+        box-shadow:
+          0 0 0 4px var(--mustard),
+          0 0 0 8px var(--wood-dark),
+          0 18px 40px rgba(0, 0, 0, 0.45);
+        animation: panel-in 0.35s ease-out;
+      }
+      .panel.small {
+        width: min(360px, 100%);
+      }
+      @keyframes panel-in {
+        from {
+          opacity: 0;
+          transform: translateY(14px) scale(0.97);
+        }
+      }
+      .panel h1,
+      .panel h2 {
+        margin: 0;
+        font-weight: normal;
+        text-shadow: 3px 3px 0 var(--wood-dark);
+      }
+      .panel h1 {
+        font-size: 24px;
+        line-height: 1.4;
+        color: var(--gold);
+      }
+      .panel h1.lost {
+        font-size: 18px;
+        color: var(--danger);
+      }
+      .panel h1.win {
+        font-size: 20px;
+      }
+      .panel h2 {
+        margin: 20px 0 10px;
+        font-size: 11px;
+        color: var(--gold);
+      }
+      .panel p {
+        margin: 12px 0 0;
+        font-size: 9px;
+        line-height: 1.8;
+      }
+      .panel p.hey {
+        margin-top: 6px;
+        font-size: 11px;
+        color: var(--gold);
+      }
+      .panel .legend {
+        justify-content: center;
+        margin-top: 16px;
+        font-size: 9px;
+      }
+      .tiers {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 6px;
+        margin-top: 18px;
+        font-size: 8px;
+      }
+      .tiers div {
+        padding: 8px 2px;
+        border-radius: 8px;
+        background: rgba(20, 35, 61, 0.45);
+        line-height: 1.8;
+      }
+      .tiers .dot {
+        display: block;
+        width: 16px;
+        height: 16px;
+        margin: 0 auto 6px;
+      }
+      .tiers b {
+        display: block;
+        font-weight: normal;
+        font-size: 10px;
+        color: var(--gold);
+      }
+      .final {
+        margin-top: 16px;
+        font-size: 10px;
+      }
+      .final b {
+        display: block;
+        margin-top: 8px;
+        font-size: 34px;
+        font-weight: normal;
+        color: var(--gold);
+        text-shadow: 3px 3px 0 var(--wood-dark);
+      }
+      .board {
+        margin: 0 auto;
+        padding: 0;
+        max-width: 300px;
+        list-style: none;
+        font-size: 10px;
+      }
+      .board li {
+        display: grid;
+        grid-template-columns: 2.4em 1fr auto;
+        padding: 7px 10px;
+        text-align: left;
+        border-radius: 6px;
+      }
+      .board li:nth-child(odd) {
+        background: rgba(20, 35, 61, 0.35);
+      }
+      .board li.you {
+        color: var(--gold);
+        background: rgba(255, 215, 94, 0.2);
+      }
+      .board .empty {
+        opacity: 0.75;
+        font-size: 9px;
+      }
+      form.name {
+        margin-top: 18px;
+      }
+      form.name label {
+        display: block;
+        font-size: 9px;
+        margin-bottom: 10px;
+      }
+      form.name .row {
+        display: flex;
+        justify-content: center;
+        gap: 8px;
+      }
+      .name input {
+        width: 11ch;
+        padding: 10px;
+        font: inherit;
+        font-size: 13px;
+        text-align: center;
+        text-transform: uppercase;
+        color: var(--gold);
+        background: #14233d;
+        border: 3px solid var(--wood-dark);
+        border-radius: 8px;
+        outline: none;
+        user-select: text;
+        -webkit-user-select: text;
+        touch-action: manipulation;
+      }
+      .name input:focus {
+        border-color: var(--gold);
+      }
+      .btn {
+        font: inherit;
+        font-size: 11px;
+        padding: 11px 16px;
+        color: var(--wood-dark);
+        background: var(--mustard);
+        border: 3px solid var(--wood-dark);
+        border-radius: 999px;
+        box-shadow: 0 4px 0 var(--wood-dark);
+        cursor: pointer;
+      }
+      .btn:active {
+        transform: translateY(3px);
+        box-shadow: 0 1px 0 var(--wood-dark);
+      }
+      .btn.big {
+        margin-top: 22px;
+        padding: 14px 24px;
+        font-size: 13px;
+      }
+      .btn.ghost {
+        color: var(--ink);
+        background: transparent;
+        border-color: var(--ink);
+        box-shadow: none;
+      }
+      .actions {
+        display: flex;
+        justify-content: center;
+        gap: 10px;
+        margin-top: 20px;
+      }
+
       @media (max-width: 700px) {
-        #score {
+        #scoreboard {
           top: calc(12px + env(safe-area-inset-top));
+          left: calc(12px + env(safe-area-inset-left));
+          gap: 6px;
+        }
+        #score {
+          font-size: 20px;
+        }
+        .heart,
+        .heart svg {
+          width: 16px;
+          height: 14px;
+        }
+        #popups {
+          left: 50%;
+          top: 26%;
+        }
+        .popup b {
+          font-size: 24px;
+        }
+        .popup.big b {
+          font-size: 30px;
         }
         #hud {
           top: auto;
@@ -136,7 +524,20 @@
         #help {
           left: calc(12px + env(safe-area-inset-left));
           bottom: calc(12px + env(safe-area-inset-bottom));
+          max-width: 45%;
           font-size: 8px;
+        }
+        .panel {
+          padding: 18px 14px;
+        }
+        .panel h1 {
+          font-size: 19px;
+        }
+        .panel h1.lost {
+          font-size: 14px;
+        }
+        .tiers {
+          font-size: 7px;
         }
       }
       @media (max-height: 500px) and (min-width: 701px) {
@@ -160,16 +561,24 @@
       }
     </script>
   </head>
-  <body>
+  <body data-mode="title">
     <div id="stage"></div>
-    <div id="score">PRIZES 0</div>
+    <div id="scoreboard">
+      <div class="label">SCORE</div>
+      <div id="score">0</div>
+      <div id="hearts"></div>
+      <div class="meta">
+        <span id="best">BEST 0</span><span id="left"></span>
+      </div>
+      <div id="streak"></div>
+    </div>
     <div id="hud">
       <div class="carriage">
         <div class="bezel">
           <canvas id="screen" width="170" height="320"></canvas>
         </div>
       </div>
-      <div id="status">Restocking bears...</div>
+      <div id="status">Restocking plushies...</div>
       <button id="restock" type="button">RESTOCK</button>
     </div>
     <div id="help">
@@ -179,7 +588,28 @@
       ><span class="touch-help"
         >DRAG move claw<br />TAP drop<br />HOLD finger reel</span
       >
+      <div class="legend" id="legend"></div>
     </div>
+    <div id="popups"></div>
+    <div id="overlay" class="overlay">
+      <div class="panel" id="panel"></div>
+    </div>
+    <div id="confirm" class="overlay" hidden>
+      <div class="panel small" role="dialog" aria-modal="true">
+        <h1>RESTOCK?</h1>
+        <p>
+          Fresh plushies, fresh start. Your current run ends and its score won't
+          count.
+        </p>
+        <div class="actions">
+          <button class="btn ghost" id="confirm-no" type="button">
+            KEEP PLAYING
+          </button>
+          <button class="btn" id="confirm-yes" type="button">RESTOCK</button>
+        </div>
+      </div>
+    </div>
+    <canvas id="fx"></canvas>
 
     <script type="module">
       import * as THREE from "three";
@@ -205,7 +635,7 @@
         topPause: 0.5,
         releaseTime: 1.4,
       };
-      // Prong torque. The reel meter (0..1) maps onto this range while the bear is in the air.
+      // Prong torque. The reel meter (0..1) maps onto this range while the plushie is in the air.
       const GRIP = { min: 16, max: 34 };
       const gripAt = (p) => GRIP.min + (GRIP.max - GRIP.min) * p;
 
@@ -217,50 +647,222 @@
         drainRate: 0.04,
         startProgress: 0.4,
         timeLimit: 20,
-        // Scales how fast the bear moves; below 1 makes every bear lazier.
+        // Scales how fast the plushie moves; below 1 makes every plushie lazier.
         bearSpeed: 0.45,
       };
 
-      const BEAR_TYPES = [
+      const RULES = {
+        lives: 5,
+        missCost: 0.5,
+        failCost: 1,
+        perfectBonus: 0.5,
+        streakStep: 0.5,
+        streakMax: 3,
+        clearBonus: 500,
+        heartBonus: 100,
+      };
+
+      // Colour is the tier: it sets the reel difficulty and the points. `count` is how many get stocked.
+      const TIERS = [
         {
-          name: "Cocoa",
-          color: 0x8b5a2b,
+          name: "Mint",
+          color: 0xa8e6cf,
+          points: 10,
           behaviors: ["smooth"],
-          difficulty: 20,
+          difficulty: 15,
           barHeight: 0.55,
-          weight: 4,
+          count: 5,
         },
         {
-          name: "Honey",
-          color: 0xc98a3c,
+          name: "Sky",
+          color: 0xa7c7e7,
+          points: 25,
+          behaviors: ["smooth", "mixed"],
+          difficulty: 25,
+          barHeight: 0.52,
+          count: 4,
+        },
+        {
+          name: "Lilac",
+          color: 0xc9b6e4,
+          points: 50,
           behaviors: ["mixed"],
           difficulty: 35,
           barHeight: 0.5,
-          weight: 4,
+          count: 3,
         },
         {
-          name: "Blossom",
-          color: 0xe89bb5,
+          name: "Peach",
+          color: 0xffc59e,
+          points: 100,
           behaviors: ["mixed", "floater"],
           difficulty: 45,
-          barHeight: 0.48,
-          weight: 3,
+          barHeight: 0.47,
+          count: 2,
         },
         {
-          name: "Snow",
-          color: 0xf1e3c8,
-          behaviors: ["dart"],
-          difficulty: 55,
-          barHeight: 0.45,
-          weight: 2,
+          name: "Cherry",
+          color: 0xf07470,
+          points: 250,
+          behaviors: ["mixed", "dart"],
+          difficulty: 60,
+          barHeight: 0.44,
+          count: 1,
+        },
+      ];
+      for (const t of TIERS)
+        t.css = `#${t.color.toString(16).padStart(6, "0")}`;
+
+      // Animals only change the shape. Solid parts are collision spheres too; the rest is decoration.
+      const FLAT = [1, 1, 0.6];
+      const part = (mat, r, x, y, z, o = {}) => ({
+        mat,
+        r,
+        x,
+        y,
+        z,
+        s: o.s ?? [1, 1, 1],
+        rot: o.rot,
+        cone: o.cone ?? false,
+        solid: o.solid ?? mat === "fur",
+        visible: o.visible ?? true,
+      });
+      const both = (f) => [f(1), f(-1)];
+      const eyes = (x, y, z) =>
+        both((s) => part("dark", 0.045, x * s, y, z, { s: FLAT }));
+      const ANIMALS = [
+        {
+          name: "Bear",
+          icon: "bear",
+          parts: [
+            part("fur", 0.42, 0, 0, 0),
+            part("fur", 0.32, 0, 0.62, 0),
+            ...both((s) => part("fur", 0.12, 0.22 * s, 0.9, 0)),
+            ...both((s) => part("fur", 0.15, 0.44 * s, 0.12, 0.06)),
+            ...both((s) => part("fur", 0.17, 0.22 * s, -0.38, 0.14)),
+            part("cream", 0.13, 0, 0.55, 0.26, { s: FLAT }),
+            part("dark", 0.05, 0, 0.6, 0.38, { s: FLAT }),
+            ...eyes(0.11, 0.7, 0.28),
+            part("cream", 0.26, 0, -0.02, 0.24, { s: FLAT }),
+          ],
         },
         {
-          name: "Goldie",
-          color: 0xf2c14e,
-          behaviors: ["dart", "sinker"],
-          difficulty: 75,
-          barHeight: 0.4,
-          weight: 1,
+          name: "Cat",
+          icon: "cat",
+          parts: [
+            part("fur", 0.38, 0, 0, 0),
+            part("fur", 0.34, 0, 0.6, 0, { s: [1.12, 1, 1] }),
+            ...both((s) =>
+              part("fur", 0.13, 0.2 * s, 0.93, 0, {
+                cone: true,
+                rot: [0, 0, -0.3 * s],
+                solid: false,
+              }),
+            ),
+            ...both((s) =>
+              part("pink", 0.07, 0.2 * s, 0.9, 0.07, {
+                cone: true,
+                rot: [0, 0, -0.3 * s],
+                s: [1, 1, 0.4],
+              }),
+            ),
+            ...both((s) =>
+              part("fur", 0.1, 0.2 * s, 0.88, 0, { visible: false }),
+            ),
+            ...both((s) => part("fur", 0.13, 0.36 * s, 0.1, 0.1)),
+            ...both((s) => part("fur", 0.15, 0.2 * s, -0.36, 0.14)),
+            part("fur", 0.1, 0.2, -0.25, -0.36),
+            part("fur", 0.1, 0.32, -0.05, -0.42),
+            part("fur", 0.09, 0.36, 0.18, -0.38),
+            ...both((s) =>
+              part("cream", 0.1, 0.07 * s, 0.52, 0.27, { s: FLAT }),
+            ),
+            part("pink", 0.045, 0, 0.58, 0.33, { s: FLAT }),
+            ...eyes(0.13, 0.68, 0.28),
+            part("cream", 0.24, 0, -0.02, 0.22, { s: FLAT }),
+          ],
+        },
+        {
+          name: "Dog",
+          icon: "dog",
+          parts: [
+            part("fur", 0.4, 0, 0, 0),
+            part("fur", 0.33, 0, 0.62, 0),
+            part("fur", 0.17, 0, 0.55, 0.3, { s: [1, 0.85, 1] }),
+            part("dark", 0.06, 0, 0.6, 0.46),
+            ...both((s) =>
+              part("accent", 0.12, 0.31 * s, 0.56, 0, { s: [0.85, 1.9, 1.1] }),
+            ),
+            ...eyes(0.13, 0.73, 0.27),
+            ...both((s) => part("fur", 0.15, 0.42 * s, 0.1, 0.08)),
+            ...both((s) => part("fur", 0.17, 0.22 * s, -0.38, 0.14)),
+            part("fur", 0.09, 0, -0.15, -0.42, { s: [1, 1, 1.6] }),
+            part("cream", 0.25, 0, -0.02, 0.24, { s: FLAT }),
+          ],
+        },
+        {
+          name: "Bunny",
+          icon: "bunny",
+          parts: [
+            part("fur", 0.38, 0, 0, 0),
+            part("fur", 0.31, 0, 0.58, 0),
+            ...both((s) =>
+              part("fur", 0.09, 0.12 * s, 0.98, -0.02, {
+                s: [1, 3, 0.8],
+                solid: false,
+              }),
+            ),
+            ...both((s) =>
+              part("pink", 0.05, 0.12 * s, 0.98, 0.04, { s: [1, 3.6, 0.5] }),
+            ),
+            ...both((s) =>
+              part("fur", 0.09, 0.12 * s, 0.86, 0, { visible: false }),
+            ),
+            ...both((s) =>
+              part("fur", 0.09, 0.12 * s, 1.08, 0, { visible: false }),
+            ),
+            ...eyes(0.12, 0.66, 0.26),
+            part("pink", 0.04, 0, 0.57, 0.3, { s: FLAT }),
+            ...both((s) =>
+              part("cream", 0.08, 0.07 * s, 0.52, 0.26, { s: FLAT }),
+            ),
+            ...both((s) => part("fur", 0.12, 0.33 * s, 0.08, 0.14)),
+            ...both((s) =>
+              part("fur", 0.16, 0.2 * s, -0.36, 0.18, { s: [1, 0.8, 1.4] }),
+            ),
+            part("cream", 0.12, 0, -0.15, -0.38),
+            part("cream", 0.24, 0, -0.02, 0.22, { s: FLAT }),
+          ],
+        },
+        {
+          name: "Axolotl",
+          icon: "axolotl",
+          parts: [
+            part("fur", 0.32, 0, 0, 0.42, { s: [1.25, 0.9, 1] }),
+            part("fur", 0.28, 0, -0.03, 0),
+            part("fur", 0.24, 0, -0.04, -0.38),
+            part("fur", 0.18, 0, -0.02, -0.7, { s: [0.6, 1.2, 1] }),
+            part("fur", 0.12, 0, 0, -0.95, { s: [0.5, 1.2, 1] }),
+            ...both((s) => part("fur", 0.09, 0.3 * s, -0.18, 0.18)),
+            ...both((s) => part("fur", 0.09, 0.26 * s, -0.18, -0.36)),
+            ...[
+              [0.2, -0.6],
+              [0.05, -1.2],
+              [-0.1, -1.9],
+            ].flatMap(([y, a]) =>
+              both((s) =>
+                part("accent", 0.06, 0.43 * s, y + 0.05, 0.38, {
+                  s: [1, 2.6, 1],
+                  rot: [0, 0, a * s],
+                }),
+              ),
+            ),
+            ...eyes(0.2, 0.1, 0.66),
+            part("dark", 0.1, 0, -0.07, 0.72, { s: [1.4, 0.18, 0.3] }),
+            ...both((s) =>
+              part("pink", 0.05, 0.25 * s, -0.05, 0.64, { s: FLAT }),
+            ),
+          ],
         },
       ];
 
@@ -286,6 +888,7 @@
         const w = innerWidth;
         const h = innerHeight;
         renderer.setSize(w, h);
+        sizeFx();
         // Leave room for the HUD on the right, and fit the cabinet in whichever axis is tighter.
         // On a phone in portrait the HUD sits bottom-right, so lift the cabinet into the empty top.
         const narrow = w <= 700;
@@ -300,8 +903,6 @@
         camera.bottom = -halfH - lift;
         camera.updateProjectionMatrix();
       }
-      addEventListener("resize", resize);
-      resize();
 
       scene.add(new THREE.HemisphereLight(0xfff1d6, 0x5a3b22, 1.1));
       const sun = new THREE.DirectionalLight(0xffe2b0, 2.2);
@@ -319,7 +920,8 @@
       });
       sun.shadow.bias = -0.0005;
       scene.add(sun, sun.target);
-      const lamp = new THREE.PointLight(0xffd59a, 25, 14, 2);
+      const LAMP_COLOR = 0xffd59a;
+      const lamp = new THREE.PointLight(LAMP_COLOR, 25, 14, 2);
       lamp.position.set(0, 9, 0);
       scene.add(lamp);
 
@@ -379,6 +981,7 @@
       const G_STATIC = 1;
       const G_PRIZE = 2;
       const G_CLAW = 4;
+      const PRIZE_MASK = G_STATIC | G_PRIZE | G_CLAW;
       const mats = {
         static: new CANNON.Material("static"),
         prize: new CANNON.Material("prize"),
@@ -393,7 +996,6 @@
       contact(mats.prize, mats.claw, 0.9);
       contact(mats.claw, mats.static, 0.3);
 
-      const floorMeshes = [];
       function addStaticBox(cx, cy, cz, hx, hy, hz, mat) {
         const body = new CANNON.Body({
           type: CANNON.Body.STATIC,
@@ -436,8 +1038,8 @@
       box(1.8, 1.1, 0.05, M.black, CHUTE.x, -1.9, 4.42);
 
       // Floor with a hole over the chute, plus the acrylic chute guard.
-      floorMeshes.push(addStaticBox(0, -0.1, -1.1, 4, 0.1, 2.9, M.felt));
-      floorMeshes.push(addStaticBox(1.1, -0.1, 2.9, 2.9, 0.1, 1.1, M.felt));
+      addStaticBox(0, -0.1, -1.1, 4, 0.1, 2.9, M.felt);
+      addStaticBox(1.1, -0.1, 2.9, 2.9, 0.1, 1.1, M.felt);
       addStaticBox(-CHUTE.edge, 0.5, 2.9, 0.05, 0.5, 1.1, M.acrylic);
       addStaticBox(-2.9, 0.5, CHUTE.edge, 1.1, 0.5, 0.05, M.acrylic);
 
@@ -471,7 +1073,9 @@
       marqueeCanvas.height = 176;
       const marqueeTex = new THREE.CanvasTexture(marqueeCanvas);
       marqueeTex.colorSpace = THREE.SRGBColorSpace;
-      function drawMarquee() {
+      let marqueeText = "START CLAW";
+      function drawMarquee(text = marqueeText) {
+        marqueeText = text;
         const c = marqueeCanvas.getContext("2d");
         c.fillStyle = "#1f6f6b";
         c.fillRect(0, 0, 1024, 176);
@@ -482,9 +1086,9 @@
         c.textAlign = "center";
         c.textBaseline = "middle";
         c.fillStyle = "#3a2a1a";
-        c.fillText("START CLAW", 518, 96);
+        c.fillText(text, 518, 96);
         c.fillStyle = "#ffd75e";
-        c.fillText("START CLAW", 512, 90);
+        c.fillText(text, 512, 90);
         c.font = "56px serif";
         c.fillText("🧸", 80, 92);
         c.fillText("🧸", 944, 92);
@@ -561,21 +1165,6 @@
         M.black,
       );
       scene.add(cable);
-
-      // Alignment aid: a ring where the claw would land.
-      const marker = new THREE.Mesh(
-        new THREE.RingGeometry(0.28, 0.4, 32),
-        new THREE.MeshBasicMaterial({
-          color: 0xffd75e,
-          transparent: true,
-          opacity: 0.85,
-          depthWrite: false,
-        }),
-      );
-      marker.rotation.x = -Math.PI / 2;
-      scene.add(marker);
-      const raycaster = new THREE.Raycaster();
-      const DOWN = new THREE.Vector3(0, -1, 0);
 
       // ---------- claw ----------
 
@@ -688,59 +1277,54 @@
         }
       }
 
-      // ---------- bears ----------
+      // ---------- plushies ----------
 
       const sphereGeo = new THREE.SphereGeometry(1, 20, 14);
-      const bears = [];
-      const BEAR_PARTS = [
-        [0.42, 0, 0, 0],
-        [0.32, 0, 0.62, 0],
-        [0.12, 0.22, 0.9, 0],
-        [0.12, -0.22, 0.9, 0],
-        [0.15, 0.44, 0.12, 0.06],
-        [0.15, -0.44, 0.12, 0.06],
-        [0.17, 0.22, -0.38, 0.14],
-        [0.17, -0.22, -0.38, 0.14],
-      ];
-      const muzzleMat = std(0xf3dfc1, 0.95);
-
-      function pickType() {
-        const total = BEAR_TYPES.reduce((s, t) => s + t.weight, 0);
-        let r = Math.random() * total;
-        return BEAR_TYPES.find((t) => (r -= t.weight) < 0) ?? BEAR_TYPES[0];
+      const coneGeo = new THREE.ConeGeometry(1, 2, 14);
+      const DECO = {
+        cream: std(0xfff4e2, 0.95),
+        pink: std(0xf7a8b8, 0.9),
+        dark: M.black,
+      };
+      for (const t of TIERS) {
+        t.mats = {
+          // The warm lamp and tone mapping wash pastels out, so the 3D fur gets a little extra saturation.
+          fur: std(new THREE.Color(t.color).offsetHSL(0, 0.25, -0.05), 0.95),
+          accent: std(
+            new THREE.Color(t.color).lerp(new THREE.Color(0x3a2a1a), 0.22),
+            0.95,
+          ),
+        };
       }
+      const plushies = [];
+      const pick = (list) => list[Math.floor(Math.random() * list.length)];
 
-      function addBear(type, x, y, z) {
+      function addPlush(tier, animal, x, y, z) {
         const body = new CANNON.Body({
           mass: 1,
           material: mats.prize,
           collisionFilterGroup: G_PRIZE,
-          collisionFilterMask: G_STATIC | G_PRIZE | G_CLAW,
+          collisionFilterMask: PRIZE_MASK,
           linearDamping: 0.15,
           angularDamping: 0.3,
         });
         const group = new THREE.Group();
-        const fur = std(type.color, 0.95);
-        for (const [r, px, py, pz] of BEAR_PARTS) {
-          body.addShape(new CANNON.Sphere(r), new CANNON.Vec3(px, py, pz));
-          const m = new THREE.Mesh(sphereGeo, fur);
-          m.scale.setScalar(r);
-          m.position.set(px, py, pz);
-          m.castShadow = true;
+        for (const p of animal.parts) {
+          if (p.solid)
+            body.addShape(
+              new CANNON.Sphere(p.r),
+              new CANNON.Vec3(p.x, p.y, p.z),
+            );
+          if (!p.visible) continue;
+          const m = new THREE.Mesh(
+            p.cone ? coneGeo : sphereGeo,
+            tier.mats[p.mat] ?? DECO[p.mat],
+          );
+          m.scale.set(p.r * p.s[0], p.r * p.s[1], p.r * p.s[2]);
+          m.position.set(p.x, p.y, p.z);
+          if (p.rot) m.rotation.set(...p.rot);
+          m.castShadow = p.mat === "fur" || p.mat === "accent";
           m.receiveShadow = true;
-          group.add(m);
-        }
-        const deco = [
-          [muzzleMat, 0.13, 0, 0.55, 0.26],
-          [M.black, 0.05, 0, 0.6, 0.38],
-          [M.black, 0.04, 0.11, 0.7, 0.28],
-          [M.black, 0.04, -0.11, 0.7, 0.28],
-          [muzzleMat, 0.26, 0, -0.02, 0.24],
-        ];
-        for (const [mat, r, px, py, pz] of deco) {
-          const m = new THREE.Mesh(sphereGeo, mat);
-          m.scale.set(r, r, r * 0.6);
-          m.position.set(px, py, pz);
           group.add(m);
         }
         body.position.set(x, y, z);
@@ -751,26 +1335,74 @@
         );
         world.addBody(body);
         scene.add(group);
-        bears.push({ body, group, type });
+        plushies.push({ body, group, tier, animal, ghost: false });
       }
 
-      function removeBear(bear) {
-        world.removeBody(bear.body);
-        scene.remove(bear.group);
-        bears.splice(bears.indexOf(bear), 1);
+      function removePlush(plush) {
+        world.removeBody(plush.body);
+        scene.remove(plush.group);
+        plushies.splice(plushies.indexOf(plush), 1);
       }
 
       function restock() {
-        while (bears.length) removeBear(bears[0]);
-        const cells = [-2.7, -0.9, 0.9, 2.7];
-        for (const cx of cells) {
-          for (const cz of cells) {
+        while (plushies.length) removePlush(plushies[0]);
+        const stock = TIERS.flatMap((t) => Array(t.count).fill(t));
+        const cells = [];
+        for (const cx of [-2.7, -0.9, 0.9, 2.7]) {
+          for (const cz of [-2.7, -0.9, 0.9, 2.7]) {
             if (cx < -CHUTE.edge && cz > CHUTE.edge) continue;
-            const j = () => (Math.random() - 0.5) * 0.6;
-            addBear(pickType(), cx + j(), 1.0 + Math.random() * 0.8, cz + j());
+            cells.push([cx, cz]);
           }
         }
-        setState("settle", "Restocking bears...");
+        cells.sort(() => Math.random() - 0.5);
+        const j = () => (Math.random() - 0.5) * 0.6;
+        stock.forEach((tier, i) => {
+          const [cx, cz] = cells[i];
+          addPlush(
+            tier,
+            pick(ANIMALS),
+            cx + j(),
+            1.0 + Math.random() * 0.8,
+            cz + j(),
+          );
+        });
+      }
+
+      // ---------- high scores ----------
+
+      const SCORE_KEY = "startclaw.highscores.v1";
+      const BOARD_SIZE = 5;
+      function loadScores() {
+        try {
+          const list = JSON.parse(localStorage.getItem(SCORE_KEY));
+          if (!Array.isArray(list)) return [];
+          return list
+            .filter(
+              (s) =>
+                typeof s?.score === "number" && typeof s?.name === "string",
+            )
+            .sort((a, b) => b.score - a.score)
+            .slice(0, BOARD_SIZE);
+        } catch {
+          return [];
+        }
+      }
+      function saveScore(name, score) {
+        const entry = { name, score, date: Date.now() };
+        const list = [...loadScores(), entry]
+          .sort((a, b) => b.score - a.score)
+          .slice(0, BOARD_SIZE);
+        try {
+          localStorage.setItem(SCORE_KEY, JSON.stringify(list));
+        } catch {}
+        return entry;
+      }
+      function makesBoard(score) {
+        const list = loadScores();
+        return (
+          score > 0 &&
+          (list.length < BOARD_SIZE || score > list[list.length - 1].score)
+        );
       }
 
       // ---------- input ----------
@@ -785,15 +1417,25 @@
         "Space",
       ];
       addEventListener("keydown", (e) => {
+        if (e.target instanceof HTMLInputElement) return;
         if (GAME_KEYS.includes(e.code)) e.preventDefault();
+        if (game.paused) {
+          if (e.code === "Enter" || e.code === "KeyY") answerRestock(true);
+          else if (e.code === "Escape" || e.code === "KeyN")
+            answerRestock(false);
+          return;
+        }
+        if (game.mode !== "play") {
+          const ready =
+            (game.mode === "title" || game.mode === "over") &&
+            performance.now() - game.modeAt > 1200;
+          if (ready && !e.repeat && (e.code === "Space" || e.code === "Enter"))
+            startGame();
+          return;
+        }
         if (!e.repeat) pressed[e.code] = true;
         keys[e.code] = true;
-        if (
-          e.code === "KeyR" &&
-          !e.repeat &&
-          (game.state === "aim" || game.state === "settle")
-        )
-          restock();
+        if (e.code === "KeyR" && !e.repeat) askRestock();
       });
       addEventListener("keyup", (e) => (keys[e.code] = false));
 
@@ -819,8 +1461,11 @@
         };
       }
 
+      const isUi = (t) =>
+        t instanceof Element && t.closest("button, input, .overlay");
+
       addEventListener("pointerdown", (e) => {
-        if (drag || (e.target instanceof Element && e.target.closest("button")))
+        if (drag || isUi(e.target) || game.mode !== "play" || game.paused)
           return;
         e.preventDefault();
         drag = {
@@ -857,9 +1502,9 @@
       addEventListener("pointercancel", endDrag);
 
       // iOS Safari ignores user-scalable=no, so quick taps double-tap-zoom and two fingers pinch.
-      // Cancelling the touch events stops that; pointer events still fire. Buttons keep their clicks.
+      // Cancelling the touch events stops that; pointer events still fire. Buttons and inputs keep working.
       const blockZoom = (e) => {
-        if (!(e.target instanceof Element && e.target.closest("button")))
+        if (!(e.target instanceof Element && e.target.closest("button, input")))
           e.preventDefault();
       };
       for (const type of ["touchstart", "touchmove", "touchend"]) {
@@ -868,20 +1513,319 @@
       for (const type of ["gesturestart", "gesturechange", "dblclick"]) {
         document.addEventListener(type, (e) => e.preventDefault());
       }
-      document.getElementById("restock").addEventListener("click", () => {
-        if (game.state === "aim" || game.state === "settle") restock();
-      });
 
-      // ---------- game state ----------
+      // ---------- HUD ----------
 
       const statusEl = document.getElementById("status");
       const scoreEl = document.getElementById("score");
+      const heartsEl = document.getElementById("hearts");
+      const bestEl = document.getElementById("best");
+      const leftEl = document.getElementById("left");
+      const streakEl = document.getElementById("streak");
+      const popupsEl = document.getElementById("popups");
+      const overlayEl = document.getElementById("overlay");
+      const panelEl = document.getElementById("panel");
+      const confirmEl = document.getElementById("confirm");
+
+      const fmt = (n) => Math.round(n).toLocaleString("en-US");
+      const esc = (s) =>
+        String(s).replace(
+          /[&<>"']/g,
+          (c) =>
+            ({
+              "&": "&amp;",
+              "<": "&lt;",
+              ">": "&gt;",
+              '"': "&quot;",
+              "'": "&#39;",
+            })[c],
+        );
+
+      const HEART_RECTS = [
+        ".XX.XX.",
+        "XXXXXXX",
+        "XXXXXXX",
+        ".XXXXX.",
+        "..XXX..",
+        "...X...",
+      ]
+        .flatMap((row, y) =>
+          [...row].map((c, x) =>
+            c === "X"
+              ? `<rect x="${x}" y="${y}" width="1.02" height="1.02"/>`
+              : "",
+          ),
+        )
+        .join("");
+      const heartSvg = (cls = "") =>
+        `<svg class="${cls}" viewBox="0 0 7 6" shape-rendering="crispEdges">${HEART_RECTS}</svg>`;
+
+      function renderHearts() {
+        heartsEl.innerHTML = Array.from({ length: RULES.lives }, (_, i) => {
+          const f = Math.max(0, Math.min(1, game.lives - i));
+          return `<span class="heart">${heartSvg("empty")}<span class="fill" style="width:${f * 100}%">${heartSvg()}</span></span>`;
+        }).join("");
+      }
+
+      const streakMult = () =>
+        Math.min(RULES.streakMax, 1 + RULES.streakStep * game.streak);
+
+      function renderHud() {
+        renderHearts();
+        const best = Math.max(loadScores()[0]?.score ?? 0, game.score);
+        bestEl.textContent = `BEST ${fmt(best)}`;
+        leftEl.textContent = `${plushies.length} LEFT`;
+        streakEl.textContent =
+          game.streak > 0 ? `NEXT CATCH x${streakMult()}` : "";
+      }
+
+      document.getElementById("legend").innerHTML = TIERS.map(
+        (t) =>
+          `<span><i class="dot" style="background:${t.css}"></i>${t.points}</span>`,
+      ).join("");
+
+      function popup(main, detail, color, big = false) {
+        const el = document.createElement("div");
+        el.className = big ? "popup big" : "popup";
+        el.style.color = color;
+        el.innerHTML = `<b>${main}</b>${detail ? `<small>${detail}</small>` : ""}`;
+        popupsEl.appendChild(el);
+        el.addEventListener("animationend", () => el.remove());
+      }
+
+      // The score counts up toward the real value instead of jumping.
+      let shownScore = 0;
+      function tallyScore(dt) {
+        if (shownScore === game.score) return;
+        const step = Math.max(
+          1,
+          (game.score - shownScore) * Math.min(1, dt * 5),
+        );
+        shownScore =
+          game.score < shownScore
+            ? game.score
+            : Math.min(game.score, shownScore + step);
+        scoreEl.textContent = fmt(shownScore);
+      }
+      function bumpScore() {
+        scoreEl.classList.add("bump");
+        requestAnimationFrame(() =>
+          requestAnimationFrame(() => scoreEl.classList.remove("bump")),
+        );
+      }
+
+      // ---------- confetti ----------
+
+      const fxCanvas = document.getElementById("fx");
+      const fx = fxCanvas.getContext("2d");
+      const confetti = [];
+      const CONFETTI_COLORS = [
+        ...TIERS.map((t) => t.css),
+        "#ffd75e",
+        "#fff4dc",
+      ];
+      function sizeFx() {
+        const d = Math.min(devicePixelRatio, 2);
+        fxCanvas.width = innerWidth * d;
+        fxCanvas.height = innerHeight * d;
+        fx.setTransform(d, 0, 0, d, 0, 0);
+      }
+      const piece = (x, y, vx, vy, life) => ({
+        x,
+        y,
+        vx,
+        vy,
+        life,
+        rot: Math.random() * 6.28,
+        spin: (Math.random() - 0.5) * 12,
+        w: 6 + Math.random() * 6,
+        h: 4 + Math.random() * 4,
+        color: pick(CONFETTI_COLORS),
+      });
+      function burst(x, y, n, power = 1) {
+        for (let i = 0; i < n; i++) {
+          const a = -Math.PI / 2 + (Math.random() - 0.5) * 2.4;
+          const s = (200 + Math.random() * 380) * power;
+          confetti.push(
+            piece(x, y, Math.cos(a) * s, Math.sin(a) * s, 3 + Math.random()),
+          );
+        }
+      }
+      function rain(n) {
+        for (let i = 0; i < n; i++) {
+          const p = piece(
+            Math.random() * innerWidth,
+            -20 - Math.random() * innerHeight * 1.5,
+            (Math.random() - 0.5) * 80,
+            80 + Math.random() * 80,
+            9,
+          );
+          confetti.push(p);
+        }
+      }
+      let fxDirty = false;
+      function stepFx(dt) {
+        if (!confetti.length && !fxDirty) return;
+        fx.clearRect(0, 0, innerWidth, innerHeight);
+        fxDirty = confetti.length > 0;
+        const drag = Math.pow(0.35, dt);
+        for (let i = confetti.length - 1; i >= 0; i--) {
+          const p = confetti[i];
+          p.life -= dt;
+          p.vx *= drag;
+          p.vy = p.vy * drag + 500 * dt;
+          p.x += p.vx * dt + Math.sin(p.rot) * 20 * dt;
+          p.y += p.vy * dt;
+          p.rot += p.spin * dt;
+          if (p.life <= 0 || p.y > innerHeight + 30) {
+            confetti.splice(i, 1);
+            continue;
+          }
+          fx.save();
+          fx.globalAlpha = Math.min(1, p.life);
+          fx.translate(p.x, p.y);
+          fx.rotate(p.rot);
+          fx.fillStyle = p.color;
+          fx.fillRect(
+            -p.w / 2,
+            (-p.h / 2) * Math.cos(p.rot * 2),
+            p.w,
+            p.h * Math.cos(p.rot * 2),
+          );
+          fx.restore();
+        }
+      }
+      function popupPoint() {
+        const r = popupsEl.getBoundingClientRect();
+        return [r.left, r.top + 20];
+      }
+
+      // ---------- overlays ----------
+
+      function setMode(mode) {
+        game.mode = mode;
+        game.modeAt = performance.now();
+        document.body.dataset.mode = mode;
+      }
+
+      const tiersHtml = () =>
+        `<div class="tiers">${TIERS.map(
+          (t) =>
+            `<div><i class="dot" style="background:${t.css}"></i>${t.name.toUpperCase()}<b>${t.points}</b></div>`,
+        ).join("")}</div><p>Easy &rarr; hard. Cherry is the tough one.</p>`;
+
+      function boardHtml(pending, highlight) {
+        const rows = loadScores();
+        if (pending) rows.push({ name: "???", score: pending, you: true });
+        rows.sort((a, b) => b.score - a.score);
+        if (!rows.length)
+          return `<p class="empty">No scores yet. Be the first!</p>`;
+        return `<ol class="board">${rows
+          .slice(0, BOARD_SIZE)
+          .map(
+            (r, i) =>
+              `<li class="${r.you || r.date === highlight ? "you" : ""}"><span>${i + 1}.</span><span>${esc(r.name)}</span><span>${fmt(r.score)}</span></li>`,
+          )
+          .join("")}</ol>`;
+      }
+
+      function showPanel(html) {
+        panelEl.innerHTML = html;
+        overlayEl.hidden = false;
+        panelEl.scrollTop = 0;
+      }
+
+      function renderTitle() {
+        showPanel(`
+          <h1>START CLAW</h1>
+          <p>Grab plushies, win the reel, drop them in the chute.</p>
+          ${tiersHtml()}
+          <p>Missed grab: -&frac12; ${heartSvg("inline")} &nbsp; Lost reel or dropped: -1 ${heartSvg("inline")}</p>
+          <h2>HIGH SCORES</h2>
+          ${boardHtml()}
+          <button class="btn big" type="button" data-action="play">${TOUCH ? "TAP TO PLAY" : "PLAY (SPACE)"}</button>`);
+      }
+
+      function renderOver() {
+        const r = game.result;
+        const entering = r.highscore && !r.saved;
+        const head = r.cleared
+          ? `<h1 class="win">MACHINE CLEARED!</h1><p>Every plushie found a home. Clear bonus +${fmt(r.bonus)}</p>`
+          : r.highscore
+            ? `<h1 class="lost">YOU LOST THE GAME,</h1><p class="hey">but hey this is a highscore</p>`
+            : `<h1 class="lost">YOU LOST THE GAME</h1>`;
+        const form = entering
+          ? `<form class="name"><label for="name">PUT YOUR NAME ON THE LIST</label><div class="row"><input id="name" name="name" maxlength="10" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="NAME" /><button class="btn" type="submit">SAVE</button></div></form>`
+          : "";
+        showPanel(`
+          ${head}
+          <div class="final">SCORE<b>${fmt(r.score)}</b></div>
+          ${r.top && !r.saved ? `<p class="hey">NEW #1 HIGH SCORE!</p>` : ""}
+          ${form}
+          <h2>${entering ? "PREVIOUS WINNERS" : "HIGH SCORES"}</h2>
+          ${boardHtml(entering ? r.score : 0, r.savedDate)}
+          <button class="btn big" type="button" data-action="play">${TOUCH ? "PLAY AGAIN" : "PLAY AGAIN (SPACE)"}</button>`);
+        if (entering && !TOUCH) panelEl.querySelector("input").focus();
+      }
+
+      function submitName(fallback) {
+        const r = game.result;
+        if (!r?.highscore || r.saved) return;
+        const input = panelEl.querySelector("input");
+        const name = (input?.value.trim() || fallback || "")
+          .toUpperCase()
+          .slice(0, 10);
+        if (!name) return input?.focus();
+        r.savedDate = saveScore(name, r.score).date;
+        r.saved = true;
+      }
+
+      panelEl.addEventListener("submit", (e) => {
+        e.preventDefault();
+        submitName();
+        renderOver();
+        renderHud();
+      });
+      panelEl.addEventListener("click", (e) => {
+        if (e.target.closest("[data-action=play]")) startGame();
+      });
+
+      function askRestock() {
+        if (game.mode !== "play" || game.paused) return;
+        game.paused = true;
+        keys.Space = false;
+        confirmEl.hidden = false;
+        document.getElementById("confirm-no").focus();
+      }
+      function answerRestock(yes) {
+        game.paused = false;
+        confirmEl.hidden = true;
+        document.activeElement?.blur?.();
+        if (yes) startGame();
+      }
+      document.getElementById("restock").addEventListener("click", askRestock);
+      document
+        .getElementById("confirm-yes")
+        .addEventListener("click", () => answerRestock(true));
+      document
+        .getElementById("confirm-no")
+        .addEventListener("click", () => answerRestock(false));
+
+      // ---------- game state ----------
+
       const game = {
+        mode: "title",
+        modeAt: 0,
+        paused: false,
         state: "settle",
         t: 0,
         held: null,
         mg: null,
-        wins: 0,
+        score: 0,
+        lives: RULES.lives,
+        streak: 0,
+        turn: null,
+        result: null,
       };
 
       function setState(state, msg) {
@@ -890,37 +1834,187 @@
         if (msg !== undefined) statusEl.textContent = msg;
       }
 
+      function startGame() {
+        // Leaving the end screen without typing a name still keeps the score.
+        if (game.result) submitName("PLAYER");
+        overlayEl.hidden = true;
+        setMode("play");
+        Object.assign(game, {
+          score: 0,
+          lives: RULES.lives,
+          streak: 0,
+          held: null,
+          mg: null,
+          turn: null,
+          result: null,
+        });
+        shownScore = 0;
+        scoreEl.textContent = "0";
+        claw.closing = false;
+        drawMarquee("START CLAW");
+        restock();
+        setState("home", "Restocking plushies...");
+        renderHud();
+      }
+
+      function awardPrize(plush) {
+        if (game.mode !== "play") return;
+        const perfect =
+          plush === game.held &&
+          game.mg?.result === "caught" &&
+          game.mg.perfect;
+        const mult = streakMult();
+        const pts = Math.round(
+          plush.tier.points * (perfect ? 1 + RULES.perfectBonus : 1) * mult,
+        );
+        game.score += pts;
+        game.streak++;
+        if (game.turn) game.turn.prizes++;
+        const tags = [
+          `${plush.tier.name} ${plush.animal.name}`.toUpperCase(),
+          perfect && "PERFECT x1.5",
+          mult > 1 && `STREAK x${mult}`,
+        ].filter(Boolean);
+        popup(`+${fmt(pts)}`, tags.join(" · "), plush.tier.css);
+        const [px, py] = popupPoint();
+        burst(px, py, 10 + TIERS.indexOf(plush.tier) * 8, 0.8);
+        bumpScore();
+        statusEl.textContent = `You won a ${plush.tier.name} ${plush.animal.name}!`;
+        renderHud();
+      }
+
+      function loseLife(cost, why) {
+        game.lives = Math.max(0, game.lives - cost);
+        game.streak = 0;
+        popup(
+          `-${cost === 0.5 ? "&frac12;" : cost} ${heartSvg("inline")}`,
+          why,
+          "#f7a8b8",
+        );
+        heartsEl.classList.remove("hurt");
+        void heartsEl.offsetWidth;
+        heartsEl.classList.add("hurt");
+        renderHud();
+      }
+
+      function endTurn() {
+        const turn = game.turn;
+        game.held = null;
+        game.mg = null;
+        game.turn = null;
+        if (turn && turn.prizes === 0) {
+          if (turn.kind === "miss") loseLife(RULES.missCost, "MISSED THE GRAB");
+          else
+            loseLife(
+              RULES.failCost,
+              turn.result === "escaped" ? "IT GOT AWAY" : "DROPPED IT",
+            );
+        }
+        if (!plushies.length) return clearMachine();
+        if (game.lives <= 0) return gameOver(false);
+        setState("aim", AIM_MSG);
+      }
+
+      function clearMachine() {
+        const bonus = RULES.clearBonus + RULES.heartBonus * game.lives;
+        game.score += bonus;
+        setMode("clear");
+        setState("idle", "You cleared the whole machine!");
+        drawMarquee("CLEARED!");
+        popup("CLEARED!", `BONUS +${fmt(bonus)}`, "#ffd75e", true);
+        bumpScore();
+        const [px, py] = popupPoint();
+        burst(px, py, 120, 1.3);
+        setTimeout(
+          () => burst(innerWidth * 0.2, innerHeight * 0.6, 80, 1.4),
+          500,
+        );
+        setTimeout(
+          () => burst(innerWidth * 0.8, innerHeight * 0.6, 80, 1.4),
+          900,
+        );
+        rain(260);
+        setTimeout(() => gameOver(true, bonus), 3600);
+      }
+
+      function gameOver(cleared, bonus = 0) {
+        setMode("over");
+        if (!cleared) setState("idle", "Out of hearts.");
+        game.result = {
+          cleared,
+          bonus,
+          score: game.score,
+          highscore: makesBoard(game.score),
+          top: game.score > (loadScores()[0]?.score ?? 0),
+          saved: false,
+        };
+        if (game.result.highscore) rain(cleared ? 160 : 90);
+        renderOver();
+        renderHud();
+      }
+
       const horizDist = (b) =>
         Math.hypot(
           b.position.x - hub.position.x,
           b.position.z - hub.position.z,
         );
-      const isHeld = (bear) =>
-        bears.includes(bear) &&
-        bear.body.position.y > 2.6 &&
-        horizDist(bear.body) < 1.4;
+      const isHeld = (plush) =>
+        plushies.includes(plush) &&
+        plush.body.position.y > 2.6 &&
+        horizDist(plush.body) < 1.4;
 
-      function findHeldBear() {
+      function findHeldPlush() {
         let best = null;
-        for (const b of bears) {
+        for (const b of plushies) {
           if (isHeld(b) && (!best || b.body.position.y > best.body.position.y))
             best = b;
         }
         return best;
       }
 
-      // The real cabinet stops the drop when the cable goes slack. Here: the hub bumps a prize,
+      // The real cabinet stops the drop when the cable goes slack. Here: the hub lands on a prize,
       // a prong hits the floor, or a prong is splayed open by what it landed on.
       function dropBlocked() {
         if (hub.position.y <= CLAW.minY) return true;
         for (const c of world.contacts) {
           const pair = [c.bi, c.bj];
-          if (pair.includes(hub)) return true;
+          if (pair.includes(hub)) {
+            const other = pair.find((b) => b !== hub);
+            if (other.position.y < hub.position.y - 0.1) return true;
+          }
           const prong = pair.find((b) => prongBodies.has(b));
-          if (prong && pair.some((b) => b.type === CANNON.Body.STATIC))
-            return true;
+          // Only the floor and the chute guard count. Near the glass the open prongs graze the walls,
+          // which used to stop the drop at the very top once the last plushies had drifted to the edges.
+          const ground = pair.find(
+            (b) => b.type === CANNON.Body.STATIC && b.position.y < 1,
+          );
+          if (prong && ground) return true;
         }
         return prongs.some((p) => p.angle > CLAW.openAngle + 0.25);
+      }
+
+      // Opening the prongs isn't always enough: a plushie wedged between them used to ride along forever,
+      // trip dropBlocked() on every later drop and turn each grab into a short one. On release, anything
+      // still in the claw stops colliding with it until it has fallen clear.
+      function letGo() {
+        for (const b of plushies) {
+          if (horizDist(b.body) < 1.5 && b.body.position.y > 1.5) {
+            b.body.collisionFilterMask = G_STATIC | G_PRIZE;
+            b.ghost = true;
+          }
+        }
+      }
+      function restoreGhosts() {
+        for (const b of plushies) {
+          if (
+            b.ghost &&
+            (b.body.position.y < hub.position.y - 2.4 ||
+              horizDist(b.body) > 1.8)
+          ) {
+            b.body.collisionFilterMask = PRIZE_MASK;
+            b.ghost = false;
+          }
+        }
       }
 
       function steerTo(v, tx, tz, speed, dt) {
@@ -934,11 +2028,13 @@
         return false;
       }
 
-      function startReel(bear) {
-        const t = bear.type;
-        game.held = bear;
+      function startReel(plush) {
+        const t = plush.tier;
+        game.held = plush;
+        game.turn.kind = "reel";
         game.mg = {
-          type: t,
+          tier: t,
+          animal: plush.animal,
           barPos: 0,
           barVel: 0,
           fishPos: t.barHeight / 2,
@@ -952,20 +2048,21 @@
         };
         setState(
           "reel",
-          `Hooked ${t.name}! ${REEL_HINT} to keep the bear in the green bar.`,
+          `Hooked a ${t.name} ${plush.animal.name} (${t.points} pts)! ${REEL_HINT} to keep it in the green bar.`,
         );
       }
 
       function endReel(result, msg) {
         game.mg.result = result;
+        game.turn.result = result;
         if (result === "caught") claw.torque = GRIP.max;
         if (result === "escaped") claw.closing = false;
         setState("return", msg);
       }
 
-      function stepBear(mg, dt) {
-        const d = mg.type.difficulty / 100;
-        const list = mg.type.behaviors;
+      function stepFish(mg, dt) {
+        const d = mg.tier.difficulty / 100;
+        const list = mg.tier.behaviors;
         if (list.length > 1 && Math.random() < dt * 0.5) {
           mg.behavior = list[Math.floor(Math.random() * list.length)];
         }
@@ -1001,7 +2098,7 @@
         mg.t += dt;
         mg.barVel += (keys.Space ? MG.lift : -MG.gravity) * dt;
         mg.barPos += mg.barVel * dt;
-        const top = 1 - mg.type.barHeight;
+        const top = 1 - mg.tier.barHeight;
         if (mg.barPos < 0) {
           mg.barPos = 0;
           mg.barVel = -mg.barVel * MG.bounce;
@@ -1009,10 +2106,10 @@
           mg.barPos = top;
           mg.barVel = 0;
         }
-        stepBear(mg, dt);
+        stepFish(mg, dt);
         const inBar =
           mg.fishPos >= mg.barPos &&
-          mg.fishPos <= mg.barPos + mg.type.barHeight;
+          mg.fishPos <= mg.barPos + mg.tier.barHeight;
         mg.progress += (inBar ? MG.fillRate : -MG.drainRate) * dt;
         if (!inBar) mg.perfect = false;
         mg.progress = Math.min(1, Math.max(0, mg.progress));
@@ -1041,9 +2138,16 @@
         const v = hub.velocity;
         v.set(0, 0, 0);
         switch (game.state) {
+          case "home":
+            claw.closing = false;
+            if (hub.position.y < CLAW.topY - 0.01)
+              v.y = Math.min(CLAW.liftSpeed, (CLAW.topY - hub.position.y) / dt);
+            else if (steerTo(v, CHUTE.x, CHUTE.z, CLAW.moveSpeed, dt))
+              setState("settle");
+            break;
           case "settle":
             claw.closing = false;
-            if (game.t > 1.5) setState("aim", AIM_MSG);
+            if (game.t > 1.5 && game.mode === "play") setState("aim", AIM_MSG);
             break;
           case "aim": {
             const ix = (keys.ArrowRight ? 1 : 0) - (keys.ArrowLeft ? 1 : 0);
@@ -1060,7 +2164,10 @@
               v.x = clampAxis(hub.position.x, ix * CLAW.moveSpeed);
               v.z = clampAxis(hub.position.z, iz * CLAW.moveSpeed);
             }
-            if (pressed.Space) setState("drop", "Dropping...");
+            if (pressed.Space) {
+              game.turn = { kind: "miss", prizes: 0, result: null };
+              setState("drop", "Dropping...");
+            }
             break;
           }
           case "drop":
@@ -1069,7 +2176,7 @@
             break;
           case "close":
             claw.closing = true;
-            // Hold tight on the way up; the reel meter only takes over once the bear is at the top.
+            // Hold tight on the way up; the reel meter only takes over once the plushie is at the top.
             claw.torque = GRIP.max;
             if (game.t > CLAW.closeTime) setState("lift", "Lifting...");
             break;
@@ -1079,8 +2186,8 @@
             break;
           case "top":
             if (game.t > CLAW.topPause) {
-              const bear = findHeldBear();
-              if (bear) startReel(bear);
+              const plush = findHeldPlush();
+              if (plush) startReel(plush);
               else setState("return", "Missed! Nothing in the claw.");
             }
             break;
@@ -1088,25 +2195,29 @@
             stepReel(dt);
             break;
           case "return":
-            if (steerTo(v, CHUTE.x, CHUTE.z, CLAW.moveSpeed * 0.8, dt))
+            if (steerTo(v, CHUTE.x, CHUTE.z, CLAW.moveSpeed * 0.8, dt)) {
+              claw.closing = false;
+              letGo();
               setState("release");
-            break;
-          case "release":
-            claw.closing = false;
-            if (game.t > CLAW.releaseTime) {
-              game.held = null;
-              game.mg = null;
-              setState("aim", AIM_MSG);
             }
             break;
+          case "release": {
+            // Give whatever we let go of time to land before judging the turn.
+            const held = game.held;
+            const falling =
+              held && plushies.includes(held) && held.body.position.y > 0.8;
+            if (game.t > CLAW.releaseTime && (!falling || game.t > 3))
+              endTurn();
+            break;
+          }
         }
 
-        for (const b of [...bears]) {
+        restoreGhosts();
+        for (const b of [...plushies]) {
           if (b.body.position.y < -1.5) {
-            game.wins++;
-            scoreEl.textContent = `PRIZES ${game.wins}`;
-            statusEl.textContent = `You won ${b.type.name}!`;
-            removeBear(b);
+            awardPrize(b);
+            removePlush(b);
+            renderHud();
           }
         }
         for (const k in pressed) delete pressed[k];
@@ -1120,6 +2231,7 @@
       const TRACK = { x: 14, y: 12, w: 110, h: SH - 24 };
       const METER = { x: 136, y: 12, w: 20, h: SH - 24 };
       const IDLE_TEXT = {
+        home: ["RESET"],
         settle: ["STOCKING"],
         aim: ["ALIGN", "", TOUCH ? "TAP" : "SPACE", "TO DROP"],
         drop: ["DROP!"],
@@ -1129,6 +2241,65 @@
         return: ["MISSED"],
         release: ["OPEN"],
       };
+      const MODE_TEXT = {
+        title: ["PRESS", "START"],
+        clear: ["YOU", "WIN!"],
+        over: ["GAME", "OVER"],
+      };
+
+      // Pixel-ish portrait of the hooked plushie, drawn in its tier colour.
+      function drawPlushIcon(c, icon, color, x, y, s) {
+        c.fillStyle = color;
+        c.strokeStyle = "#3a2a1a";
+        c.lineWidth = 2;
+        const blob = (bx, by, rx, ry, rot = 0) => {
+          c.beginPath();
+          c.ellipse(bx, by, rx, ry, rot, 0, Math.PI * 2);
+          c.fill();
+          c.stroke();
+        };
+        if (icon === "bear")
+          for (const k of [-1, 1])
+            blob(x + k * 0.72 * s, y - 0.72 * s, 0.38 * s, 0.38 * s);
+        if (icon === "bunny")
+          for (const k of [-1, 1])
+            blob(x + k * 0.38 * s, y - 1.2 * s, 0.24 * s, 0.7 * s, k * 0.15);
+        if (icon === "cat")
+          for (const k of [-1, 1]) {
+            c.beginPath();
+            c.moveTo(x + k * 0.95 * s, y - 0.25 * s);
+            c.lineTo(x + k * 0.8 * s, y - 1.25 * s);
+            c.lineTo(x + k * 0.2 * s, y - 0.85 * s);
+            c.closePath();
+            c.fill();
+            c.stroke();
+          }
+        if (icon === "axolotl")
+          for (const k of [-1, 1])
+            for (const a of [-0.6, 0, 0.6])
+              blob(
+                x + k * 1.25 * s,
+                y - 0.15 * s + a * 0.6 * s,
+                0.32 * s,
+                0.14 * s,
+                a * k,
+              );
+        blob(x, y, (icon === "axolotl" || icon === "cat" ? 1.15 : 1) * s, s);
+        if (icon === "dog")
+          for (const k of [-1, 1]) {
+            c.fillStyle = color;
+            blob(x + k * 0.95 * s, y + 0.05 * s, 0.3 * s, 0.6 * s, -k * 0.3);
+          }
+        c.fillStyle = "#3a2a1a";
+        for (const k of [-1, 1]) {
+          c.beginPath();
+          c.arc(x + k * 0.38 * s, y - 0.12 * s, 0.13 * s, 0, Math.PI * 2);
+          c.fill();
+        }
+        c.beginPath();
+        c.arc(x, y + 0.28 * s, 0.11 * s, 0, Math.PI * 2);
+        c.fill();
+      }
 
       function drawScreen() {
         const c = sctx;
@@ -1146,14 +2317,20 @@
         const mg = game.mg;
 
         if (mg) {
-          const bh = mg.type.barHeight * TRACK.h;
+          const bh = mg.tier.barHeight * TRACK.h;
           c.fillStyle = "rgba(94,224,94,0.55)";
           c.fillRect(TRACK.x + 4, y(mg.barPos) - bh, TRACK.w - 8, bh);
           c.strokeStyle = "#5ee05e";
           c.lineWidth = 2;
           c.strokeRect(TRACK.x + 4, y(mg.barPos) - bh, TRACK.w - 8, bh);
-          c.font = "24px serif";
-          c.fillText("🧸", TRACK.x + TRACK.w / 2, y(mg.fishPos) + 9);
+          drawPlushIcon(
+            c,
+            mg.animal.icon,
+            mg.tier.css,
+            TRACK.x + TRACK.w / 2,
+            y(mg.fishPos),
+            11,
+          );
           const p = mg.progress;
           c.fillStyle = `hsl(${p * 120},80%,50%)`;
           c.fillRect(
@@ -1170,6 +2347,7 @@
             TRACK.w * Math.max(0, 1 - mg.t / MG.timeLimit),
             4,
           );
+          c.font = '12px "Press Start 2P", monospace';
           if (mg.result) {
             const label = {
               caught: mg.perfect ? "PERFECT!" : "CAUGHT!",
@@ -1177,16 +2355,19 @@
               escaped: "ESCAPED",
               timeout: "TIME!",
             };
-            c.font = '12px "Press Start 2P", monospace';
             c.fillStyle = "#3a2a1a";
             c.fillText(label[mg.result], TRACK.x + TRACK.w / 2 + 2, 42);
             c.fillStyle = "#ffd75e";
             c.fillText(label[mg.result], TRACK.x + TRACK.w / 2, 40);
+          } else {
+            c.font = '8px "Press Start 2P", monospace';
+            c.fillStyle = mg.tier.css;
+            c.fillText(`${mg.tier.points} PTS`, TRACK.x + TRACK.w / 2, 34);
           }
         } else {
           c.font = '11px "Press Start 2P", monospace';
           c.fillStyle = "#ffd75e";
-          const lines = IDLE_TEXT[game.state] ?? [];
+          const lines = MODE_TEXT[game.mode] ?? IDLE_TEXT[game.state] ?? [];
           lines.forEach((l, i) =>
             c.fillText(l, TRACK.x + TRACK.w / 2, SH / 2 - 20 + i * 18),
           );
@@ -1196,8 +2377,8 @@
 
       // ---------- render sync ----------
 
-      function sync() {
-        for (const b of bears) {
+      function sync(now) {
+        for (const b of plushies) {
           b.group.position.copy(b.body.position);
           b.group.quaternion.copy(b.body.quaternion);
         }
@@ -1217,27 +2398,12 @@
           hub.position.z,
         );
 
-        marker.visible = game.state === "aim";
-        if (marker.visible) {
-          raycaster.set(
-            new THREE.Vector3(
-              hub.position.x,
-              hub.position.y - 1.6,
-              hub.position.z,
-            ),
-            DOWN,
-          );
-          const hit = raycaster.intersectObjects(
-            [...floorMeshes, ...bears.map((b) => b.group)],
-            true,
-          )[0];
-          if (hit)
-            marker.position.set(
-              hub.position.x,
-              hit.point.y + 0.03,
-              hub.position.z,
-            );
-        }
+        // The cabinet lamp slowly cycles through the pastels after a clear.
+        const party =
+          game.mode === "clear" ||
+          (game.mode === "over" && game.result?.cleared);
+        if (party) lamp.color.setHSL((now / 4000) % 1, 0.7, 0.75);
+        else lamp.color.setHex(LAMP_COLOR);
 
         const ix = (keys.ArrowRight ? 1 : 0) - (keys.ArrowLeft ? 1 : 0);
         const iz = (keys.ArrowDown ? 1 : 0) - (keys.ArrowUp ? 1 : 0);
@@ -1251,29 +2417,40 @@
       let acc = 0;
       let last = performance.now();
       function frame(now) {
-        acc += Math.min(0.1, (now - last) / 1000);
+        const dt = Math.min(0.1, (now - last) / 1000);
         last = now;
-        while (acc >= FIXED) {
-          tick(FIXED);
-          driveProngs();
-          world.step(FIXED);
-          acc -= FIXED;
+        if (!game.paused) {
+          acc += dt;
+          while (acc >= FIXED) {
+            tick(FIXED);
+            driveProngs();
+            world.step(FIXED);
+            acc -= FIXED;
+          }
         }
-        sync();
+        sync(now);
         drawScreen();
+        tallyScore(dt);
+        stepFx(dt);
         renderer.render(scene, camera);
         requestAnimationFrame(frame);
       }
 
-      document.fonts.load('16px "Press Start 2P"').then(drawMarquee);
+      addEventListener("resize", resize);
+      resize();
+      document.fonts.load('16px "Press Start 2P"').then(() => drawMarquee());
       restock();
+      setMode("title");
+      setState("settle", "Restocking plushies...");
+      renderHud();
+      renderTitle();
       requestAnimationFrame(frame);
 
       // Debug handle for playtesting from the console.
       window.__claw = {
         game,
         hub,
-        bears,
+        plushies,
         prongs,
         claw,
         keys,
@@ -1281,6 +2458,9 @@
         CLAW,
         GRIP,
         MG,
+        RULES,
+        TIERS,
+        startGame,
       };
     </script>
   </body>
