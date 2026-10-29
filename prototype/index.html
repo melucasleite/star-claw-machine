@@ -86,11 +86,34 @@
         align-items: center;
         gap: 12px;
       }
+      /* The reel game pops up in the middle of the screen, and only while something is hooked. */
       .carriage {
+        position: fixed;
+        left: 50%;
+        top: 50%;
+        z-index: 15;
         background: var(--wood);
         border: 4px solid var(--wood-dark);
-        border-radius: 12px;
-        padding: 14px 22px;
+        border-radius: 14px;
+        padding: 16px 24px;
+        box-shadow:
+          0 0 0 4px var(--mustard),
+          0 18px 40px rgba(0, 0, 0, 0.45);
+        transform: translate(-50%, -50%) scale(0.6);
+        opacity: 0;
+        visibility: hidden;
+        transition:
+          transform 0.25s ease-out,
+          opacity 0.2s ease-out,
+          visibility 0s 0.25s;
+      }
+      body.reeling .carriage {
+        transform: translate(-50%, -50%) scale(1);
+        opacity: 1;
+        visibility: visible;
+        transition:
+          transform 0.3s cubic-bezier(0.3, 1.5, 0.5, 1),
+          opacity 0.15s ease-out;
       }
       .bezel {
         background: var(--mustard);
@@ -100,8 +123,9 @@
       }
       #screen {
         display: block;
-        width: 170px;
-        height: 320px;
+        height: min(60vh, 480px);
+        width: auto;
+        aspect-ratio: 170 / 320;
         image-rendering: pixelated;
         touch-action: none;
       }
@@ -674,10 +698,17 @@
         }
         #hud {
           top: auto;
-          right: calc(8px + env(safe-area-inset-right));
-          bottom: calc(8px + env(safe-area-inset-bottom));
-          transform: scale(0.65);
-          transform-origin: bottom right;
+          right: calc(10px + env(safe-area-inset-right));
+          bottom: calc(12px + env(safe-area-inset-bottom));
+        }
+        #status {
+          max-width: 46vw;
+          min-height: 0;
+          font-size: 8px;
+          text-align: right;
+        }
+        .carriage {
+          padding: 10px 14px;
         }
         #sound {
           top: calc(12px + env(safe-area-inset-top));
@@ -713,8 +744,9 @@
         #hud {
           top: calc(8px + env(safe-area-inset-top));
           right: calc(8px + env(safe-area-inset-right));
-          transform: scale(0.55);
-          transform-origin: top right;
+        }
+        #screen {
+          height: 76vh;
         }
         #help {
           display: none;
@@ -2396,6 +2428,7 @@
         fetchWorld();
         sfx.coinIn();
         setMusicLevel(1);
+        showReel(false);
         overlayEl.hidden = true;
         setMode("play");
         Object.assign(game, {
@@ -2621,6 +2654,7 @@
           game.held = null;
           game.mg = null;
           game.turn = null;
+          showReel(false);
           setState("home", "Cashed out.");
           game.score += bonus;
           if (bonus)
@@ -2723,7 +2757,20 @@
         return false;
       }
 
+      // Keep the reel up a beat after it ends so the result registers, then tuck it away.
+      let reelHide = 0;
+      function showReel(on) {
+        clearTimeout(reelHide);
+        if (on) document.body.classList.add("reeling");
+        else
+          reelHide = setTimeout(
+            () => document.body.classList.remove("reeling"),
+            700,
+          );
+      }
+
       function startReel(plush) {
+        showReel(true);
         sfx.reelStart();
         setMusicLevel(0.45);
         const t = plush.tier;
@@ -2754,6 +2801,7 @@
         else if (result === "escaped") sfx.escaped();
         else sfx.slipped();
         setMusicLevel(1);
+        showReel(false);
         game.mg.result = result;
         game.turn.result = result;
         if (result === "caught") claw.torque = GRIP.max;
