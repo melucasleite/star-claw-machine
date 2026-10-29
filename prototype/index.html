@@ -7,7 +7,69 @@
       content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover"
     />
     <meta name="apple-mobile-web-app-capable" content="yes" />
-    <title>START CLAW</title>
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="Star Claw" />
+    <meta name="application-name" content="Star Claw" />
+    <title>Star Claw: a cozy knitted claw machine game</title>
+    <meta
+      name="description"
+      content="Grab knitted plushies in a free claw machine you play in the browser. Win the reel, fill your prize bag, collect all 50 and climb the world top 10. Works on phones and desktop."
+    />
+    <meta name="theme-color" content="#2b1d14" />
+    <link rel="canonical" href="https://star-claw-machine.vercel.app/" />
+    <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+    <link rel="icon" href="favicon-32.png" type="image/png" sizes="32x32" />
+    <link rel="apple-touch-icon" href="apple-touch-icon.png" />
+    <link rel="manifest" href="site.webmanifest" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Star Claw" />
+    <meta property="og:url" content="https://star-claw-machine.vercel.app/" />
+    <meta
+      property="og:title"
+      content="Star Claw: a cozy knitted claw machine game"
+    />
+    <meta
+      property="og:description"
+      content="Grab knitted plushies in a free claw machine you play in the browser. Win the reel, fill your prize bag, collect all 50 and climb the world top 10. Works on phones and desktop."
+    />
+    <meta
+      property="og:image"
+      content="https://star-claw-machine.vercel.app/og.png"
+    />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta
+      property="og:image:alt"
+      content="A wooden claw machine full of knitted pastel plushies, with the Star Claw marquee"
+    />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta
+      name="twitter:title"
+      content="Star Claw: a cozy knitted claw machine game"
+    />
+    <meta
+      name="twitter:description"
+      content="Grab knitted plushies in a free claw machine you play in the browser. Win the reel, fill your prize bag, collect all 50 and climb the world top 10. Works on phones and desktop."
+    />
+    <meta
+      name="twitter:image"
+      content="https://star-claw-machine.vercel.app/og.png"
+    />
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "VideoGame",
+        "name": "Star Claw",
+        "url": "https://star-claw-machine.vercel.app/",
+        "description": "Grab knitted plushies in a free claw machine you play in the browser. Win the reel, fill your prize bag, collect all 50 and climb the world top 10. Works on phones and desktop.",
+        "image": "https://star-claw-machine.vercel.app/og.png",
+        "genre": ["Arcade", "Casual"],
+        "gamePlatform": ["Web browser", "iOS", "Android"],
+        "applicationCategory": "Game",
+        "operatingSystem": "Any",
+        "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" }
+      }
+    </script>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -65,17 +127,6 @@
       }
       body:not([data-mode="play"]) #quit {
         visibility: hidden;
-      }
-      .touch-help {
-        display: none;
-      }
-      @media (pointer: coarse) {
-        .key-help {
-          display: none;
-        }
-        .touch-help {
-          display: inline;
-        }
       }
       #hud {
         position: fixed;
@@ -335,6 +386,73 @@
         cursor: pointer;
         touch-action: manipulation;
       }
+      #sound button[data-help] {
+        padding: 0;
+        font: inherit;
+        font-size: 15px;
+        line-height: 1;
+      }
+      #howto {
+        z-index: 22;
+      }
+      .controls {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 9px 14px;
+        margin: 0 auto;
+        max-width: 500px;
+        font-size: 9px;
+        line-height: 1.5;
+        text-align: left;
+        align-items: center;
+      }
+      .steps {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 8px;
+        margin: 0 auto 14px;
+        max-width: 520px;
+      }
+      .step {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 6px;
+        padding: 12px 8px;
+        font-size: 8px;
+        line-height: 1.5;
+        background: rgba(20, 35, 61, 0.35);
+        border-radius: 8px;
+      }
+      .step svg {
+        width: 40px;
+        height: 40px;
+      }
+      .step b {
+        font-weight: normal;
+        font-size: 11px;
+        color: var(--gold);
+      }
+      .step .n {
+        position: absolute;
+        top: 6px;
+        left: 8px;
+        opacity: 0.6;
+      }
+      .aside {
+        font-size: 8px;
+        opacity: 0.75;
+      }
+      .controls b {
+        font-weight: normal;
+        color: var(--gold);
+        white-space: nowrap;
+      }
+      .controls .head {
+        opacity: 0.7;
+        font-size: 8px;
+      }
       #sound svg {
         display: block;
         width: 100%;
@@ -354,23 +472,6 @@
         height: 3px;
         background: var(--wood-dark);
         transform: rotate(-45deg);
-      }
-      #help {
-        position: fixed;
-        left: 16px;
-        bottom: 16px;
-        font-size: 10px;
-        line-height: 2;
-        opacity: 0.85;
-      }
-      .legend {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 4px 12px;
-        margin-top: 6px;
-      }
-      .legend span {
-        white-space: nowrap;
       }
       .dot {
         display: inline-block;
@@ -515,11 +616,6 @@
         font-size: 11px;
         color: var(--gold);
       }
-      .panel .legend {
-        justify-content: center;
-        margin-top: 16px;
-        font-size: 9px;
-      }
       .tiers {
         display: grid;
         grid-template-columns: repeat(5, 1fr);
@@ -649,6 +745,8 @@
       }
       .actions {
         display: flex;
+        flex-wrap: wrap;
+        align-items: center;
         justify-content: center;
         gap: 10px;
         margin-top: 20px;
@@ -721,12 +819,6 @@
           height: 36px;
           padding: 8px;
         }
-        #help {
-          left: calc(12px + env(safe-area-inset-left));
-          bottom: calc(12px + env(safe-area-inset-bottom));
-          max-width: 45%;
-          font-size: 8px;
-        }
         .panel {
           padding: 18px 14px;
         }
@@ -748,9 +840,35 @@
         #screen {
           height: 76vh;
         }
-        #help {
-          display: none;
-        }
+      }
+      /* Dual-screen / folding phones spanned across the hinge (resize() sets the class and the
+         second screen's rect): the cabinet gets the first screen, everything else the second. */
+      body.spanned .overlay {
+        box-sizing: border-box;
+        inset: auto;
+        left: var(--seg2-x);
+        top: var(--seg2-y);
+        width: var(--seg2-w);
+        height: var(--seg2-h);
+      }
+      /* The reel sits against the far edge of the second screen, clear of the scoreboard. */
+      body.spanned .carriage {
+        left: calc(var(--seg2-x) + var(--seg2-w) - 20px);
+        top: calc(var(--seg2-y) + var(--seg2-h) / 2);
+        transform: translate(-100%, -50%) scale(0.6);
+      }
+      body.spanned.reeling .carriage {
+        transform: translate(-100%, -50%) scale(1);
+      }
+      body.spanned #screen {
+        height: min(calc(var(--seg2-h) * 0.62), 480px);
+      }
+      body.spanned #hud {
+        top: calc(var(--seg2-y) + 16px);
+      }
+      body.spanned #scoreboard {
+        left: calc(var(--seg2-x) + 16px);
+        top: calc(var(--seg2-y) + 16px);
       }
     </style>
     <script type="importmap">
@@ -786,16 +904,15 @@
       </div>
       <div id="status">Restocking plushies...</div>
     </div>
-    <div id="help">
-      <span class="key-help"
-        >ARROWS move claw<br />SPACE drop<br />HOLD SPACE reel<br />Q quit &amp;
-        save<br />M music &nbsp; S sound</span
-      ><span class="touch-help"
-        >DRAG move claw<br />TAP drop<br />HOLD finger reel</span
-      >
-      <div class="legend" id="legend"></div>
-    </div>
     <div id="sound">
+      <button
+        type="button"
+        data-help
+        aria-label="How to play"
+        title="How to play (H)"
+      >
+        ?
+      </button>
       <button type="button" data-sound="music" aria-label="Music">
         <svg
           viewBox="0 0 12 12"
@@ -818,6 +935,9 @@
     <div id="popups"></div>
     <div id="overlay" class="overlay">
       <div class="panel" id="panel"></div>
+    </div>
+    <div id="howto" class="overlay" hidden>
+      <div class="panel" role="dialog" aria-modal="true" id="howto-panel"></div>
     </div>
     <div id="confirm" class="overlay" hidden>
       <div class="panel small" role="dialog" aria-modal="true">
@@ -858,7 +978,7 @@
         releaseTime: 1.4,
       };
       // Prong torque. The reel meter (0..1) maps onto this range while the plushie is in the air.
-      const GRIP = { min: 16, max: 34 };
+      const GRIP = { min: 18, max: 38 };
       const gripAt = (p) => GRIP.min + (GRIP.max - GRIP.min) * p;
 
       const MG = {
@@ -1230,23 +1350,63 @@
       camera.position.copy(CAM_TARGET).add(CAM_OFFSET);
       camera.lookAt(CAM_TARGET);
 
+      // Two screen segments (a dual-screen or folding phone spanned across its hinge), or null.
+      function screenSegments() {
+        let segs = null;
+        try {
+          segs = window.viewport?.segments ?? window.getWindowSegments?.();
+        } catch {}
+        if (!segs || segs.length !== 2) return null;
+        return [...segs]
+          .map((r) => ({
+            x: r.x ?? r.left,
+            y: r.y ?? r.top,
+            width: r.width,
+            height: r.height,
+          }))
+          .sort((a, b) => a.x - b.x || a.y - b.y);
+      }
+
       function resize() {
         const w = innerWidth;
         const h = innerHeight;
         renderer.setSize(w, h);
         sizeFx();
-        // Leave room for the HUD on the right, and fit the cabinet in whichever axis is tighter.
-        // On a phone in portrait the HUD sits bottom-right, so lift the cabinet into the empty top.
-        const narrow = w <= 700;
-        const hudPx = narrow ? 0 : h < 500 ? 180 : 260;
-        const halfH = Math.max(9.6, (7.6 * h) / (w - hudPx));
-        const halfW = (halfH * w) / h;
-        const shift = (hudPx / 2 / w) * halfW * 2;
-        const lift = narrow ? (140 / h) * halfH * 2 : 0;
-        camera.left = -halfW + shift;
-        camera.right = halfW + shift;
-        camera.top = halfH - lift;
-        camera.bottom = -halfH - lift;
+        // Pick the area the cabinet should fill, then fit it in whichever axis is tighter.
+        // - Foldables spanning two screens (Surface Duo): the cabinet gets the first screen,
+        //   menus and the reel game get the second, so nothing sits under the hinge.
+        // - Phones in portrait: the status sits bottom-right, so lift the cabinet into the top.
+        // - Tall tablets: just centre it.
+        // - Desktop: leave room for the status on the right.
+        const seg = screenSegments();
+        document.body.classList.toggle("spanned", !!seg);
+        if (seg)
+          for (const [k, v] of Object.entries({
+            x: seg[1].x,
+            y: seg[1].y,
+            w: seg[1].width,
+            h: seg[1].height,
+          }))
+            document.body.style.setProperty(`--seg2-${k}`, `${v}px`);
+        let area;
+        if (seg) area = seg[0];
+        else if (w <= 700)
+          area = { x: 0, y: 0, width: w, height: h, liftPx: 140 };
+        else if (h > w) area = { x: 0, y: 0, width: w, height: h };
+        else {
+          const hudPx = h < 500 ? 180 : 260;
+          area = { x: 0, y: 0, width: w - hudPx, height: h };
+        }
+        const scale = Math.min(area.height / 19.2, area.width / 15.2);
+        const halfW = w / 2 / scale;
+        const halfH = h / 2 / scale;
+        const shiftX = (w / 2 - (area.x + area.width / 2)) / scale;
+        const shiftY =
+          (h / 2 - (area.y + area.height / 2) + (area.liftPx ?? 0)) / scale;
+        camera.left = -halfW + shiftX;
+        camera.right = halfW + shiftX;
+        camera.top = halfH - shiftY;
+        camera.bottom = -halfH - shiftY;
         camera.updateProjectionMatrix();
       }
 
@@ -1341,7 +1501,7 @@
       // The claw contact stays firm so the grip is unchanged.
       const COTTON = {
         restitution: 0,
-        contactEquationStiffness: 1.5e6,
+        contactEquationStiffness: 1.2e6,
         contactEquationRelaxation: 6,
       };
       contact(mats.prize, mats.static, 0.5, COTTON);
@@ -1426,7 +1586,7 @@
       marqueeCanvas.height = 176;
       const marqueeTex = new THREE.CanvasTexture(marqueeCanvas);
       marqueeTex.colorSpace = THREE.SRGBColorSpace;
-      let marqueeText = "START CLAW";
+      let marqueeText = "STAR CLAW";
       function drawMarquee(text = marqueeText) {
         marqueeText = text;
         const c = marqueeCanvas.getContext("2d");
@@ -1732,7 +1892,7 @@
       const pick = (list) => list[Math.floor(Math.random() * list.length)];
 
       // Squash-and-stretch spring: impacts flatten it, then it puffs back up slowly, with barely a wobble.
-      const SQUISH = { stiffness: 180, damping: 22, kick: 0.6, max: 0.2 };
+      const SQUISH = { stiffness: 150, damping: 20, kick: 0.75, max: 0.25 };
 
       function addPlush(tier, animal, x, y, z) {
         const body = new CANNON.Body({
@@ -1938,6 +2098,12 @@
       addEventListener("keydown", (e) => {
         if (e.target instanceof HTMLInputElement) return;
         if (GAME_KEYS.includes(e.code)) e.preventDefault();
+        if (!howtoEl.hidden) {
+          if (["Escape", "Enter", "Space", "KeyH"].includes(e.code))
+            closeHelp();
+          return;
+        }
+        if (e.code === "KeyH" && !e.repeat) return openHelp();
         if ((e.code === "KeyM" || e.code === "KeyS") && !e.repeat)
           return toggleSound(e.code === "KeyM" ? "music" : "sfx");
         if (game.paused) {
@@ -2099,11 +2265,6 @@
         streakEl.textContent =
           game.streak > 0 ? `NEXT CATCH x${streakMult()}` : "";
       }
-
-      document.getElementById("legend").innerHTML = TIERS.map(
-        (t) =>
-          `<span><i class="dot" style="background:${t.css}"></i>${t.points}</span>`,
-      ).join("");
 
       function popup(main, detail, color, big = false) {
         const el = document.createElement("div");
@@ -2288,15 +2449,106 @@
 
       function renderTitle() {
         showPanel(`
-          <h1>START CLAW</h1>
+          <h1>STAR CLAW</h1>
           <p>Grab plushies, win the reel, drop them in the chute.</p>
           ${tiersHtml()}
-          <p>Missed grab or dropped: -&frac12; ${heartSvg("inline")} &nbsp; Lost reel: -1 ${heartSvg("inline")}</p>
-          <p>Every catch: +&frac12; ${heartSvg("inline")} &nbsp; Cash out: +${RULES.cashOutPerHalf} per &frac12; ${heartSvg("inline")} left</p>
           ${collectionHtml()}
           ${boardsHtml("YOUR TOP 5")}
-          <button class="btn big" type="button" data-action="play">${TOUCH ? "TAP TO PLAY" : "PLAY (SPACE)"}</button>`);
+          <div class="actions">
+            <button class="btn ghost" type="button" data-help>HOW TO PLAY</button>
+            <button class="btn big" type="button" data-action="play">${TOUCH ? "TAP TO PLAY" : "PLAY (SPACE)"}</button>
+          </div>`);
       }
+
+      // ---------- how to play ----------
+
+      // One help sheet, opened by the ? button, H, or automatically the first time this browser plays.
+      const HOWTO_KEY = "startclaw.howto.v1";
+      const howtoEl = document.getElementById("howto");
+      const howtoPanel = document.getElementById("howto-panel");
+      let howtoPaused = false;
+      const row = (what, key) => `<span>${what}</span><b>${key}</b>`;
+
+      // The three moves of a turn, as cards with a little pixel gesture each.
+      const GESTURES = {
+        drag: `<svg viewBox="0 0 24 24" shape-rendering="crispEdges"><path d="M10 9h4v4h-4z" fill="#fff4e2"/><path d="M11 2h2v5h-2zM11 15h2v5h-2zM3 10h5v2H3zM16 10h5v2h-5zM10 4h1v1h-1zM13 4h1v1h-1zM10 17h1v1h-1zM13 17h1v1h-1zM5 9h1v1H5zM5 12h1v1H5zM18 9h1v1h-1zM18 12h1v1h-1z" fill="#ffd75e"/></svg>`,
+        tap: `<svg viewBox="0 0 24 24" shape-rendering="crispEdges"><path d="M10 10h4v4h-4z" fill="#fff4e2"/><path d="M8 6h8v1H8zM8 17h8v1H8zM6 8h1v8H6zM17 8h1v8h-1zM7 7h1v1H7zM16 7h1v1h-1zM7 16h1v1H7zM16 16h1v1h-1z" fill="#ffd75e"/></svg>`,
+        hold: `<svg viewBox="0 0 24 24" shape-rendering="crispEdges"><path d="M9 9h6v6H9z" fill="#fff4e2"/><path d="M7 4h10v1H7zM7 19h10v1H7zM4 7h1v10H4zM19 7h1v10h-1zM5 5h2v2H5zM17 5h2v2h-2zM5 17h2v2H5zM17 17h2v2h-2z" fill="#5ee05e"/></svg>`,
+      };
+      function stepsHtml() {
+        const steps = TOUCH
+          ? [
+              ["drag", "DRAG", "anywhere to move the claw"],
+              ["tap", "TAP", "to drop it"],
+              [
+                "hold",
+                "HOLD",
+                "your finger to reel: keep the plushie in the green bar",
+              ],
+            ]
+          : [
+              ["drag", "ARROWS", "move the claw"],
+              ["tap", "SPACE", "drops it"],
+              [
+                "hold",
+                "HOLD SPACE",
+                "to reel: keep the plushie in the green bar",
+              ],
+            ];
+        return `<div class="steps">${steps
+          .map(
+            ([icon, key, text], n) =>
+              `<div class="step"><span class="n">${n + 1}</span>${GESTURES[icon]}<b>${key}</b><span>${text}</span></div>`,
+          )
+          .join("")}</div>`;
+      }
+      function openHelp() {
+        if (!howtoEl.hidden || pendingConfirm) return;
+        const heart = heartSvg("inline");
+        howtoPanel.innerHTML = `
+          <h1>HOW TO PLAY</h1>
+          <p>Line up the claw, drop it on a plushie, win the reel game, and it falls in the chute for points.</p>
+          <h2>${TOUCH ? "TOUCH CONTROLS" : "CONTROLS"}</h2>
+          ${stepsHtml()}
+          <div class="controls">
+            ${row("Cash out and keep your score", TOUCH ? "QUIT &amp; SAVE" : "Q")}
+            ${row("Music / sound", TOUCH ? "&#9835; / &#128264; buttons" : "M / S")}
+            ${row("This help", TOUCH ? "? button" : "H")}
+          </div>
+          <p class="aside">${TOUCH ? "Got a keyboard? Arrows move, SPACE drops, hold SPACE to reel." : "On a phone or tablet: drag to move, tap to drop, hold to reel."}</p>
+          <h2>POINTS</h2>
+          ${tiersHtml()}
+          <p>A perfect reel (never leaving the bar) is x1.5. Catches in a row build a streak up to x${RULES.streakMax}.</p>
+          <h2>HEARTS</h2>
+          <p>Missed grab or dropped plushie: -&frac12; ${heart}<br />Lost the reel: -1 ${heart}<br />Every catch: +&frac12; ${heart} (up to ${RULES.lives})</p>
+          <p>Cash out any time for +${RULES.cashOutPerHalf} per &frac12; ${heart} left. Clear the machine for +${RULES.clearBonus}, plus ${RULES.heartBonus} per ${heart}.</p>
+          <h2>PRIZES</h2>
+          <p>Every win drops into your prize bag. Collect all ${COLLECTION_SIZE} colour and animal pairs, and chase the world top ${WORLD.size}.</p>
+          <div class="actions"><button class="btn big" type="button" data-close-help>GOT IT</button></div>`;
+        howtoEl.hidden = false;
+        howtoPanel.scrollTop = 0;
+        sfx.blip();
+        if (game.mode === "play" && !game.paused) {
+          game.paused = true;
+          howtoPaused = true;
+          keys.Space = false;
+        }
+      }
+      function closeHelp() {
+        if (howtoEl.hidden) return;
+        howtoEl.hidden = true;
+        if (howtoPaused) game.paused = false;
+        howtoPaused = false;
+        try {
+          localStorage.setItem(HOWTO_KEY, "1");
+        } catch {}
+      }
+      addEventListener("click", (e) => {
+        if (!(e.target instanceof Element)) return;
+        if (e.target.closest("[data-help]")) openHelp();
+        else if (e.target.closest("[data-close-help]") || e.target === howtoEl)
+          closeHelp();
+      });
 
       function renderOver() {
         const r = game.result;
@@ -2445,7 +2697,7 @@
         shownScore = 0;
         scoreEl.textContent = "0";
         claw.closing = false;
-        drawMarquee("START CLAW");
+        drawMarquee("STAR CLAW");
         restock();
         setState("home", "Restocking plushies...");
         renderHud();
@@ -3294,7 +3546,7 @@
       }
       const soundEl = document.getElementById("sound");
       function renderSoundButtons() {
-        for (const b of soundEl.querySelectorAll("button")) {
+        for (const b of soundEl.querySelectorAll("button[data-sound]")) {
           const on = sound[b.dataset.sound];
           b.classList.toggle("off", !on);
           b.setAttribute("aria-pressed", String(on));
@@ -3676,6 +3928,9 @@
       setState("settle", "Restocking plushies...");
       renderHud();
       renderTitle();
+      try {
+        if (!localStorage.getItem(HOWTO_KEY)) openHelp();
+      } catch {}
       fetchWorld();
       requestAnimationFrame(frame);
 

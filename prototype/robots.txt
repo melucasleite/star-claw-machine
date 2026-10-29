@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://star-claw-machine.vercel.app/sitemap.xml

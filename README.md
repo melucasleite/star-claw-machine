@@ -1,4 +1,4 @@
-# START CLAW
+# STAR CLAW
 
 A claw machine where the claw's grip isn't left to a hidden payout timer. **You earn it.**
 
