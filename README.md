@@ -25,10 +25,9 @@ Open `prototype/index.html` in a browser. It loads three.js and cannon-es from a
 - **Arrow keys** move the claw. There's no landing guide, so judge it by eye.
 - **Space** drops the claw. It grabs whatever the physics lets it grab.
 - **Hold Space** during the reel game to lift the green bar. Keep the plushie in the bar to keep the grip strong.
-- **R** restocks the machine and starts a new run (it asks first).
 - **Q** (or the QUIT & SAVE button, top left) cashes out: the run ends and your score goes to the high score list (it asks first).
 
-On a phone: **drag** to move the claw, **tap** to drop, and **hold your finger down** to reel. The RESTOCK button does the same as R.
+On a phone: **drag** to move the claw, **tap** to drop, and **hold your finger down** to reel.
 
 ### Scoring
 

@@ -51,21 +51,6 @@
         position: fixed;
         inset: 0;
       }
-      .hud-actions {
-        display: flex;
-        gap: 8px;
-      }
-      .hud-actions button {
-        display: block;
-        font: inherit;
-        font-size: 10px;
-        padding: 10px 16px;
-        color: var(--wood-dark);
-        background: var(--mustard);
-        border: 3px solid var(--wood-dark);
-        border-radius: 999px;
-        cursor: pointer;
-      }
       #quit {
         align-self: flex-start;
         font: inherit;
@@ -79,9 +64,6 @@
         cursor: pointer;
       }
       body:not([data-mode="play"]) #quit {
-        visibility: hidden;
-      }
-      body:not([data-mode="play"]) .hud-actions {
         visibility: hidden;
       }
       .touch-help {
@@ -608,14 +590,11 @@
         </div>
       </div>
       <div id="status">Restocking plushies...</div>
-      <div class="hud-actions">
-        <button id="restock" type="button">RESTOCK</button>
-      </div>
     </div>
     <div id="help">
       <span class="key-help"
         >ARROWS move claw<br />SPACE drop<br />HOLD SPACE reel<br />Q quit &amp;
-        save<br />R restock</span
+        save</span
       ><span class="touch-help"
         >DRAG move claw<br />TAP drop<br />HOLD finger reel</span
       >
@@ -1142,15 +1121,15 @@
         world.addContactMaterial(
           new CANNON.ContactMaterial(a, b, { friction, restitution: 0, ...o }),
         );
-      // Plushies are a little rubbery: softer contacts that sink in a touch and a small bounce.
+      // Plushies are stuffed cotton: soft contacts that sink in and soak up the hit, no bounce.
       // The claw contact stays firm so the grip is unchanged.
-      const RUBBER = {
-        restitution: 0.22,
-        contactEquationStiffness: 2e6,
-        contactEquationRelaxation: 4,
+      const COTTON = {
+        restitution: 0,
+        contactEquationStiffness: 1.5e6,
+        contactEquationRelaxation: 6,
       };
-      contact(mats.prize, mats.static, 0.5, RUBBER);
-      contact(mats.prize, mats.prize, 0.4, RUBBER);
+      contact(mats.prize, mats.static, 0.5, COTTON);
+      contact(mats.prize, mats.prize, 0.45, COTTON);
       contact(mats.prize, mats.claw, 0.9);
       contact(mats.claw, mats.static, 0.3);
 
@@ -1458,8 +1437,8 @@
       const plushies = [];
       const pick = (list) => list[Math.floor(Math.random() * list.length)];
 
-      // Squash-and-stretch spring: impacts kick it, and it wobbles back like rubber.
-      const SQUISH = { stiffness: 320, damping: 11, kick: 0.45, max: 0.2 };
+      // Squash-and-stretch spring: impacts flatten it, then it puffs back up slowly, with barely a wobble.
+      const SQUISH = { stiffness: 180, damping: 22, kick: 0.6, max: 0.2 };
 
       function addPlush(tier, animal, x, y, z) {
         const body = new CANNON.Body({
@@ -1467,8 +1446,9 @@
           material: mats.prize,
           collisionFilterGroup: G_PRIZE,
           collisionFilterMask: PRIZE_MASK,
-          linearDamping: 0.15,
-          angularDamping: 0.3,
+          // Cotton drags: plushies slump and settle instead of rolling around.
+          linearDamping: 0.22,
+          angularDamping: 0.55,
         });
         const group = new THREE.Group();
         for (const p of animal.parts) {
@@ -1623,7 +1603,6 @@
         }
         if (!e.repeat) pressed[e.code] = true;
         keys[e.code] = true;
-        if (e.code === "KeyR" && !e.repeat) askConfirm("restock");
         if (e.code === "KeyQ" && !e.repeat) askConfirm("quit");
       });
       addEventListener("keyup", (e) => (keys[e.code] = false));
@@ -1985,13 +1964,6 @@
       });
 
       const CONFIRMS = {
-        restock: {
-          title: "RESTOCK?",
-          text: () =>
-            "Fresh plushies, fresh start. Your current run ends and its score won't count.",
-          yes: "RESTOCK",
-          run: () => startGame(),
-        },
         quit: {
           title: "CASH OUT?",
           text: () =>
@@ -2021,9 +1993,6 @@
         document.activeElement?.blur?.();
         if (yes) c?.run();
       }
-      document
-        .getElementById("restock")
-        .addEventListener("click", () => askConfirm("restock"));
       document
         .getElementById("quit")
         .addEventListener("click", () => askConfirm("quit"));
