@@ -128,15 +128,6 @@
       body:not([data-mode="play"]) #quit {
         visibility: hidden;
       }
-      #hud {
-        position: fixed;
-        top: 16px;
-        right: 16px;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 12px;
-      }
       /* The reel game pops up in the middle of the screen, and only while something is hooked. */
       .carriage {
         position: fixed;
@@ -179,13 +170,6 @@
         aspect-ratio: 170 / 320;
         image-rendering: pixelated;
         touch-action: none;
-      }
-      #status {
-        max-width: 230px;
-        min-height: 4.8em;
-        font-size: 10px;
-        line-height: 1.6;
-        text-align: center;
       }
 
       /* ---------- scoreboard ---------- */
@@ -794,17 +778,6 @@
         .popup.big b {
           font-size: 30px;
         }
-        #hud {
-          top: auto;
-          right: calc(10px + env(safe-area-inset-right));
-          bottom: calc(12px + env(safe-area-inset-bottom));
-        }
-        #status {
-          max-width: 46vw;
-          min-height: 0;
-          font-size: 8px;
-          text-align: right;
-        }
         .carriage {
           padding: 10px 14px;
         }
@@ -833,16 +806,12 @@
         }
       }
       @media (max-height: 500px) and (min-width: 701px) {
-        #hud {
-          top: calc(8px + env(safe-area-inset-top));
-          right: calc(8px + env(safe-area-inset-right));
-        }
         #screen {
           height: 76vh;
         }
       }
       /* Dual-screen / folding phones spanned across the hinge (resize() sets the class and the
-         second screen's rect): the cabinet gets the first screen, everything else the second. */
+         second screen's rect): the cabinet stays centred, dialogs and the reel game use the second screen. */
       body.spanned .overlay {
         box-sizing: border-box;
         inset: auto;
@@ -862,13 +831,6 @@
       }
       body.spanned #screen {
         height: min(calc(var(--seg2-h) * 0.62), 480px);
-      }
-      body.spanned #hud {
-        top: calc(var(--seg2-y) + 16px);
-      }
-      body.spanned #scoreboard {
-        left: calc(var(--seg2-x) + 16px);
-        top: calc(var(--seg2-y) + 16px);
       }
     </style>
     <script type="importmap">
@@ -902,7 +864,6 @@
           <canvas id="screen" width="170" height="320"></canvas>
         </div>
       </div>
-      <div id="status">Restocking plushies...</div>
     </div>
     <div id="sound">
       <button
@@ -1372,12 +1333,8 @@
         const h = innerHeight;
         renderer.setSize(w, h);
         sizeFx();
-        // Pick the area the cabinet should fill, then fit it in whichever axis is tighter.
-        // - Foldables spanning two screens (Surface Duo): the cabinet gets the first screen,
-        //   menus and the reel game get the second, so nothing sits under the hinge.
-        // - Phones in portrait: the status sits bottom-right, so lift the cabinet into the top.
-        // - Tall tablets: just centre it.
-        // - Desktop: leave room for the status on the right.
+        // The cabinet is centred and fit in whichever axis is tighter. On a foldable spanning two
+        // screens (Surface Duo) menus and the reel game still move to the second screen.
         const seg = screenSegments();
         document.body.classList.toggle("spanned", !!seg);
         if (seg)
@@ -1388,25 +1345,13 @@
             h: seg[1].height,
           }))
             document.body.style.setProperty(`--seg2-${k}`, `${v}px`);
-        let area;
-        if (seg) area = seg[0];
-        else if (w <= 700)
-          area = { x: 0, y: 0, width: w, height: h, liftPx: 140 };
-        else if (h > w) area = { x: 0, y: 0, width: w, height: h };
-        else {
-          const hudPx = h < 500 ? 180 : 260;
-          area = { x: 0, y: 0, width: w - hudPx, height: h };
-        }
-        const scale = Math.min(area.height / 19.2, area.width / 15.2);
+        const scale = Math.min(h / 19.2, w / 15.2);
         const halfW = w / 2 / scale;
         const halfH = h / 2 / scale;
-        const shiftX = (w / 2 - (area.x + area.width / 2)) / scale;
-        const shiftY =
-          (h / 2 - (area.y + area.height / 2) + (area.liftPx ?? 0)) / scale;
-        camera.left = -halfW + shiftX;
-        camera.right = halfW + shiftX;
-        camera.top = halfH - shiftY;
-        camera.bottom = -halfH - shiftY;
+        camera.left = -halfW;
+        camera.right = halfW;
+        camera.top = halfH;
+        camera.bottom = -halfH;
         camera.updateProjectionMatrix();
       }
 
@@ -2128,10 +2073,6 @@
 
       // Touch and mouse: drag to move the claw, tap to drop, hold anywhere to reel.
       const TOUCH = matchMedia("(pointer: coarse)").matches;
-      const AIM_MSG = TOUCH
-        ? "Drag to line up the claw, then tap to drop."
-        : "Line up the claw with the arrow keys, then press SPACE.";
-      const REEL_HINT = TOUCH ? "Hold your finger down" : "Hold SPACE";
       const TAP = { maxMove: 10, maxMs: 350 };
       const SIN_ELEV = CAM_OFFSET.y / CAM_OFFSET.length();
       let drag = null;
@@ -2203,7 +2144,6 @@
 
       // ---------- HUD ----------
 
-      const statusEl = document.getElementById("status");
       const scoreEl = document.getElementById("score");
       const heartsEl = document.getElementById("hearts");
       const bestEl = document.getElementById("best");
@@ -2667,11 +2607,10 @@
         lift: () => sfx.lift(),
         release: () => sfx.release(),
       };
-      function setState(state, msg) {
+      function setState(state) {
         if (state !== game.state) STATE_SFX[state]?.();
         game.state = state;
         game.t = 0;
-        if (msg !== undefined) statusEl.textContent = msg;
       }
 
       function startGame() {
@@ -2699,7 +2638,7 @@
         claw.closing = false;
         drawMarquee("STAR CLAW");
         restock();
-        setState("home", "Restocking plushies...");
+        setState("home");
         renderHud();
       }
 
@@ -2830,7 +2769,6 @@
         const [px, py] = popupPoint();
         burst(px, py, 10 + TIERS.indexOf(plush.tier) * 8, 0.8);
         bumpScore();
-        statusEl.textContent = `You won a ${plush.tier.name} ${plush.animal.name}!`;
         renderHud();
       }
 
@@ -2870,14 +2808,14 @@
         }
         if (!plushies.length) return clearMachine();
         if (game.lives <= 0) return gameOver("lost");
-        setState("aim", AIM_MSG);
+        setState("aim");
       }
 
       function clearMachine() {
         const bonus = RULES.clearBonus + RULES.heartBonus * game.lives;
         game.score += bonus;
         setMode("clear");
-        setState("idle", "You cleared the whole machine!");
+        setState("idle");
         drawMarquee("CLEARED!");
         popup("CLEARED!", `BONUS +${fmt(bonus)}`, "#ffd75e", true);
         bumpScore();
@@ -2900,14 +2838,14 @@
       function gameOver(end, bonus = 0) {
         const cleared = end === "cleared";
         setMode("over");
-        if (end === "lost") setState("idle", "Out of hearts.");
+        if (end === "lost") setState("idle");
         if (end === "quit") {
           // Whatever is in the claw is forfeit; open up and park over the chute.
           game.held = null;
           game.mg = null;
           game.turn = null;
           showReel(false);
-          setState("home", "Cashed out.");
+          setState("home");
           game.score += bonus;
           if (bonus)
             popup("CASHED OUT", `HEARTS +${fmt(bonus)}`, "#ffd75e", true);
@@ -3042,13 +2980,10 @@
           perfect: true,
           result: null,
         };
-        setState(
-          "reel",
-          `Hooked a ${t.name} ${plush.animal.name} (${t.points} pts)! ${REEL_HINT} to keep it in the green bar.`,
-        );
+        setState("reel");
       }
 
-      function endReel(result, msg) {
+      function endReel(result) {
         if (result === "caught") sfx.caught(game.mg.perfect);
         else if (result === "escaped") sfx.escaped();
         else sfx.slipped();
@@ -3058,7 +2993,7 @@
         game.turn.result = result;
         if (result === "caught") claw.torque = GRIP.max;
         if (result === "escaped") claw.closing = false;
-        setState("return", msg);
+        setState("return");
       }
 
       function stepFish(mg, dt) {
@@ -3126,22 +3061,10 @@
         mg.notch = notch;
         claw.torque = gripAt(mg.progress);
 
-        if (!isHeld(game.held))
-          endReel("slipped", "It slipped out of the claw!");
-        else if (mg.progress >= 1)
-          endReel(
-            "caught",
-            mg.perfect
-              ? "PERFECT! Full grip all the way home."
-              : "Reeled in! Full grip.",
-          );
-        else if (mg.progress <= 0)
-          endReel("escaped", "It got away! The claw went limp.");
-        else if (mg.t >= MG.timeLimit)
-          endReel(
-            "timeout",
-            `Time! Grip stuck at ${Math.round(mg.progress * 100)}%. Hold on...`,
-          );
+        if (!isHeld(game.held)) endReel("slipped");
+        else if (mg.progress >= 1) endReel("caught");
+        else if (mg.progress <= 0) endReel("escaped");
+        else if (mg.t >= MG.timeLimit) endReel("timeout");
       }
 
       function tick(dt) {
@@ -3158,7 +3081,7 @@
             break;
           case "settle":
             claw.closing = false;
-            if (game.t > 1.5 && game.mode === "play") setState("aim", AIM_MSG);
+            if (game.t > 1.5 && game.mode === "play") setState("aim");
             break;
           case "aim": {
             const ix = (keys.ArrowRight ? 1 : 0) - (keys.ArrowLeft ? 1 : 0);
@@ -3177,19 +3100,19 @@
             }
             if (pressed.Space) {
               game.turn = { kind: "miss", prizes: 0, result: null };
-              setState("drop", "Dropping...");
+              setState("drop");
             }
             break;
           }
           case "drop":
             v.y = -Math.min(CLAW.dropSpeed, (hub.position.y - CLAW.minY) / dt);
-            if (game.t > 0.1 && dropBlocked()) setState("close", "Grabbing...");
+            if (game.t > 0.1 && dropBlocked()) setState("close");
             break;
           case "close":
             claw.closing = true;
             // Hold tight on the way up; the reel meter only takes over once the plushie is at the top.
             claw.torque = GRIP.max;
-            if (game.t > CLAW.closeTime) setState("lift", "Lifting...");
+            if (game.t > CLAW.closeTime) setState("lift");
             break;
           case "lift":
             v.y = Math.min(CLAW.liftSpeed, (CLAW.topY - hub.position.y) / dt);
@@ -3201,7 +3124,7 @@
               if (plush) startReel(plush);
               else {
                 sfx.empty();
-                setState("return", "Missed! Nothing in the claw.");
+                setState("return");
               }
             }
             break;
@@ -3925,7 +3848,7 @@
       document.fonts.load('16px "Press Start 2P"').then(() => drawMarquee());
       restock();
       setMode("title");
-      setState("settle", "Restocking plushies...");
+      setState("settle");
       renderHud();
       renderTitle();
       try {
