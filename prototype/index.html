@@ -379,16 +379,31 @@
       #howto {
         z-index: 22;
       }
-      .controls {
-        display: grid;
-        grid-template-columns: minmax(0, 1fr) auto;
-        gap: 9px 14px;
-        margin: 0 auto;
-        max-width: 500px;
-        font-size: 9px;
-        line-height: 1.5;
-        text-align: left;
-        align-items: center;
+      #howto h1 {
+        margin-bottom: 0;
+      }
+      #howto h2 {
+        margin: 14px 0 0;
+      }
+      #howto p {
+        margin-top: 8px;
+        line-height: 1.7;
+      }
+      #howto .steps {
+        margin: 12px auto 0;
+      }
+      #howto .tiers {
+        margin-top: 8px;
+      }
+      #howto .tiers div {
+        padding: 5px 2px;
+      }
+      #howto .actions {
+        position: sticky;
+        bottom: -22px;
+        margin: 12px -20px -22px;
+        padding: 12px 0 16px;
+        background: var(--teal);
       }
       .steps {
         display: grid;
@@ -402,16 +417,16 @@
         display: flex;
         flex-direction: column;
         align-items: center;
-        gap: 6px;
-        padding: 12px 8px;
+        gap: 5px;
+        padding: 9px 6px;
         font-size: 8px;
         line-height: 1.5;
         background: rgba(20, 35, 61, 0.35);
         border-radius: 8px;
       }
       .step svg {
-        width: 40px;
-        height: 40px;
+        width: 32px;
+        height: 32px;
       }
       .step b {
         font-weight: normal;
@@ -427,15 +442,6 @@
       .aside {
         font-size: 8px;
         opacity: 0.75;
-      }
-      .controls b {
-        font-weight: normal;
-        color: var(--gold);
-        white-space: nowrap;
-      }
-      .controls .head {
-        opacity: 0.7;
-        font-size: 8px;
       }
       #sound svg {
         display: block;
@@ -803,6 +809,43 @@
         }
         .tiers {
           font-size: 7px;
+        }
+        #howto .panel {
+          padding: 14px 12px;
+        }
+        #howto h1 {
+          font-size: 16px;
+        }
+        #howto h2 {
+          margin-top: 10px;
+          font-size: 10px;
+        }
+        #howto p {
+          margin-top: 6px;
+          font-size: 8px;
+          line-height: 1.6;
+        }
+        #howto .steps {
+          margin-top: 8px;
+        }
+        #howto .actions {
+          bottom: -14px;
+          margin: 8px -12px -14px;
+          padding: 8px 0 12px;
+        }
+      }
+      /* Short screens (iPhone SE and friends): squeeze the help sheet a little more. */
+      @media (max-height: 620px) {
+        #howto .step {
+          padding: 6px 4px;
+          gap: 3px;
+        }
+        #howto .step svg {
+          width: 24px;
+          height: 24px;
+        }
+        #howto .tiers div {
+          padding: 3px 2px;
         }
       }
       @media (max-height: 500px) and (min-width: 701px) {
@@ -2132,8 +2175,12 @@
       // iOS Safari ignores user-scalable=no, so quick taps double-tap-zoom and two fingers pinch.
       // Cancelling the touch events stops that; pointer events still fire. Buttons and inputs keep working.
       const blockZoom = (e) => {
-        if (!(e.target instanceof Element && e.target.closest("button, input")))
-          e.preventDefault();
+        if (!(e.target instanceof Element)) return e.preventDefault();
+        if (e.target.closest("button, input")) return;
+        const oneFinger = e.touches && e.touches.length < 2;
+        if (e.type !== "touchend" && oneFinger && e.target.closest(".panel"))
+          return;
+        e.preventDefault();
       };
       for (const type of ["touchstart", "touchmove", "touchend"]) {
         document.addEventListener(type, blockZoom, { passive: false });
@@ -2407,7 +2454,6 @@
       const howtoEl = document.getElementById("howto");
       const howtoPanel = document.getElementById("howto-panel");
       let howtoPaused = false;
-      const row = (what, key) => `<span>${what}</span><b>${key}</b>`;
 
       // The three moves of a turn, as cards with a little pixel gesture each.
       const GESTURES = {
@@ -2418,22 +2464,14 @@
       function stepsHtml() {
         const steps = TOUCH
           ? [
-              ["drag", "DRAG", "anywhere to move the claw"],
-              ["tap", "TAP", "to drop it"],
-              [
-                "hold",
-                "HOLD",
-                "your finger to reel: keep the plushie in the green bar",
-              ],
+              ["drag", "DRAG", "to move"],
+              ["tap", "TAP", "to drop"],
+              ["hold", "HOLD", "to reel"],
             ]
           : [
-              ["drag", "ARROWS", "move the claw"],
-              ["tap", "SPACE", "drops it"],
-              [
-                "hold",
-                "HOLD SPACE",
-                "to reel: keep the plushie in the green bar",
-              ],
+              ["drag", "ARROWS", "to move"],
+              ["tap", "SPACE", "to drop"],
+              ["hold", "HOLD SPACE", "to reel"],
             ];
         return `<div class="steps">${steps
           .map(
@@ -2445,25 +2483,22 @@
       function openHelp() {
         if (!howtoEl.hidden || pendingConfirm) return;
         const heart = heartSvg("inline");
+        // Kept short enough to fit a phone screen without scrolling; GOT IT also sticks to the bottom.
+        const tiers = TIERS.map(
+          (t) =>
+            `<div><i class="dot" style="background:${t.css}"></i>${t.name.toUpperCase()}<b>${t.points}</b></div>`,
+        ).join("");
         howtoPanel.innerHTML = `
           <h1>HOW TO PLAY</h1>
-          <p>Line up the claw, drop it on a plushie, win the reel game, and it falls in the chute for points.</p>
-          <h2>${TOUCH ? "TOUCH CONTROLS" : "CONTROLS"}</h2>
+          <p>Drop the claw on a plushie, then keep it in the green bar to reel it into the chute.</p>
           ${stepsHtml()}
-          <div class="controls">
-            ${row("Cash out and keep your score", TOUCH ? "QUIT &amp; SAVE" : "Q")}
-            ${row("Music / sound", TOUCH ? "&#9835; / &#128264; buttons" : "M / S")}
-            ${row("This help", TOUCH ? "? button" : "H")}
-          </div>
-          <p class="aside">${TOUCH ? "Got a keyboard? Arrows move, SPACE drops, hold SPACE to reel." : "On a phone or tablet: drag to move, tap to drop, hold to reel."}</p>
+          <p class="aside">${TOUCH ? "QUIT &amp; SAVE cashes out &middot; &#9835; / &#128264; toggle sound" : "Q cashes out &middot; M / S toggle sound &middot; H opens this"}</p>
           <h2>POINTS</h2>
-          ${tiersHtml()}
-          <p>A perfect reel (never leaving the bar) is x1.5. Catches in a row build a streak up to x${RULES.streakMax}.</p>
+          <div class="tiers">${tiers}</div>
+          <p>Perfect reel x1.5 &middot; streaks up to x${RULES.streakMax}</p>
           <h2>HEARTS</h2>
-          <p>Missed grab or dropped plushie: -&frac12; ${heart}<br />Lost the reel: -1 ${heart}<br />Every catch: +&frac12; ${heart} (up to ${RULES.lives})</p>
-          <p>Cash out any time for +${RULES.cashOutPerHalf} per &frac12; ${heart} left. Clear the machine for +${RULES.clearBonus}, plus ${RULES.heartBonus} per ${heart}.</p>
-          <h2>PRIZES</h2>
-          <p>Every win drops into your prize bag. Collect all ${COLLECTION_SIZE} colour and animal pairs, and chase the world top ${WORLD.size}.</p>
+          <p>Miss or drop -&frac12;${heart} &middot; lost reel -1${heart} &middot; catch +&frac12;${heart}<br />Cash out +${RULES.cashOutPerHalf} per &frac12;${heart} &middot; clear it all +${RULES.clearBonus}</p>
+          <p>Collect all ${COLLECTION_SIZE} and top the world board.</p>
           <div class="actions"><button class="btn big" type="button" data-close-help>GOT IT</button></div>`;
         howtoEl.hidden = false;
         howtoPanel.scrollTop = 0;
