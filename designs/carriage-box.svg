@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 460" font-family="Helvetica, Arial, sans-serif" font-size="12">
+  <rect width="760" height="460" fill="#faf6ee" />
+  <text x="20" y="30" font-size="18" font-weight="bold" fill="#3a2a1a">START CLAW: carriage box (scale 2 px = 1 mm)</text>
+
+  <!-- FRONT VIEW: 140 x 120 mm -> 280 x 240 px -->
+  <g transform="translate(60,80)">
+    <text x="0" y="-14" font-weight="bold" fill="#3a2a1a">FRONT</text>
+    <rect x="0" y="0" width="280" height="240" rx="10" fill="#7a4e2d" stroke="#3a2a1a" stroke-width="2" />
+    <!-- bezel + screen 1.9in: active ~22.7 x 42.7 mm -> 46 x 86 px, bezel 36x60mm -->
+    <rect x="104" y="60" width="72" height="120" rx="6" fill="#d9a521" stroke="#3a2a1a" />
+    <rect x="117" y="77" width="46" height="86" fill="#2a6fdb" />
+    <rect x="121" y="112" width="26" height="22" fill="none" stroke="#5ee05e" stroke-width="2" />
+    <text x="128" y="128" font-size="11">🐟</text>
+    <rect x="152" y="82" width="7" height="76" fill="#333" />
+    <rect x="152" y="120" width="7" height="38" fill="#5ee05e" />
+    <!-- LEDs -->
+    <g fill="#ffe28a" stroke="#3a2a1a" stroke-width="0.5">
+      <circle cx="96" cy="70" r="4" /><circle cx="96" cy="120" r="4" /><circle cx="96" cy="170" r="4" />
+      <circle cx="184" cy="70" r="4" /><circle cx="184" cy="120" r="4" /><circle cx="184" cy="170" r="4" />
+    </g>
+    <!-- screws -->
+    <g fill="#c8a24a"><circle cx="14" cy="14" r="4" /><circle cx="266" cy="14" r="4" /><circle cx="14" cy="226" r="4" /><circle cx="266" cy="226" r="4" /></g>
+    <!-- cable + claw -->
+    <line x1="140" y1="240" x2="140" y2="290" stroke="#333" stroke-width="2" />
+    <path d="M120 300 Q140 280 160 300 M126 296 Q112 320 128 336 M154 296 Q168 320 152 336 M140 292 L140 336" fill="none" stroke="#b8902e" stroke-width="4" />
+    <!-- dims -->
+    <g stroke="#a33" fill="#a33">
+      <line x1="0" y1="-4" x2="280" y2="-4" /><text x="120" y="-20" stroke="none">140 mm</text>
+      <line x1="-14" y1="0" x2="-14" y2="240" /><text x="-50" y="124" stroke="none">120</text>
+      <line x1="104" y1="194" x2="176" y2="194" /><text x="118" y="210" stroke="none">36 mm bezel</text>
+    </g>
+  </g>
+
+  <!-- SIDE VIEW: 110 x 120 mm -> 220 x 240 -->
+  <g transform="translate(440,80)">
+    <text x="0" y="-14" font-weight="bold" fill="#3a2a1a">SIDE (section)</text>
+    <rect x="0" y="0" width="220" height="240" rx="10" fill="#e8d5bb" stroke="#3a2a1a" stroke-width="2" />
+    <!-- rail wheels -->
+    <g fill="#555"><circle cx="40" cy="-8" r="8" /><circle cx="180" cy="-8" r="8" /></g>
+    <!-- screen module at front (left) -->
+    <rect x="4" y="60" width="14" height="120" fill="#2a6fdb" stroke="#3a2a1a" />
+    <text x="24" y="70" font-size="10">ST7789 + acrylic</text>
+    <!-- C3 board -->
+    <rect x="30" y="100" width="50" height="30" fill="#2e7d32" stroke="#3a2a1a" />
+    <text x="34" y="119" font-size="10" fill="#fff">ESP32-C3</text>
+    <!-- motor + spool -->
+    <rect x="110" y="120" width="60" height="24" rx="4" fill="#888" stroke="#3a2a1a" />
+    <text x="118" y="136" font-size="10">N20 motor</text>
+    <circle cx="140" cy="180" r="18" fill="#c8a24a" stroke="#3a2a1a" />
+    <text x="170" y="184" font-size="10">spool</text>
+    <!-- driver -->
+    <rect x="30" y="150" width="40" height="20" fill="#7b1fa2" stroke="#3a2a1a" />
+    <text x="32" y="164" font-size="9" fill="#fff">DRV8833</text>
+    <!-- drag chain -->
+    <path d="M200 0 Q240 -30 260 -60" fill="none" stroke="#333" stroke-width="6" stroke-dasharray="6 3" />
+    <text x="236" y="-66" font-size="10">drag chain: 24V/GND/TX/RX</text>
+    <line x1="140" y1="198" x2="140" y2="290" stroke="#333" stroke-width="2" />
+    <g stroke="#a33" fill="#a33">
+      <line x1="0" y1="254" x2="220" y2="254" /><text x="90" y="270" stroke="none">110 mm</text>
+    </g>
+  </g>
+</svg>

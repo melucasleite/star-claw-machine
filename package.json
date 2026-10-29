@@ -1,0 +1,12 @@
+{
+  "name": "start-claw-machine",
+  "version": "0.1.0",
+  "private": true,
+  "description": "A claw machine whose gantry box hosts a Stardew-style fishing minigame that decides grip strength.",
+  "scripts": {
+    "format": "prettier --write ."
+  },
+  "devDependencies": {
+    "prettier": "^3.3.3"
+  }
+}
