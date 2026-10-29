@@ -25,6 +25,7 @@ Open `prototype/index.html` in a browser. It loads three.js and cannon-es from a
 - **Arrow keys** move the claw. There's no landing guide, so judge it by eye.
 - **Space** drops the claw. It grabs whatever the physics lets it grab.
 - **Hold Space** during the reel game to lift the green bar. Keep the plushie in the bar to keep the grip strong.
+- **M** toggles the music and **S** the sound effects (or the note and speaker buttons in the corner).
 - **Q** (or the QUIT & SAVE button, top left) cashes out: the run ends and your score goes to the high score list (it asks first).
 
 On a phone: **drag** to move the claw, **tap** to drop, and **hold your finger down** to reel.
@@ -50,3 +51,9 @@ Every plushie you win flies into the prize bag under the score, and the end scre
 ```bash
 yarn format
 ```
+
+### Look and sound
+
+The plushies are knitted: one procedural stitch tile (a colour map plus a bump map) is wrapped around every part with UVs scaled to the part's size, so the stitches stay the same size on a big belly and a small ear. Eyes are smooth, shiny buttons.
+
+All audio is synthesised with Web Audio, so there are no sound files: a looping chiptune (8 bars of tune, 8 of groove), a motor hum that follows the claw, clacks and whirrs for the claw, pings, buzzes and a ratchet for the reel game, and jingles for prizes, hearts, high scores and clearing the machine. Browsers only start audio after a tap or key press, so it wakes up on the first one; on iPhone it is set to play even with the silent switch on.

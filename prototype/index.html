@@ -124,6 +124,7 @@
         text-shadow: 2px 2px 0 var(--wood-dark);
       }
       #bag {
+        pointer-events: none;
         box-sizing: border-box;
         width: 196px;
         min-height: 64px;
@@ -290,6 +291,46 @@
         vertical-align: -1px;
       }
 
+      #sound {
+        position: fixed;
+        right: 16px;
+        bottom: 16px;
+        z-index: 25;
+        display: flex;
+        gap: 8px;
+      }
+      #sound button {
+        position: relative;
+        width: 40px;
+        height: 40px;
+        padding: 9px;
+        color: var(--wood-dark);
+        background: var(--mustard);
+        border: 3px solid var(--wood-dark);
+        border-radius: 999px;
+        cursor: pointer;
+        touch-action: manipulation;
+      }
+      #sound svg {
+        display: block;
+        width: 100%;
+        height: 100%;
+        fill: currentColor;
+      }
+      #sound button.off {
+        background: #8a7a5c;
+        opacity: 0.75;
+      }
+      #sound button.off::after {
+        content: "";
+        position: absolute;
+        left: 6px;
+        right: 6px;
+        top: 50%;
+        height: 3px;
+        background: var(--wood-dark);
+        transform: rotate(-45deg);
+      }
       #help {
         position: fixed;
         left: 16px;
@@ -599,8 +640,18 @@
           font-size: 20px;
         }
         #bag {
-          width: 150px;
-          min-height: 50px;
+          width: 132px;
+          min-height: 0;
+          padding: 4px 6px 7px;
+          border-top-width: 4px;
+          border-radius: 6px 6px 18px 18px;
+        }
+        #bag-items {
+          min-height: 19px;
+        }
+        .bag-label {
+          font-size: 7px;
+          margin-bottom: 2px;
         }
         #bag .prize-icon {
           width: 19px;
@@ -627,6 +678,17 @@
           bottom: calc(8px + env(safe-area-inset-bottom));
           transform: scale(0.65);
           transform-origin: bottom right;
+        }
+        #sound {
+          top: calc(12px + env(safe-area-inset-top));
+          right: calc(12px + env(safe-area-inset-right));
+          bottom: auto;
+          gap: 6px;
+        }
+        #sound button {
+          width: 36px;
+          height: 36px;
+          padding: 8px;
         }
         #help {
           left: calc(12px + env(safe-area-inset-left));
@@ -695,11 +757,31 @@
     <div id="help">
       <span class="key-help"
         >ARROWS move claw<br />SPACE drop<br />HOLD SPACE reel<br />Q quit &amp;
-        save</span
+        save<br />M music &nbsp; S sound</span
       ><span class="touch-help"
         >DRAG move claw<br />TAP drop<br />HOLD finger reel</span
       >
       <div class="legend" id="legend"></div>
+    </div>
+    <div id="sound">
+      <button type="button" data-sound="music" aria-label="Music">
+        <svg
+          viewBox="0 0 12 12"
+          shape-rendering="crispEdges"
+          aria-hidden="true"
+        >
+          <path d="M4 1h7v7h-1V3H5v6H4zM1 8h4v3H1zM7 6h4v3H7z" />
+        </svg>
+      </button>
+      <button type="button" data-sound="sfx" aria-label="Sound effects">
+        <svg
+          viewBox="0 0 12 12"
+          shape-rendering="crispEdges"
+          aria-hidden="true"
+        >
+          <path d="M1 4h3l3-3h1v10H7L4 8H1zM9 4h1v4H9zM10 2h1v8h-1z" />
+        </svg>
+      </button>
     </div>
     <div id="popups"></div>
     <div id="overlay" class="overlay">
@@ -1518,21 +1600,99 @@
 
       // ---------- plushies ----------
 
-      const sphereGeo = new THREE.SphereGeometry(1, 20, 14);
-      const coneGeo = new THREE.ConeGeometry(1, 2, 14);
+      const sphereGeo = new THREE.SphereGeometry(1, 24, 16);
+      const coneGeo = new THREE.ConeGeometry(1, 2, 16);
+
+      // Knitted yarn: a tile of stockinette "V" stitches, drawn once as a colour map (soft shading
+      // between the stitches) and a bump map (each leg of the V puffs up like a strand of yarn).
+      const KNIT = { cols: 4, rows: 4, cell: 32, stitchW: 0.06, stitchH: 0.05 };
+      function knitCanvas(bump) {
+        const size = KNIT.cols * KNIT.cell;
+        const cv = document.createElement("canvas");
+        cv.width = cv.height = size;
+        const c = cv.getContext("2d");
+        c.fillStyle = bump ? "#000" : "#c6c6c6";
+        c.fillRect(0, 0, size, size);
+        const leg = (x, y, rot) => {
+          const g = c.createRadialGradient(0, 0, 1, 0, 0, 15);
+          g.addColorStop(0, bump ? "#fff" : "#ffffff");
+          g.addColorStop(0.6, bump ? "#aaa" : "#ececec");
+          g.addColorStop(1, bump ? "#000" : "#d2d2d2");
+          c.save();
+          c.translate(x, y);
+          c.rotate(rot);
+          c.scale(0.48, 1);
+          c.fillStyle = g;
+          c.beginPath();
+          c.arc(0, 0, 15, 0, Math.PI * 2);
+          c.fill();
+          c.restore();
+        };
+        // Draw a row above and below the tile too, so the stitches wrap without a seam.
+        for (let row = -1; row <= KNIT.rows; row++)
+          for (let col = 0; col < KNIT.cols; col++) {
+            const cx = col * KNIT.cell + KNIT.cell / 2;
+            const cy = row * KNIT.cell + KNIT.cell / 2;
+            leg(cx - 7, cy, -0.5);
+            leg(cx + 7, cy, 0.5);
+          }
+        // A little fuzz so it reads as yarn, not plastic.
+        for (let i = 0; i < 900; i++) {
+          c.fillStyle = `rgba(${bump ? "0,0,0" : "90,90,90"},${Math.random() * 0.12})`;
+          c.fillRect(Math.random() * size, Math.random() * size, 1, 2);
+        }
+        return cv;
+      }
+      const knitMap = new THREE.CanvasTexture(knitCanvas(false));
+      knitMap.colorSpace = THREE.SRGBColorSpace;
+      const knitBump = new THREE.CanvasTexture(knitCanvas(true));
+      for (const t of [knitMap, knitBump]) {
+        t.wrapS = t.wrapT = THREE.RepeatWrapping;
+        t.anisotropy = 4;
+      }
+      const yarn = (color) =>
+        new THREE.MeshStandardMaterial({
+          color,
+          roughness: 1,
+          map: knitMap,
+          bumpMap: knitBump,
+          bumpScale: 2.2,
+        });
+
+      // Every part shares the same stitch size, so each scaled sphere or cone gets UVs that repeat
+      // the tile by its own size. Geometries are cached per repeat count.
+      const knitGeos = {};
+      function knitGeo(p) {
+        const sx = p.r * p.s[0];
+        const sy = p.r * p.s[1];
+        const sz = p.r * p.s[2];
+        const around = Math.PI * (sx + sz);
+        const tall = p.cone ? 2 * sy : Math.PI * sy;
+        const u = Math.max(1, Math.round(around / KNIT.stitchW / KNIT.cols));
+        const v = Math.max(1, Math.round(tall / KNIT.stitchH / KNIT.rows));
+        const key = `${p.cone ? "c" : "s"}${u}x${v}`;
+        if (knitGeos[key]) return knitGeos[key];
+        const geo = (p.cone ? coneGeo : sphereGeo).clone();
+        const uv = geo.attributes.uv;
+        for (let i = 0; i < uv.count; i++)
+          uv.setXY(i, uv.getX(i) * u, uv.getY(i) * v);
+        return (knitGeos[key] = geo);
+      }
+
       const DECO = {
-        cream: std(0xfff4e2, 0.95),
-        pink: std(0xf7a8b8, 0.9),
-        beak: std(0xf2a65a, 0.8),
-        dark: M.black,
+        cream: yarn(0xfff4e2),
+        pink: yarn(0xf7a8b8),
+        beak: yarn(0xf2a65a),
+        // Button eyes: smooth and a little shiny against the yarn.
+        dark: std(0x161616, 0.25),
       };
+      const KNITTED = new Set(["fur", "accent", "cream", "pink", "beak"]);
       for (const t of TIERS) {
         t.mats = {
           // The warm lamp and tone mapping wash pastels out, so the 3D fur gets a little extra saturation.
-          fur: std(new THREE.Color(t.color).offsetHSL(0, 0.25, -0.05), 0.95),
-          accent: std(
+          fur: yarn(new THREE.Color(t.color).offsetHSL(0, 0.28, 0)),
+          accent: yarn(
             new THREE.Color(t.color).lerp(new THREE.Color(0x3a2a1a), 0.22),
-            0.95,
           ),
         };
       }
@@ -1561,7 +1721,7 @@
             );
           if (!p.visible) continue;
           const m = new THREE.Mesh(
-            p.cone ? coneGeo : sphereGeo,
+            KNITTED.has(p.mat) ? knitGeo(p) : p.cone ? coneGeo : sphereGeo,
             tier.mats[p.mat] ?? DECO[p.mat],
           );
           m.scale.set(p.r * p.s[0], p.r * p.s[1], p.r * p.s[2]);
@@ -1746,6 +1906,8 @@
       addEventListener("keydown", (e) => {
         if (e.target instanceof HTMLInputElement) return;
         if (GAME_KEYS.includes(e.code)) e.preventDefault();
+        if ((e.code === "KeyM" || e.code === "KeyS") && !e.repeat)
+          return toggleSound(e.code === "KeyM" ? "music" : "sfx");
         if (game.paused) {
           if (e.code === "Enter" || e.code === "KeyY") answerConfirm(true);
           else if (e.code === "Escape" || e.code === "KeyN")
@@ -2142,6 +2304,7 @@
         if (makesBoard(r.score)) r.savedDate = saveScore(name, r.score).date;
         // Only names people actually typed go to the world board, not the PLAYER fallback.
         if (typed && makesWorld(r.score)) postWorld(name, r.score);
+        if (typed) sfx.saved();
         r.saved = true;
       }
 
@@ -2175,6 +2338,7 @@
         document.getElementById("confirm-text").textContent = c.text();
         document.getElementById("confirm-yes").textContent = c.yes;
         confirmEl.hidden = false;
+        sfx.blip();
         document.getElementById("confirm-no").focus();
       }
       function answerConfirm(yes) {
@@ -2213,7 +2377,14 @@
         bag: [],
       };
 
+      const STATE_SFX = {
+        drop: () => sfx.drop(),
+        close: () => sfx.clack(),
+        lift: () => sfx.lift(),
+        release: () => sfx.release(),
+      };
       function setState(state, msg) {
+        if (state !== game.state) STATE_SFX[state]?.();
         game.state = state;
         game.t = 0;
         if (msg !== undefined) statusEl.textContent = msg;
@@ -2223,6 +2394,8 @@
         // Leaving the end screen without typing a name still keeps the score.
         if (game.result) submitName("PLAYER");
         fetchWorld();
+        sfx.coinIn();
+        setMusicLevel(1);
         overlayEl.hidden = true;
         setMode("play");
         Object.assign(game, {
@@ -2325,6 +2498,7 @@
           .finished.then(() => {
             fly.remove();
             slot.style.visibility = "";
+            sfx.plop();
             bagEl.classList.remove("bump");
             void bagEl.offsetWidth;
             bagEl.classList.add("bump");
@@ -2364,6 +2538,9 @@
         if (prize.fresh) tags.push("NEW!");
         game.bag.push(prize);
         flyToBag(plush, prize);
+        sfx.prize(TIERS.indexOf(plush.tier), game.streak - 1);
+        if (prize.fresh) sfx.fresh();
+        if (healed) sfx.heal();
         popup(`+${fmt(pts)}`, tags.join(" · "), plush.tier.css);
         const [px, py] = popupPoint();
         burst(px, py, 10 + TIERS.indexOf(plush.tier) * 8, 0.8);
@@ -2381,6 +2558,7 @@
           "#f7a8b8",
         );
         flashHearts("hurt");
+        sfx.hurt(cost >= 1);
         renderHud();
       }
 
@@ -2429,6 +2607,7 @@
           900,
         );
         rain(260);
+        sfx.cleared();
         setTimeout(() => gameOver("cleared", bonus), 3600);
       }
 
@@ -2458,6 +2637,13 @@
           saved: false,
         };
         if (game.result.highscore) rain(cleared ? 160 : 90);
+        setMusicLevel(0.4);
+        if (!cleared)
+          (game.result.highscore
+            ? sfx.fanfare
+            : end === "quit"
+              ? sfx.cashOut
+              : sfx.lost)();
         renderOver();
         renderHud();
       }
@@ -2538,6 +2724,8 @@
       }
 
       function startReel(plush) {
+        sfx.reelStart();
+        setMusicLevel(0.45);
         const t = plush.tier;
         game.held = plush;
         game.turn.kind = "reel";
@@ -2562,6 +2750,10 @@
       }
 
       function endReel(result, msg) {
+        if (result === "caught") sfx.caught(game.mg.perfect);
+        else if (result === "escaped") sfx.escaped();
+        else sfx.slipped();
+        setMusicLevel(1);
         game.mg.result = result;
         game.turn.result = result;
         if (result === "caught") claw.torque = GRIP.max;
@@ -2622,6 +2814,16 @@
         mg.progress += (inBar ? MG.fillRate : -MG.drainRate) * dt;
         if (!inBar) mg.perfect = false;
         mg.progress = Math.min(1, Math.max(0, mg.progress));
+        // Ping in, buzz out, and a ratchet that clicks up as the grip builds.
+        if (mg.wasInBar !== undefined && inBar !== mg.wasInBar)
+          inBar ? sfx.inBar() : sfx.outBar();
+        mg.wasInBar = inBar;
+        const notch = Math.floor(mg.progress * 16);
+        if (mg.notch !== undefined && notch > mg.notch)
+          sfx.ratchet(mg.progress);
+        else if (mg.notch !== undefined && notch < mg.notch)
+          sfx.slack(mg.progress);
+        mg.notch = notch;
         claw.torque = gripAt(mg.progress);
 
         if (!isHeld(game.held))
@@ -2697,7 +2899,10 @@
             if (game.t > CLAW.topPause) {
               const plush = findHeldPlush();
               if (plush) startReel(plush);
-              else setState("return", "Missed! Nothing in the claw.");
+              else {
+                sfx.empty();
+                setState("return", "Missed! Nothing in the claw.");
+              }
             }
             break;
           case "reel":
@@ -2956,6 +3161,435 @@
         reelButton.position.y = keys.Space ? -0.07 : -0.02;
       }
 
+      // ---------- sound ----------
+
+      // Everything is synthesised with Web Audio: no files to load. Browsers (iPhone especially)
+      // only start audio after a tap or key press, so the context is created on the first one.
+      const SOUND_KEY = "startclaw.sound.v1";
+      const sound = { music: true, sfx: true };
+      try {
+        Object.assign(sound, JSON.parse(localStorage.getItem(SOUND_KEY)));
+      } catch {}
+      const MUSIC_VOL = 0.32;
+      let ac = null;
+      let sfxBus;
+      let musicBus;
+      let noiseBuf;
+      let motor;
+      let musicLevel = 1;
+
+      function audioOn() {
+        if (!ac) {
+          const AC = window.AudioContext || window.webkitAudioContext;
+          if (!AC) return null;
+          // Lets iPhones play through the silent switch, like a game should.
+          try {
+            if (navigator.audioSession)
+              navigator.audioSession.type = "playback";
+          } catch {}
+          ac = new AC();
+          const comp = ac.createDynamicsCompressor();
+          comp.connect(ac.destination);
+          const master = ac.createGain();
+          master.gain.value = 0.7;
+          master.connect(comp);
+          sfxBus = ac.createGain();
+          sfxBus.connect(master);
+          musicBus = ac.createGain();
+          musicBus.connect(master);
+          noiseBuf = ac.createBuffer(1, ac.sampleRate, ac.sampleRate);
+          const d = noiseBuf.getChannelData(0);
+          for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+          // The gantry motor: a low filtered buzz whose volume follows the claw's speed.
+          const osc = ac.createOscillator();
+          osc.type = "sawtooth";
+          osc.frequency.value = 62;
+          const lp = ac.createBiquadFilter();
+          lp.type = "lowpass";
+          lp.frequency.value = 320;
+          motor = ac.createGain();
+          motor.gain.value = 0;
+          osc.connect(lp).connect(motor).connect(sfxBus);
+          osc.start();
+          applySound();
+        }
+        if (ac.state !== "running") ac.resume();
+        if (sound.music) startMusic();
+        return ac;
+      }
+      for (const ev of ["pointerdown", "pointerup", "keydown", "touchend"])
+        addEventListener(ev, audioOn, { capture: true });
+
+      function applySound() {
+        if (!ac) return;
+        const now = ac.currentTime;
+        sfxBus.gain.setTargetAtTime(sound.sfx ? 1 : 0, now, 0.02);
+        musicBus.gain.setTargetAtTime(
+          sound.music ? MUSIC_VOL * musicLevel : 0,
+          now,
+          0.15,
+        );
+      }
+      function setMusicLevel(level) {
+        musicLevel = level;
+        applySound();
+      }
+      function toggleSound(kind) {
+        sound[kind] = !sound[kind];
+        try {
+          localStorage.setItem(SOUND_KEY, JSON.stringify(sound));
+        } catch {}
+        audioOn();
+        applySound();
+        renderSoundButtons();
+        if (kind === "sfx" && sound.sfx) sfx.click();
+      }
+      const soundEl = document.getElementById("sound");
+      function renderSoundButtons() {
+        for (const b of soundEl.querySelectorAll("button")) {
+          const on = sound[b.dataset.sound];
+          b.classList.toggle("off", !on);
+          b.setAttribute("aria-pressed", String(on));
+          b.title = `${b.dataset.sound === "music" ? "Music" : "Sound effects"} ${on ? "on" : "off"} (${b.dataset.sound === "music" ? "M" : "S"})`;
+        }
+      }
+      addEventListener("pointerdown", (e) => {
+        if (e.target.closest("button:not([data-sound])")) sfx.click();
+      });
+      soundEl.addEventListener("click", (e) => {
+        const b = e.target.closest("button[data-sound]");
+        if (b) toggleSound(b.dataset.sound);
+      });
+      renderSoundButtons();
+
+      const hz = (midi) => 440 * 2 ** ((midi - 69) / 12);
+
+      // One enveloped oscillator. `at` is an absolute time (for the music); otherwise `t` seconds from now.
+      function tone({
+        f,
+        f2,
+        type = "square",
+        t = 0,
+        at,
+        dur = 0.12,
+        vol = 0.15,
+        attack = 0.005,
+        bus,
+      }) {
+        if (!ac || ac.state !== "running") return;
+        const t0 = at ?? ac.currentTime + t;
+        const o = ac.createOscillator();
+        const g = ac.createGain();
+        o.type = type;
+        o.frequency.setValueAtTime(f, t0);
+        if (f2) o.frequency.exponentialRampToValueAtTime(f2, t0 + dur);
+        g.gain.setValueAtTime(0.0001, t0);
+        g.gain.exponentialRampToValueAtTime(vol, t0 + attack);
+        g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+        o.connect(g).connect(bus ?? sfxBus);
+        o.start(t0);
+        o.stop(t0 + dur + 0.05);
+      }
+      function noise({
+        t = 0,
+        at,
+        dur = 0.08,
+        vol = 0.15,
+        freq = 2000,
+        f2,
+        q = 1,
+        type = "bandpass",
+        bus,
+      }) {
+        if (!ac || ac.state !== "running") return;
+        const t0 = at ?? ac.currentTime + t;
+        const src = ac.createBufferSource();
+        src.buffer = noiseBuf;
+        const filter = ac.createBiquadFilter();
+        filter.type = type;
+        filter.Q.value = q;
+        filter.frequency.setValueAtTime(freq, t0);
+        if (f2) filter.frequency.exponentialRampToValueAtTime(f2, t0 + dur);
+        const g = ac.createGain();
+        g.gain.setValueAtTime(vol, t0);
+        g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+        src
+          .connect(filter)
+          .connect(g)
+          .connect(bus ?? sfxBus);
+        src.start(t0, Math.random() * 0.5);
+        src.stop(t0 + dur + 0.05);
+      }
+      const notes = (list, step, o = {}) =>
+        list.forEach(
+          (m, i) => m && tone({ f: hz(m), t: i * step, dur: step * 1.6, ...o }),
+        );
+
+      const sfx = {
+        click: () => tone({ f: 1200, f2: 900, dur: 0.04, vol: 0.06 }),
+        blip: () => notes([79, 84], 0.06, { vol: 0.08 }),
+        coinIn: () => notes([72, 76, 79, 84, 88], 0.06, { vol: 0.1 }),
+        drop: () => {
+          tone({ f: 520, f2: 180, dur: 0.35, vol: 0.06, type: "triangle" });
+          noise({ dur: 0.05, vol: 0.05, freq: 900 });
+        },
+        clack: () => {
+          noise({ dur: 0.05, vol: 0.18, freq: 1400, q: 3 });
+          tone({ f: 260, f2: 120, dur: 0.07, vol: 0.08 });
+        },
+        lift: () =>
+          tone({ f: 140, f2: 280, dur: 0.6, vol: 0.05, type: "triangle" }),
+        release: () => {
+          noise({ dur: 0.04, vol: 0.12, freq: 2200, q: 4 });
+          tone({ f: 600, f2: 900, dur: 0.08, vol: 0.06, type: "triangle" });
+        },
+        empty: () =>
+          notes([67, 63], 0.14, { vol: 0.07, type: "triangle", dur: 0.25 }),
+        reelStart: () => notes([76, 79, 76, 79, 83], 0.05, { vol: 0.08 }),
+        inBar: () =>
+          tone({ f: 1320, dur: 0.08, vol: 0.06, type: "sine", attack: 0.002 }),
+        outBar: () => tone({ f: 150, f2: 110, dur: 0.12, vol: 0.07 }),
+        ratchet: (p) =>
+          tone({
+            f: 300 + p * 900,
+            dur: 0.035,
+            vol: 0.05,
+            type: "triangle",
+          }),
+        slack: (p) => tone({ f: 200 + p * 200, f2: 120, dur: 0.05, vol: 0.04 }),
+        caught: (perfect) => {
+          notes([72, 76, 79, 84], 0.07, { vol: 0.1 });
+          if (perfect)
+            notes([0, 0, 0, 0, 88, 91, 96], 0.05, {
+              vol: 0.06,
+              type: "triangle",
+            });
+        },
+        escaped: () =>
+          notes([67, 66, 65, 64], 0.13, {
+            vol: 0.08,
+            type: "sawtooth",
+            dur: 0.2,
+          }),
+        slipped: () =>
+          tone({ f: 500, f2: 160, dur: 0.4, vol: 0.07, type: "triangle" }),
+        // Bigger tiers get a longer, higher jingle.
+        prize: (tierIndex, streak) => {
+          const up = Math.min(streak, 6);
+          tone({ f: hz(83 + up), dur: 0.08, vol: 0.09 });
+          tone({ f: hz(88 + up), t: 0.08, dur: 0.3, vol: 0.09 });
+          const extra = [76, 79, 84, 88, 91].slice(0, tierIndex + 1);
+          notes(
+            extra.map((m) => m + up),
+            0.06,
+            {
+              vol: 0.05,
+              type: "triangle",
+              t: 0,
+            },
+          );
+        },
+        fresh: () =>
+          [96, 100, 103, 108].forEach((m, i) =>
+            tone({
+              f: hz(m),
+              t: 0.35 + i * 0.05,
+              dur: 0.15,
+              vol: 0.04,
+              type: "sine",
+            }),
+          ),
+        plop: () =>
+          tone({ f: 700, f2: 260, dur: 0.09, vol: 0.09, type: "sine" }),
+        heal: () =>
+          notes([79, 83, 86], 0.06, { vol: 0.06, type: "sine", t: 0.2 }),
+        hurt: (full) => {
+          tone({ f: 330, f2: 160, dur: 0.18, vol: 0.09 });
+          if (full) tone({ f: 250, f2: 110, t: 0.18, dur: 0.25, vol: 0.09 });
+        },
+        lost: () =>
+          notes([72, 71, 70, 69, 0, 64, 0, 60], 0.16, {
+            vol: 0.08,
+            type: "triangle",
+            dur: 0.3,
+          }),
+        cashOut: () =>
+          notes([84, 0, 88, 84, 91], 0.08, { vol: 0.08, type: "square" }),
+        fanfare: () => {
+          notes([72, 72, 72, 76, 0, 72, 76, 79], 0.1, { vol: 0.09 });
+          notes([60, 0, 0, 64, 0, 0, 67, 72], 0.1, {
+            vol: 0.06,
+            type: "triangle",
+            dur: 0.3,
+          });
+        },
+        cleared: () => {
+          sfx.fanfare();
+          notes([84, 88, 91, 96, 91, 96, 100, 103, 108], 0.08, {
+            vol: 0.06,
+            type: "triangle",
+            t: 0.9,
+          });
+        },
+        saved: () => notes([79, 84, 88], 0.07, { vol: 0.07, type: "sine" }),
+      };
+
+      function setMotor(speed) {
+        if (!motor) return;
+        motor.gain.setTargetAtTime(
+          Math.min(1, speed / 4) * 0.12,
+          ac.currentTime,
+          0.06,
+        );
+      }
+
+      // ---------- music ----------
+
+      // A loop of 16 bars of 16 steps: an 8-bar tune, then 8 bars of just groove so it never nags.
+      // Chords C, Am, F, G. Notes are [step, midi, length in steps].
+      const BPM = 132;
+      const STEP = 60 / BPM / 4;
+      const CHORDS = [
+        [48, 52, 55],
+        [45, 48, 52],
+        [41, 45, 48],
+        [43, 47, 50],
+      ];
+      const TUNE = [
+        [
+          [0, 76, 2],
+          [2, 79, 2],
+          [4, 84, 4],
+          [8, 83, 2],
+          [10, 79, 2],
+          [12, 76, 4],
+        ],
+        [
+          [0, 81, 4],
+          [4, 79, 2],
+          [6, 76, 2],
+          [8, 72, 4],
+          [12, 74, 2],
+          [14, 76, 2],
+        ],
+        [
+          [0, 77, 2],
+          [2, 81, 2],
+          [4, 84, 4],
+          [8, 81, 2],
+          [10, 77, 2],
+          [12, 81, 4],
+        ],
+        [
+          [0, 79, 6],
+          [6, 77, 2],
+          [8, 76, 2],
+          [10, 74, 2],
+          [12, 71, 2],
+          [14, 74, 2],
+        ],
+        [
+          [0, 76, 2],
+          [2, 79, 2],
+          [4, 84, 4],
+          [8, 83, 2],
+          [10, 79, 2],
+          [12, 76, 4],
+        ],
+        [
+          [0, 81, 2],
+          [2, 84, 2],
+          [4, 88, 4],
+          [8, 86, 2],
+          [10, 84, 2],
+          [12, 81, 4],
+        ],
+        [
+          [0, 77, 2],
+          [2, 79, 2],
+          [4, 81, 2],
+          [6, 84, 2],
+          [8, 86, 4],
+          [12, 84, 4],
+        ],
+        [
+          [0, 83, 4],
+          [4, 81, 2],
+          [6, 83, 2],
+          [8, 86, 8],
+        ],
+      ];
+      const music = { on: false, step: 0, next: 0, timer: 0 };
+      function startMusic() {
+        if (music.on || !ac) return;
+        music.on = true;
+        music.step = 0;
+        music.next = ac.currentTime + 0.1;
+        music.timer = setInterval(scheduleMusic, 25);
+      }
+      function scheduleMusic() {
+        if (ac.state !== "running") return;
+        // Behind (tab was hidden): skip ahead instead of firing a burst of notes.
+        if (music.next < ac.currentTime) music.next = ac.currentTime + 0.05;
+        while (music.next < ac.currentTime + 0.12) {
+          playStep(music.step, music.next);
+          music.step = (music.step + 1) % (16 * 16);
+          music.next += STEP;
+        }
+      }
+      function playStep(n, at) {
+        if (!sound.music) return;
+        const bar = Math.floor(n / 16);
+        const s = n % 16;
+        const chord = CHORDS[bar % 4];
+        const tuneBar = bar < 8 ? TUNE[bar] : null;
+        const bus = musicBus;
+        // Bass: bouncy root / octave eighths.
+        if (s % 2 === 0)
+          tone({
+            f: hz(chord[0] - 12 + (s % 4 === 2 ? 12 : 0)),
+            at,
+            dur: STEP * 1.6,
+            vol: 0.22,
+            type: "triangle",
+            bus,
+          });
+        // Drums.
+        if (s === 0 || s === 8 || (s === 10 && bar % 2))
+          tone({ f: 150, f2: 45, at, dur: 0.14, vol: 0.5, type: "sine", bus });
+        if (s === 4 || s === 12)
+          noise({ at, dur: 0.12, vol: 0.18, freq: 1800, q: 0.8, bus });
+        if (s % 2 === 0)
+          noise({
+            at,
+            dur: 0.03,
+            vol: s % 4 ? 0.05 : 0.08,
+            freq: 8000,
+            type: "highpass",
+            bus,
+          });
+        // Arpeggio: a soft sparkle in the groove half, a whisper under the tune.
+        const arp = chord[[0, 1, 2, 1][s % 4]] + 24;
+        tone({
+          f: hz(arp),
+          at,
+          dur: STEP * 0.9,
+          vol: tuneBar ? 0.025 : 0.05,
+          bus,
+        });
+        if (tuneBar)
+          for (const [st, m, len] of tuneBar)
+            if (st === s)
+              tone({
+                f: hz(m),
+                at,
+                dur: STEP * len * 0.95,
+                vol: 0.09,
+                attack: 0.01,
+                bus,
+              });
+      }
+
       // ---------- loop ----------
 
       const FIXED = 1 / 120;
@@ -2975,6 +3609,10 @@
           }
         }
         sync(now);
+        const hv = hub.velocity;
+        setMotor(
+          game.paused ? 0 : Math.hypot(hv.x, hv.z) + Math.abs(hv.y) * 0.5,
+        );
         drawScreen();
         tallyScore(dt);
         stepFx(dt);
