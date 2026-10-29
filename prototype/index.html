@@ -1127,12 +1127,19 @@
         prize: new CANNON.Material("prize"),
         claw: new CANNON.Material("claw"),
       };
-      const contact = (a, b, friction) =>
+      const contact = (a, b, friction, o = {}) =>
         world.addContactMaterial(
-          new CANNON.ContactMaterial(a, b, { friction, restitution: 0 }),
+          new CANNON.ContactMaterial(a, b, { friction, restitution: 0, ...o }),
         );
-      contact(mats.prize, mats.static, 0.5);
-      contact(mats.prize, mats.prize, 0.4);
+      // Plushies are a little rubbery: softer contacts that sink in a touch and a small bounce.
+      // The claw contact stays firm so the grip is unchanged.
+      const RUBBER = {
+        restitution: 0.22,
+        contactEquationStiffness: 2e6,
+        contactEquationRelaxation: 4,
+      };
+      contact(mats.prize, mats.static, 0.5, RUBBER);
+      contact(mats.prize, mats.prize, 0.4, RUBBER);
       contact(mats.prize, mats.claw, 0.9);
       contact(mats.claw, mats.static, 0.3);
 
@@ -1440,6 +1447,9 @@
       const plushies = [];
       const pick = (list) => list[Math.floor(Math.random() * list.length)];
 
+      // Squash-and-stretch spring: impacts kick it, and it wobbles back like rubber.
+      const SQUISH = { stiffness: 320, damping: 11, kick: 0.45, max: 0.2 };
+
       function addPlush(tier, animal, x, y, z) {
         const body = new CANNON.Body({
           mass: 1,
@@ -1475,13 +1485,29 @@
           Math.random() * 6.28,
         );
         world.addBody(body);
-        scene.add(group);
-        plushies.push({ body, group, tier, animal, ghost: false });
+        // The root carries position and a world-vertical squash; the inner group carries rotation.
+        const root = new THREE.Group();
+        root.add(group);
+        scene.add(root);
+        const plush = { body, root, group, tier, animal, ghost: false };
+        plush.squash = { a: 0, v: 0 };
+        body.addEventListener("collide", (e) => {
+          const hit = Math.abs(e.contact.getImpactVelocityAlongNormal());
+          if (hit > 0.4) plush.squash.v += Math.min(hit, 6) * SQUISH.kick;
+        });
+        plushies.push(plush);
+      }
+
+      function jiggle(dt) {
+        for (const { squash: q } of plushies) {
+          q.v += (-SQUISH.stiffness * q.a - SQUISH.damping * q.v) * dt;
+          q.a = Math.max(-SQUISH.max, Math.min(SQUISH.max, q.a + q.v * dt));
+        }
       }
 
       function removePlush(plush) {
         world.removeBody(plush.body);
-        scene.remove(plush.group);
+        scene.remove(plush.root);
         plushies.splice(plushies.indexOf(plush), 1);
       }
 
@@ -2606,7 +2632,11 @@
 
       function sync(now) {
         for (const b of plushies) {
-          b.group.position.copy(b.body.position);
+          // Squash keeps the volume and sinks a little so the plushie stays on the floor.
+          const a = b.squash.a;
+          b.root.position.copy(b.body.position);
+          b.root.position.y -= a * 0.35;
+          b.root.scale.set(1 + a / 2, 1 - a, 1 + a / 2);
           b.group.quaternion.copy(b.body.quaternion);
         }
         hubMesh.position.copy(hub.position);
@@ -2652,6 +2682,7 @@
             tick(FIXED);
             driveProngs();
             world.step(FIXED);
+            jiggle(FIXED);
             acc -= FIXED;
           }
         }
