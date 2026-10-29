@@ -51,7 +51,11 @@
         position: fixed;
         inset: 0;
       }
-      #restock {
+      .hud-actions {
+        display: flex;
+        gap: 8px;
+      }
+      .hud-actions button {
         display: block;
         font: inherit;
         font-size: 10px;
@@ -62,7 +66,22 @@
         border-radius: 999px;
         cursor: pointer;
       }
-      body:not([data-mode="play"]) #restock {
+      #quit {
+        align-self: flex-start;
+        font: inherit;
+        font-size: 9px;
+        padding: 8px 12px;
+        color: var(--ink);
+        background: var(--teal);
+        border: 3px solid var(--wood-dark);
+        border-radius: 999px;
+        text-shadow: none;
+        cursor: pointer;
+      }
+      body:not([data-mode="play"]) #quit {
+        visibility: hidden;
+      }
+      body:not([data-mode="play"]) .hud-actions {
         visibility: hidden;
       }
       .touch-help {
@@ -571,6 +590,7 @@
         <span id="best">BEST 0</span><span id="left"></span>
       </div>
       <div id="streak"></div>
+      <button id="quit" type="button">QUIT &amp; SAVE</button>
     </div>
     <div id="hud">
       <div class="carriage">
@@ -579,12 +599,14 @@
         </div>
       </div>
       <div id="status">Restocking plushies...</div>
-      <button id="restock" type="button">RESTOCK</button>
+      <div class="hud-actions">
+        <button id="restock" type="button">RESTOCK</button>
+      </div>
     </div>
     <div id="help">
       <span class="key-help"
-        >ARROWS move claw<br />SPACE drop<br />HOLD SPACE reel<br />R
-        restock</span
+        >ARROWS move claw<br />SPACE drop<br />HOLD SPACE reel<br />Q quit &amp;
+        save<br />R restock</span
       ><span class="touch-help"
         >DRAG move claw<br />TAP drop<br />HOLD finger reel</span
       >
@@ -596,16 +618,13 @@
     </div>
     <div id="confirm" class="overlay" hidden>
       <div class="panel small" role="dialog" aria-modal="true">
-        <h1>RESTOCK?</h1>
-        <p>
-          Fresh plushies, fresh start. Your current run ends and its score won't
-          count.
-        </p>
+        <h1 id="confirm-title"></h1>
+        <p id="confirm-text"></p>
         <div class="actions">
           <button class="btn ghost" id="confirm-no" type="button">
             KEEP PLAYING
           </button>
-          <button class="btn" id="confirm-yes" type="button">RESTOCK</button>
+          <button class="btn" id="confirm-yes" type="button"></button>
         </div>
       </div>
     </div>
@@ -1420,9 +1439,9 @@
         if (e.target instanceof HTMLInputElement) return;
         if (GAME_KEYS.includes(e.code)) e.preventDefault();
         if (game.paused) {
-          if (e.code === "Enter" || e.code === "KeyY") answerRestock(true);
+          if (e.code === "Enter" || e.code === "KeyY") answerConfirm(true);
           else if (e.code === "Escape" || e.code === "KeyN")
-            answerRestock(false);
+            answerConfirm(false);
           return;
         }
         if (game.mode !== "play") {
@@ -1435,7 +1454,8 @@
         }
         if (!e.repeat) pressed[e.code] = true;
         keys[e.code] = true;
-        if (e.code === "KeyR" && !e.repeat) askRestock();
+        if (e.code === "KeyR" && !e.repeat) askConfirm("restock");
+        if (e.code === "KeyQ" && !e.repeat) askConfirm("quit");
       });
       addEventListener("keyup", (e) => (keys[e.code] = false));
 
@@ -1751,9 +1771,13 @@
         const entering = r.highscore && !r.saved;
         const head = r.cleared
           ? `<h1 class="win">MACHINE CLEARED!</h1><p>Every plushie found a home. Clear bonus +${fmt(r.bonus)}</p>`
-          : r.highscore
-            ? `<h1 class="lost">YOU LOST THE GAME,</h1><p class="hey">but hey this is a highscore</p>`
-            : `<h1 class="lost">YOU LOST THE GAME</h1>`;
+          : r.quit
+            ? r.highscore
+              ? `<h1 class="win">CASHED OUT!</h1><p class="hey">and it's a highscore</p>`
+              : `<h1 class="win">CASHED OUT</h1><p>Run over. Not quite enough for the list this time.</p>`
+            : r.highscore
+              ? `<h1 class="lost">YOU LOST THE GAME,</h1><p class="hey">but hey this is a highscore</p>`
+              : `<h1 class="lost">YOU LOST THE GAME</h1>`;
         const form = entering
           ? `<form class="name"><label for="name">PUT YOUR NAME ON THE LIST</label><div class="row"><input id="name" name="name" maxlength="10" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="NAME" /><button class="btn" type="submit">SAVE</button></div></form>`
           : "";
@@ -1790,26 +1814,55 @@
         if (e.target.closest("[data-action=play]")) startGame();
       });
 
-      function askRestock() {
+      const CONFIRMS = {
+        restock: {
+          title: "RESTOCK?",
+          text: () =>
+            "Fresh plushies, fresh start. Your current run ends and its score won't count.",
+          yes: "RESTOCK",
+          run: () => startGame(),
+        },
+        quit: {
+          title: "CASH OUT?",
+          text: () =>
+            `End the run now and keep your ${fmt(game.score)} points for the high score list.`,
+          yes: "CASH OUT",
+          run: () => gameOver("quit"),
+        },
+      };
+      let pendingConfirm = null;
+      function askConfirm(kind) {
         if (game.mode !== "play" || game.paused) return;
+        const c = CONFIRMS[kind];
+        pendingConfirm = c;
         game.paused = true;
         keys.Space = false;
+        document.getElementById("confirm-title").textContent = c.title;
+        document.getElementById("confirm-text").textContent = c.text();
+        document.getElementById("confirm-yes").textContent = c.yes;
         confirmEl.hidden = false;
         document.getElementById("confirm-no").focus();
       }
-      function answerRestock(yes) {
+      function answerConfirm(yes) {
+        const c = pendingConfirm;
+        pendingConfirm = null;
         game.paused = false;
         confirmEl.hidden = true;
         document.activeElement?.blur?.();
-        if (yes) startGame();
+        if (yes) c?.run();
       }
-      document.getElementById("restock").addEventListener("click", askRestock);
+      document
+        .getElementById("restock")
+        .addEventListener("click", () => askConfirm("restock"));
+      document
+        .getElementById("quit")
+        .addEventListener("click", () => askConfirm("quit"));
       document
         .getElementById("confirm-yes")
-        .addEventListener("click", () => answerRestock(true));
+        .addEventListener("click", () => answerConfirm(true));
       document
         .getElementById("confirm-no")
-        .addEventListener("click", () => answerRestock(false));
+        .addEventListener("click", () => answerConfirm(false));
 
       // ---------- game state ----------
 
@@ -1911,7 +1964,7 @@
             );
         }
         if (!plushies.length) return clearMachine();
-        if (game.lives <= 0) return gameOver(false);
+        if (game.lives <= 0) return gameOver("lost");
         setState("aim", AIM_MSG);
       }
 
@@ -1934,14 +1987,24 @@
           900,
         );
         rain(260);
-        setTimeout(() => gameOver(true, bonus), 3600);
+        setTimeout(() => gameOver("cleared", bonus), 3600);
       }
 
-      function gameOver(cleared, bonus = 0) {
+      // How a run ends: "lost" (out of hearts), "cleared" (machine empty) or "quit" (cashed out).
+      function gameOver(end, bonus = 0) {
+        const cleared = end === "cleared";
         setMode("over");
-        if (!cleared) setState("idle", "Out of hearts.");
+        if (end === "lost") setState("idle", "Out of hearts.");
+        if (end === "quit") {
+          // Whatever is in the claw is forfeit; open up and park over the chute.
+          game.held = null;
+          game.mg = null;
+          game.turn = null;
+          setState("home", "Cashed out.");
+        }
         game.result = {
           cleared,
+          quit: end === "quit",
           bonus,
           score: game.score,
           highscore: makesBoard(game.score),
