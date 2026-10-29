@@ -123,6 +123,88 @@
         gap: 8px;
         text-shadow: 2px 2px 0 var(--wood-dark);
       }
+      #bag {
+        box-sizing: border-box;
+        width: 196px;
+        min-height: 64px;
+        margin-top: 4px;
+        padding: 6px 8px 10px;
+        color: var(--wood-dark);
+        text-shadow: none;
+        background:
+          repeating-linear-gradient(
+            45deg,
+            rgba(0, 0, 0, 0.05) 0 3px,
+            transparent 3px 6px
+          ),
+          #d8b47a;
+        border: 3px solid var(--wood-dark);
+        border-top-width: 6px;
+        border-radius: 8px 8px 28px 28px;
+        transform-origin: top center;
+      }
+      #bag.bump {
+        animation: bag-bump 0.45s ease-out;
+      }
+      @keyframes bag-bump {
+        35% {
+          transform: scale(1.06, 0.94);
+        }
+        70% {
+          transform: scale(0.98, 1.03);
+        }
+      }
+      .bag-label {
+        display: flex;
+        justify-content: space-between;
+        font-size: 8px;
+        margin-bottom: 4px;
+      }
+      #bag-items {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1px;
+        min-height: 26px;
+      }
+      #bag-items:empty::after {
+        content: "empty... for now";
+        font-size: 7px;
+        opacity: 0.6;
+        align-self: center;
+      }
+      .prize-icon {
+        width: 26px;
+        height: 26px;
+      }
+      .prize-icon.fresh {
+        filter: drop-shadow(0 0 3px #fff6b0);
+      }
+      .prize-flyer {
+        position: fixed;
+        left: 0;
+        top: 0;
+        z-index: 30;
+        width: 44px;
+        height: 44px;
+        margin: -22px 0 0 -22px;
+        pointer-events: none;
+      }
+      .haul {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 2px;
+        margin: 6px auto 10px;
+        max-width: 420px;
+      }
+      .haul .prize-icon {
+        width: 34px;
+        height: 34px;
+      }
+      .collection {
+        font-size: 9px;
+        opacity: 0.85;
+      }
       body[data-mode="title"] #scoreboard {
         visibility: hidden;
       }
@@ -312,7 +394,7 @@
       }
       .panel {
         box-sizing: border-box;
-        width: min(440px, 100%);
+        width: min(600px, 100%);
         max-height: calc(100dvh - 40px);
         overflow: auto;
         padding: 22px 20px;
@@ -431,7 +513,14 @@
         color: var(--gold);
         background: rgba(255, 215, 94, 0.2);
       }
-      .board .empty {
+      .boards {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 0 18px;
+        align-items: start;
+      }
+      .board .empty,
+      .boards .empty {
         opacity: 0.75;
         font-size: 9px;
       }
@@ -509,6 +598,14 @@
         #score {
           font-size: 20px;
         }
+        #bag {
+          width: 150px;
+          min-height: 50px;
+        }
+        #bag .prize-icon {
+          width: 19px;
+          height: 19px;
+        }
         .heart,
         .heart svg {
           width: 16px;
@@ -582,6 +679,10 @@
       </div>
       <div id="streak"></div>
       <button id="quit" type="button">QUIT &amp; SAVE</button>
+      <div id="bag" aria-label="Prize bag">
+        <div class="bag-label">PRIZE BAG <span id="bag-count"></span></div>
+        <div id="bag-items"></div>
+      </div>
     </div>
     <div id="hud">
       <div class="carriage">
@@ -662,6 +763,7 @@
         lives: 5,
         missCost: 0.5,
         failCost: 1,
+        dropCost: 0.5,
         perfectBonus: 0.5,
         streakStep: 0.5,
         streakMax: 3,
@@ -1565,6 +1667,63 @@
         } catch {}
         return entry;
       }
+      // Global board: one public table on Supabase. Anyone can read it and add a score, nothing else.
+      // The publishable key is meant to ship in the page; row-level security does the gatekeeping.
+      const WORLD = {
+        url: "https://rmswzajiqycfvlgrsqbm.supabase.co/rest/v1/star_claw_scores",
+        key: "sb_publishable_QX8Ah8CUiAnjHgUtpf74gg_HnIAKX8E",
+        size: 10,
+      };
+      const globalBoard = { rows: null, failed: false, mine: null };
+      const worldHeaders = {
+        apikey: WORLD.key,
+        Authorization: `Bearer ${WORLD.key}`,
+      };
+      const cleanName = (s) =>
+        s
+          .toUpperCase()
+          .replace(/[^A-Z0-9 ._!?-]/g, "")
+          .trim()
+          .slice(0, 10);
+      async function fetchWorld() {
+        try {
+          const res = await fetch(
+            `${WORLD.url}?select=id,name,score&order=score.desc,created_at.asc&limit=${WORLD.size}`,
+            { headers: worldHeaders },
+          );
+          if (!res.ok) throw new Error(res.status);
+          globalBoard.rows = await res.json();
+          globalBoard.failed = false;
+        } catch {
+          globalBoard.failed = !globalBoard.rows;
+        }
+        refreshWorldBoard();
+      }
+      async function postWorld(name, score) {
+        try {
+          const res = await fetch(WORLD.url, {
+            method: "POST",
+            headers: {
+              ...worldHeaders,
+              "Content-Type": "application/json",
+              Prefer: "return=representation",
+            },
+            body: JSON.stringify({ name, score }),
+          });
+          if (!res.ok) throw new Error(res.status);
+          globalBoard.mine = (await res.json())[0]?.id ?? null;
+        } catch {}
+        await fetchWorld();
+      }
+      function makesWorld(score) {
+        const rows = globalBoard.rows;
+        return (
+          !!rows &&
+          score > 0 &&
+          (rows.length < WORLD.size || score > rows[rows.length - 1].score)
+        );
+      }
+
       function makesBoard(score) {
         const list = loadScores();
         return (
@@ -1882,19 +2041,49 @@
             `<div><i class="dot" style="background:${t.css}"></i>${t.name.toUpperCase()}<b>${t.points}</b></div>`,
         ).join("")}</div><p>Easy &rarr; hard. Cherry is the tough one.</p>`;
 
-      function boardHtml(pending, highlight) {
-        const rows = loadScores();
+      function listHtml(rows, size, pending, isMine) {
+        rows = [...rows];
         if (pending) rows.push({ name: "???", score: pending, you: true });
         rows.sort((a, b) => b.score - a.score);
         if (!rows.length)
           return `<p class="empty">No scores yet. Be the first!</p>`;
         return `<ol class="board">${rows
-          .slice(0, BOARD_SIZE)
+          .slice(0, size)
           .map(
             (r, i) =>
-              `<li class="${r.you || r.date === highlight ? "you" : ""}"><span>${i + 1}.</span><span>${esc(r.name)}</span><span>${fmt(r.score)}</span></li>`,
+              `<li class="${r.you || isMine(r) ? "you" : ""}"><span>${i + 1}.</span><span>${esc(r.name)}</span><span>${fmt(r.score)}</span></li>`,
           )
           .join("")}</ol>`;
+      }
+      const boardHtml = (pending, highlight) =>
+        listHtml(
+          loadScores(),
+          BOARD_SIZE,
+          pending,
+          (r) => r.date === highlight,
+        );
+      let worldPending = 0;
+      function worldHtml() {
+        if (globalBoard.rows)
+          return listHtml(
+            globalBoard.rows,
+            WORLD.size,
+            worldPending,
+            (r) => r.id === globalBoard.mine,
+          );
+        return `<p class="empty">${globalBoard.failed ? "World board is offline." : "Loading..."}</p>`;
+      }
+      function refreshWorldBoard() {
+        const el = document.getElementById("world-board");
+        if (el) el.innerHTML = worldHtml();
+      }
+      // Local top 5 and world top 10, side by side when there is room.
+      function boardsHtml(title, pending, highlight) {
+        worldPending = pending && makesWorld(pending) ? pending : 0;
+        return `<div class="boards">
+          <div><h2>${title}</h2>${boardHtml(pending && makesBoard(pending) ? pending : 0, highlight)}</div>
+          <div><h2>WORLD TOP ${WORLD.size}</h2><div id="world-board">${worldHtml()}</div></div>
+        </div>`;
       }
 
       function showPanel(html) {
@@ -1908,10 +2097,10 @@
           <h1>START CLAW</h1>
           <p>Grab plushies, win the reel, drop them in the chute.</p>
           ${tiersHtml()}
-          <p>Missed grab: -&frac12; ${heartSvg("inline")} &nbsp; Lost reel or dropped: -1 ${heartSvg("inline")}</p>
+          <p>Missed grab or dropped: -&frac12; ${heartSvg("inline")} &nbsp; Lost reel: -1 ${heartSvg("inline")}</p>
           <p>Every catch: +&frac12; ${heartSvg("inline")} &nbsp; Cash out: +${RULES.cashOutPerHalf} per &frac12; ${heartSvg("inline")} left</p>
-          <h2>HIGH SCORES</h2>
-          ${boardHtml()}
+          ${collectionHtml()}
+          ${boardsHtml("YOUR TOP 5")}
           <button class="btn big" type="button" data-action="play">${TOUCH ? "TAP TO PLAY" : "PLAY (SPACE)"}</button>`);
       }
 
@@ -1933,10 +2122,12 @@
         showPanel(`
           ${head}
           <div class="final">SCORE<b>${fmt(r.score)}</b></div>
+          <h2>YOUR HAUL</h2>
+          ${game.bag.length ? `<div class="haul">${game.bag.map(prizeImg).join("")}</div>` : `<p class="empty">The bag stayed empty this time.</p>`}
+          ${collectionHtml()}
           ${r.top && !r.saved ? `<p class="hey">NEW #1 HIGH SCORE!</p>` : ""}
           ${form}
-          <h2>${entering ? "PREVIOUS WINNERS" : "HIGH SCORES"}</h2>
-          ${boardHtml(entering ? r.score : 0, r.savedDate)}
+          ${boardsHtml(entering ? "PREVIOUS WINNERS" : "YOUR TOP 5", entering ? r.score : 0, r.savedDate)}
           <button class="btn big" type="button" data-action="play">${TOUCH ? "PLAY AGAIN" : "PLAY AGAIN (SPACE)"}</button>`);
         if (entering && !TOUCH) panelEl.querySelector("input").focus();
       }
@@ -1945,11 +2136,12 @@
         const r = game.result;
         if (!r?.highscore || r.saved) return;
         const input = panelEl.querySelector("input");
-        const name = (input?.value.trim() || fallback || "")
-          .toUpperCase()
-          .slice(0, 10);
+        const typed = cleanName(input?.value ?? "");
+        const name = typed || fallback || "";
         if (!name) return input?.focus();
-        r.savedDate = saveScore(name, r.score).date;
+        if (makesBoard(r.score)) r.savedDate = saveScore(name, r.score).date;
+        // Only names people actually typed go to the world board, not the PLAYER fallback.
+        if (typed && makesWorld(r.score)) postWorld(name, r.score);
         r.saved = true;
       }
 
@@ -2018,6 +2210,7 @@
         streak: 0,
         turn: null,
         result: null,
+        bag: [],
       };
 
       function setState(state, msg) {
@@ -2029,6 +2222,7 @@
       function startGame() {
         // Leaving the end screen without typing a name still keeps the score.
         if (game.result) submitName("PLAYER");
+        fetchWorld();
         overlayEl.hidden = true;
         setMode("play");
         Object.assign(game, {
@@ -2039,7 +2233,9 @@
           mg: null,
           turn: null,
           result: null,
+          bag: [],
         });
+        renderBag();
         shownScore = 0;
         scoreEl.textContent = "0";
         claw.closing = false;
@@ -2047,6 +2243,92 @@
         restock();
         setState("home", "Restocking plushies...");
         renderHud();
+      }
+
+      // ---------- prize bag & collection ----------
+
+      const iconUrls = {};
+      function plushIconUrl(tier, animal) {
+        const id = `${tier.name}:${animal.name}`;
+        if (iconUrls[id]) return iconUrls[id];
+        const cv = document.createElement("canvas");
+        cv.width = cv.height = 64;
+        drawPlushIcon(cv.getContext("2d"), animal.icon, tier.css, 32, 36, 18);
+        return (iconUrls[id] = cv.toDataURL());
+      }
+      const prizeImg = (p) =>
+        `<img class="prize-icon${p.fresh ? " fresh" : ""}" src="${plushIconUrl(p.tier, p.animal)}" alt="${p.tier.name} ${p.animal.name}" title="${p.tier.name} ${p.animal.name}${p.fresh ? " (new!)" : ""}" />`;
+
+      // Every colour + animal combo you have ever won, across runs.
+      const COLLECTION_KEY = "startclaw.collection.v1";
+      const COLLECTION_SIZE = TIERS.length * ANIMALS.length;
+      let collection;
+      try {
+        collection = new Set(
+          JSON.parse(localStorage.getItem(COLLECTION_KEY)) ?? [],
+        );
+      } catch {
+        collection = new Set();
+      }
+      function collect(plush) {
+        const id = `${plush.tier.name}:${plush.animal.name}`;
+        if (collection.has(id)) return false;
+        collection.add(id);
+        try {
+          localStorage.setItem(COLLECTION_KEY, JSON.stringify([...collection]));
+        } catch {}
+        return true;
+      }
+      const collectionHtml = () =>
+        `<p class="collection">COLLECTION ${collection.size}/${COLLECTION_SIZE}</p>`;
+
+      const bagEl = document.getElementById("bag");
+      const bagItemsEl = document.getElementById("bag-items");
+      const bagCountEl = document.getElementById("bag-count");
+      function renderBag() {
+        bagItemsEl.innerHTML = game.bag.map(prizeImg).join("");
+        bagCountEl.textContent = game.bag.length ? `x${game.bag.length}` : "";
+      }
+
+      // The won plushie pops out of the chute and arcs into the bag.
+      function flyToBag(plush, prize) {
+        const v = new THREE.Vector3(CHUTE.x, 0.5, CHUTE.z).project(camera);
+        const x0 = ((v.x + 1) / 2) * innerWidth;
+        const y0 = ((1 - v.y) / 2) * innerHeight;
+        bagItemsEl.insertAdjacentHTML("beforeend", prizeImg(prize));
+        const slot = bagItemsEl.lastElementChild;
+        slot.style.visibility = "hidden";
+        bagCountEl.textContent = `x${game.bag.length}`;
+        const r = slot.getBoundingClientRect();
+        const x1 = r.left + r.width / 2;
+        const y1 = r.top + r.height / 2;
+        const fly = document.createElement("img");
+        fly.className = "prize-flyer";
+        fly.src = slot.src;
+        document.body.appendChild(fly);
+        const k = r.width / 44;
+        const peak = Math.min(y0, y1) - 120;
+        fly
+          .animate(
+            [
+              { transform: `translate(${x0}px, ${y0}px) scale(0.4)` },
+              {
+                transform: `translate(${(x0 + x1) / 2}px, ${peak}px) scale(1.5) rotate(-12deg)`,
+                offset: 0.45,
+              },
+              {
+                transform: `translate(${x1}px, ${y1}px) scale(${k}) rotate(0deg)`,
+              },
+            ],
+            { duration: 900, easing: "cubic-bezier(.3,.7,.4,1)" },
+          )
+          .finished.then(() => {
+            fly.remove();
+            slot.style.visibility = "";
+            bagEl.classList.remove("bump");
+            void bagEl.offsetWidth;
+            bagEl.classList.add("bump");
+          });
       }
 
       function awardPrize(plush) {
@@ -2074,6 +2356,14 @@
           mult > 1 && `STREAK x${mult}`,
           healed && `+&frac12; ${heartSvg("inline")}`,
         ].filter(Boolean);
+        const prize = {
+          tier: plush.tier,
+          animal: plush.animal,
+          fresh: collect(plush),
+        };
+        if (prize.fresh) tags.push("NEW!");
+        game.bag.push(prize);
+        flyToBag(plush, prize);
         popup(`+${fmt(pts)}`, tags.join(" · "), plush.tier.css);
         const [px, py] = popupPoint();
         burst(px, py, 10 + TIERS.indexOf(plush.tier) * 8, 0.8);
@@ -2111,11 +2401,9 @@
         game.turn = null;
         if (turn && turn.prizes === 0) {
           if (turn.kind === "miss") loseLife(RULES.missCost, "MISSED THE GRAB");
-          else
-            loseLife(
-              RULES.failCost,
-              turn.result === "escaped" ? "IT GOT AWAY" : "DROPPED IT",
-            );
+          else if (turn.result === "escaped")
+            loseLife(RULES.failCost, "IT GOT AWAY");
+          else loseLife(RULES.dropCost, "DROPPED IT");
         }
         if (!plushies.length) return clearMachine();
         if (game.lives <= 0) return gameOver("lost");
@@ -2165,7 +2453,7 @@
           quit: end === "quit",
           bonus,
           score: game.score,
-          highscore: makesBoard(game.score),
+          highscore: makesBoard(game.score) || makesWorld(game.score),
           top: game.score > (loadScores()[0]?.score ?? 0),
           saved: false,
         };
@@ -2472,7 +2760,7 @@
       function drawPlushIcon(c, icon, color, x, y, s) {
         c.fillStyle = color;
         c.strokeStyle = "#3a2a1a";
-        c.lineWidth = 2;
+        c.lineWidth = Math.max(2, s / 6);
         const blob = (bx, by, rx, ry, rot = 0) => {
           c.beginPath();
           c.ellipse(bx, by, rx, ry, rot, 0, Math.PI * 2);
@@ -2702,6 +2990,7 @@
       setState("settle", "Restocking plushies...");
       renderHud();
       renderTitle();
+      fetchWorld();
       requestAnimationFrame(frame);
 
       // Debug handle for playtesting from the console.

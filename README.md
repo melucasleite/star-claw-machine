@@ -41,7 +41,9 @@ The machine is stocked with 15 plushies, dealt from ten animals (bears, cats, do
 | Peach  | 100    | 2       |
 | Cherry | 250    | 1       |
 
-A perfect reel (never leaving the bar) is worth x1.5, and back-to-back catches build a streak up to x3. You have 5 hearts: a grab that comes up empty costs half a heart, and losing the reel or dropping the plushie costs a whole one. Every successful grab heals half a heart, up to the full 5. Cashing out with QUIT & SAVE pays 25 points per half heart you have left. Clearing the machine pays 500 plus 100 per heart left. The top 5 scores are kept in `localStorage`.
+A perfect reel (never leaving the bar) is worth x1.5, and back-to-back catches build a streak up to x3. You have 5 hearts: a grab that comes up empty or a plushie dropped on the way to the chute costs half a heart, and losing the reel costs a whole one. Every successful grab heals half a heart, up to the full 5. Cashing out with QUIT & SAVE pays 25 points per half heart you have left. Clearing the machine pays 500 plus 100 per heart left. Your top 5 scores are kept in `localStorage`, next to a world top 10 stored in Supabase (the `star_claw_scores` table in the `lucas-crafts` project; anyone can read it and add a score, nobody can edit or delete). Only names you type go to the world board.
+
+Every plushie you win flies into the prize bag under the score, and the end screen shows the haul. Each colour and animal pair you have ever won counts toward your collection (50 in all), and a first-time catch is marked NEW!
 
 ## Formatting
 
