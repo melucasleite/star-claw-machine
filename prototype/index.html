@@ -106,7 +106,13 @@
       * {
         touch-action: none;
       }
-      button {
+      /* Dialogs scroll with a finger; the rest of the page is a game surface. */
+      .panel,
+      .panel * {
+        touch-action: pan-y;
+      }
+      button,
+      .panel button {
         touch-action: manipulation;
       }
       #stage {
@@ -398,10 +404,10 @@
       #howto .tiers div {
         padding: 5px 2px;
       }
-      #howto .actions {
+      .panel > .actions:last-child {
         position: sticky;
-        bottom: -22px;
-        margin: 12px -20px -22px;
+        bottom: calc(-1 * var(--pad-y));
+        margin: 12px calc(-1 * var(--pad-x)) calc(-1 * var(--pad-y));
         padding: 12px 0 16px;
         background: var(--teal);
       }
@@ -549,11 +555,14 @@
         display: none;
       }
       .panel {
+        --pad-y: 22px;
+        --pad-x: 20px;
         box-sizing: border-box;
         width: min(600px, 100%);
         max-height: calc(100dvh - 40px);
         overflow: auto;
-        padding: 22px 20px;
+        overscroll-behavior: contain;
+        padding: var(--pad-y) var(--pad-x);
         text-align: center;
         background: var(--teal);
         border: 4px solid var(--wood-dark);
@@ -799,7 +808,8 @@
           padding: 8px;
         }
         .panel {
-          padding: 18px 14px;
+          --pad-y: 18px;
+          --pad-x: 14px;
         }
         .panel h1 {
           font-size: 19px;
@@ -811,7 +821,8 @@
           font-size: 7px;
         }
         #howto .panel {
-          padding: 14px 12px;
+          --pad-y: 14px;
+          --pad-x: 12px;
         }
         #howto h1 {
           font-size: 16px;
@@ -828,9 +839,8 @@
         #howto .steps {
           margin-top: 8px;
         }
-        #howto .actions {
-          bottom: -14px;
-          margin: 8px -12px -14px;
+        .panel > .actions:last-child {
+          margin-top: 8px;
           padding: 8px 0 12px;
         }
       }
@@ -2549,7 +2559,7 @@
           ${r.top && !r.saved ? `<p class="hey">NEW #1 HIGH SCORE!</p>` : ""}
           ${form}
           ${boardsHtml(entering ? "PREVIOUS WINNERS" : "YOUR TOP 5", entering ? r.score : 0, r.savedDate)}
-          <button class="btn big" type="button" data-action="play">${TOUCH ? "PLAY AGAIN" : "PLAY AGAIN (SPACE)"}</button>`);
+          <div class="actions"><button class="btn big" type="button" data-action="play">${TOUCH ? "PLAY AGAIN" : "PLAY AGAIN (SPACE)"}</button></div>`);
         if (entering && !TOUCH) panelEl.querySelector("input").focus();
       }
 
