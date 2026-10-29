@@ -32,15 +32,15 @@ On a phone: **drag** to move the claw, **tap** to drop, and **hold your finger d
 
 ### Scoring
 
-The machine is stocked with 29 plushies piled in layers, dealt from ten animals (bears, cats, dogs, bunnies, axolotls, frogs, penguins, pigs, ducks and foxes). The animal sets the shape; the colour sets the reel difficulty and the points:
+The machine is stocked with 15 plushies, dealt from ten animals (bears, cats, dogs, bunnies, axolotls, frogs, penguins, pigs, ducks and foxes). The animal sets the shape; the colour sets the reel difficulty and the points:
 
 | Colour | Points | Stocked |
 | ------ | ------ | ------- |
-| Mint   | 10     | 9       |
-| Sky    | 25     | 8       |
-| Lilac  | 50     | 6       |
-| Peach  | 100    | 4       |
-| Cherry | 250    | 2       |
+| Mint   | 10     | 5       |
+| Sky    | 25     | 4       |
+| Lilac  | 50     | 3       |
+| Peach  | 100    | 2       |
+| Cherry | 250    | 1       |
 
 A perfect reel (never leaving the bar) is worth x1.5, and back-to-back catches build a streak up to x3. You have 5 hearts: a grab that comes up empty costs half a heart, and losing the reel or dropping the plushie costs a whole one. Clearing the machine pays 500 plus 100 per heart left. The top 5 scores are kept in `localStorage`.
 
