@@ -119,6 +119,12 @@
         position: fixed;
         inset: 0;
       }
+      /* Always cover the whole page, even for the instant before a resize is measured. */
+      #stage canvas {
+        display: block;
+        width: 100% !important;
+        height: 100% !important;
+      }
       #quit {
         align-self: flex-start;
         font: inherit;
@@ -1382,9 +1388,12 @@
       }
 
       function resize() {
-        const w = innerWidth;
-        const h = innerHeight;
-        renderer.setSize(w, h);
+        // Measure the page itself: when a Surface Duo spans onto both screens, innerWidth can still
+        // report the old single-screen width at the moment the resize event fires.
+        const root = document.documentElement;
+        const w = Math.max(root.clientWidth, innerWidth) || innerWidth;
+        const h = Math.max(root.clientHeight, innerHeight) || innerHeight;
+        renderer.setSize(w, h, false);
         sizeFx();
         // The cabinet is centred and fit in whichever axis is tighter. On a foldable spanning two
         // screens (Surface Duo) menus and the reel game still move to the second screen.
@@ -3888,6 +3897,14 @@
       }
 
       addEventListener("resize", resize);
+      // Span, unspan, rotate or fold: the layout can settle after the resize event, so also watch
+      // the page box itself and re-measure once things have settled.
+      new ResizeObserver(resize).observe(document.documentElement);
+      visualViewport?.addEventListener("resize", resize);
+      addEventListener("orientationchange", () => setTimeout(resize, 300));
+      document.addEventListener("visibilitychange", () => {
+        if (!document.hidden) resize();
+      });
       resize();
       document.fonts.load('16px "Press Start 2P"').then(() => drawMarquee());
       restock();
