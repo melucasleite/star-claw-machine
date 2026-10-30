@@ -7,6 +7,7 @@ import {
   clearBonus,
   cleanName,
   lateDropCounts,
+  levelUnlocked,
   makesList,
   musicDrive,
   overHole,
@@ -124,4 +125,13 @@ test("music drive never leaves 0..1, even with odd counts", () => {
   assert.equal(musicDrive(20, 15).intensity, 0);
   assert.equal(musicDrive(-3, 15).intensity, 1);
   assert.equal(musicDrive(0, 0).intensity, 0);
+});
+
+test("a level opens once the one before it is cleared, and placeholders never do", () => {
+  const levels = [{ id: 1 }, { id: 2 }, { id: 3, soon: true }];
+  assert.equal(levelUnlocked(levels, new Set(), 1), true);
+  assert.equal(levelUnlocked(levels, new Set(), 2), false);
+  assert.equal(levelUnlocked(levels, new Set([1]), 2), true);
+  assert.equal(levelUnlocked(levels, new Set([1, 2]), 3), false);
+  assert.equal(levelUnlocked(levels, new Set([1]), 9), false);
 });

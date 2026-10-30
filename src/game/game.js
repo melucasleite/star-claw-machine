@@ -22,6 +22,7 @@ import { collect, flyToBag, renderBag } from "./bag.js";
 import { showReel, startReel, stepReel } from "./reel.js";
 import { setMusicLevel, sfx } from "./audio.js";
 import { settings } from "./settings.js";
+import { currentLevel, markCleared } from "./levels.js";
 import {
   cashOutBonus as bonusForLives,
   chuteBusy,
@@ -51,6 +52,8 @@ export const game = {
   late: null,
   assisted: false,
   result: null,
+  // The level a clear in this run opened, if any.
+  unlocked: null,
   bag: [],
 };
 
@@ -86,12 +89,13 @@ export function startGame() {
     // Fixed for the whole run: switching aim assist restarts the run.
     assisted: settings.aimAssist,
     result: null,
+    unlocked: null,
     bag: [],
   });
   renderBag();
   resetScore();
   claw.closing = false;
-  drawMarquee("STAR CLAW");
+  drawMarquee(currentLevel().marquee);
   restock();
   setState("home");
   renderHud();
@@ -205,6 +209,12 @@ export function clearMachine() {
   setTimeout(() => burst(innerWidth * 0.8, innerHeight * 0.6, 80, 1.4), 900);
   rain(260);
   sfx.cleared();
+  const opened = (game.unlocked = markCleared(currentLevel()));
+  if (opened)
+    setTimeout(
+      () => popup(`LEVEL ${opened.id} UNLOCKED!`, opened.name, "#ffd75e", true),
+      1800,
+    );
   setTimeout(() => gameOver("cleared", bonus), 3600);
 }
 
@@ -227,6 +237,7 @@ export function gameOver(end, bonus = 0) {
   }
   game.result = {
     cleared,
+    unlocked: cleared ? game.unlocked : null,
     quit: end === "quit",
     bonus,
     assisted: game.assisted,

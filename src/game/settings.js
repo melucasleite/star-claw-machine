@@ -1,15 +1,17 @@
-// Player settings that outlive a run: the theme and aim assist. A leaf module: it only stores
+// Player settings that outlive a run: the theme, aim assist and the picked level. A leaf module: it only stores
 // values and tells subscribers when the theme changes, so anything can import it at load time.
 import { THEMES } from "./themes.js";
 
 const SETTINGS_KEY = "startclaw.settings.v1";
 
-export const settings = { theme: "default", aimAssist: false };
+export const settings = { theme: "default", aimAssist: false, level: 1 };
 try {
   const saved = JSON.parse(localStorage.getItem(SETTINGS_KEY));
   if (saved && THEMES[saved.theme]) settings.theme = saved.theme;
   if (saved && typeof saved.aimAssist === "boolean")
     settings.aimAssist = saved.aimAssist;
+  // Whether it is still open is checked in levels.js.
+  if (saved && Number.isInteger(saved.level)) settings.level = saved.level;
 } catch {}
 
 function save() {
@@ -35,5 +37,10 @@ export function applyTheme(id = settings.theme) {
 
 export function setAimAssist(on) {
   settings.aimAssist = on;
+  save();
+}
+
+export function setLevel(id) {
+  settings.level = id;
   save();
 }

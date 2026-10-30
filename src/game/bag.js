@@ -1,7 +1,7 @@
 import { bagCountEl, bagEl, bagItemsEl } from "./dom.js";
 import * as THREE from "three";
 import { CHUTE, TIERS } from "./config.js";
-import { ANIMALS } from "./animals.js";
+import { currentLevel } from "./levels.js";
 import { camera } from "./scene.js";
 import { game } from "./game.js";
 import { drawPlushIcon } from "./screen.js";
@@ -31,9 +31,16 @@ export function plushIconUrl(tier, animal) {
 export const prizeImg = (p) =>
   `<img class="prize-icon${p.fresh ? " fresh" : ""}" src="${plushIconUrl(p.tier, p.animal)}" alt="${p.tier.name} ${p.animal.name}" title="${p.tier.name} ${p.animal.name}${p.fresh ? " (new!)" : ""}" />`;
 
-// Every colour + animal combo you have ever won, across runs.
+// Every colour + kind combo you have ever won, across runs and levels. Kind names are unique
+// across levels, so the ids need no level prefix (and level 1's saved ids still work).
 export const COLLECTION_KEY = "startclaw.collection.v1";
-export const COLLECTION_SIZE = TIERS.length * ANIMALS.length;
+export const collectionSize = (level) => TIERS.length * level.kinds.length;
+export const collectedIn = (level) =>
+  level.kinds.reduce(
+    (n, k) =>
+      n + TIERS.filter((t) => collection.has(`${t.name}:${k.name}`)).length,
+    0,
+  );
 export let collection;
 try {
   collection = new Set(JSON.parse(localStorage.getItem(COLLECTION_KEY)) ?? []);
@@ -49,8 +56,8 @@ export function collect(plush) {
   } catch {}
   return true;
 }
-export const collectionHtml = () =>
-  `<p class="collection">COLLECTION ${collection.size}/${COLLECTION_SIZE}</p>`;
+export const collectionHtml = (level = currentLevel()) =>
+  `<p class="collection">COLLECTION ${collectedIn(level)}/${collectionSize(level)}</p>`;
 
 export function renderBag() {
   bagItemsEl.innerHTML = game.bag.map(prizeImg).join("");

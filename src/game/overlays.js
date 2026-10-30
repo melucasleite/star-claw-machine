@@ -15,7 +15,16 @@ import { cashOutBonus, game, gameOver, startGame } from "./game.js";
 import { cleanName } from "./rules.js";
 import { hold, release } from "./pause.js";
 import { setAssist } from "./settingsui.js";
-import { collectionHtml, prizeImg } from "./bag.js";
+import {
+  collectedIn,
+  collectionHtml,
+  collectionSize,
+  prizeImg,
+} from "./bag.js";
+import { LEVELS, currentLevel, isUnlocked, pickLevel } from "./levels.js";
+import { restock } from "./plushies.js";
+import { drawMarquee } from "./cabinet.js";
+import { applyTheme } from "./settings.js";
 import { sfx } from "./audio.js";
 
 // ---------- overlays ----------
@@ -31,6 +40,47 @@ export const tiersHtml = () =>
     (t) =>
       `<div><i class="dot" style="background:${t.css}"></i>${t.name.toUpperCase()}<b>${t.points}</b></div>`,
   ).join("")}</div><p>Easy &rarr; hard. Cherry is the tough one.</p>`;
+
+const LOCK_SVG = `<svg viewBox="0 0 12 12" shape-rendering="crispEdges" role="img" aria-label="Locked"><path fill-rule="evenodd" d="M4 1h4v1h1v3h1v6H2V5h1V2h1zM4 2h4v3H4zM5 7h2v2H5z"/></svg>`;
+
+// One card per level: open ones can be picked, locked ones say what opens them.
+export function levelsHtml() {
+  const current = currentLevel();
+  const cards = LEVELS.map((l, i) => {
+    const open = isUnlocked(l);
+    const prev = LEVELS[i - 1];
+    const state = l.soon
+      ? "COMING SOON"
+      : !open
+        ? `CLEAR ${prev.name} IN ONE RUN TO UNLOCK`
+        : `COLLECTION ${collectedIn(l)}/${collectionSize(l)}`;
+    const cls = [
+      "level-card",
+      l === current && "on",
+      !open && "locked",
+      l.soon && "soon",
+    ]
+      .filter(Boolean)
+      .join(" ");
+    return `<button type="button" class="${cls}" data-level-pick="${l.id}" aria-pressed="${l === current}"${open ? "" : " disabled"}>
+      <span class="num">${open ? l.id : LOCK_SVG}</span>
+      <b>${l.name}</b><small>${l.blurb}</small><em>${state}</em>
+    </button>`;
+  }).join("");
+  return `<h2>LEVELS</h2><div class="levels">${cards}</div>`;
+}
+
+// Picking a level restocks the machine with its prizes, so the title shows what you'll play.
+export function chooseLevel(id) {
+  if (game.mode === "play" || !pickLevel(id)) return;
+  restock();
+  drawMarquee(currentLevel().marquee);
+  // Re-styling from the theme puts the cabinet back, then the new level's stage dresses it.
+  applyTheme();
+  sfx.coinIn();
+  if (game.mode === "over") renderOver();
+  else renderTitle();
+}
 
 export function listHtml(rows, size, pending, isMine) {
   rows = [...rows];
@@ -82,7 +132,7 @@ export function renderTitle() {
     <h1>STAR CLAW</h1>
     <p>Grab plushies, win the reel, drop them in the chute.</p>
     ${tiersHtml()}
-    ${collectionHtml()}
+    ${levelsHtml()}
     ${boardsHtml("YOUR TOP 5")}
     <div class="actions">
       <button class="btn big" type="button" data-action="play">${TOUCH ? "TAP TO PLAY" : "PLAY (SPACE)"}</button>
@@ -93,7 +143,7 @@ export function renderOver() {
   const r = game.result;
   const entering = r.highscore && !r.saved;
   const head = r.cleared
-    ? `<h1 class="win">MACHINE CLEARED!</h1><p>Every plushie found a home. Clear bonus +${fmt(r.bonus)}</p>`
+    ? `<h1 class="win">MACHINE CLEARED!</h1><p>Every plushie found a home. Clear bonus +${fmt(r.bonus)}</p>${r.unlocked ? `<p class="hey">LEVEL ${r.unlocked.id} UNLOCKED: ${r.unlocked.name}</p>` : ""}`
     : r.quit
       ? r.highscore
         ? `<h1 class="win">CASHED OUT!</h1><p class="hey">and it's a highscore</p><p>Hearts bonus +${fmt(r.bonus)}</p>`
@@ -114,6 +164,7 @@ export function renderOver() {
     <h2>YOUR HAUL</h2>
     ${game.bag.length ? `<div class="haul">${game.bag.map(prizeImg).join("")}</div>` : `<p class="empty">The bag stayed empty this time.</p>`}
     ${collectionHtml()}
+    ${levelsHtml()}
     ${r.top && !r.saved ? `<p class="hey">NEW #1 HIGH SCORE!</p>` : ""}
     ${form}
     ${boardsHtml(entering ? "PREVIOUS WINNERS" : "YOUR TOP 5", entering ? r.score : 0, r.savedDate)}
@@ -143,6 +194,8 @@ panelEl.addEventListener("submit", (e) => {
 });
 panelEl.addEventListener("click", (e) => {
   if (e.target.closest("[data-action=play]")) startGame();
+  const card = e.target.closest("[data-level-pick]");
+  if (card) chooseLevel(Number(card.dataset.levelPick));
 });
 
 export const CONFIRMS = {

@@ -1,7 +1,8 @@
 import * as THREE from "three";
 import * as CANNON from "cannon-es";
 import { CHUTE, TIERS } from "./config.js";
-import { ANIMALS } from "./animals.js";
+import { LOOKS } from "./arcade.js";
+import { currentLevel } from "./levels.js";
 import { scene, std } from "./scene.js";
 import { G_PRIZE, PRIZE_MASK, mats, world } from "./physics.js";
 import { onTheme, theme } from "./settings.js";
@@ -10,17 +11,25 @@ import { onTheme, theme } from "./settings.js";
 
 export const sphereGeo = new THREE.SphereGeometry(1, 24, 16);
 export const coneGeo = new THREE.ConeGeometry(1, 2, 16);
+// Two units across like the sphere, so a part's r * s is its half-size either way.
+export const boxGeo = new THREE.BoxGeometry(2, 2, 2);
 // Per plush style: 8-bit gets chunky low-poly parts, 4K gets smooth high-poly ones.
 const BASE_GEOS = {
   // Voxel critters: every round part becomes a cube, every cone a pyramid.
   pixel: [
     new THREE.BoxGeometry(1.55, 1.55, 1.55),
     new THREE.ConeGeometry(1, 2, 4),
+    boxGeo,
   ],
-  real: [new THREE.SphereGeometry(1, 48, 32), new THREE.ConeGeometry(1, 2, 32)],
+  real: [
+    new THREE.SphereGeometry(1, 48, 32),
+    new THREE.ConeGeometry(1, 2, 32),
+    boxGeo,
+  ],
 };
+const shapeOf = (p) => (p.box ? "b" : p.cone ? "c" : "s");
 const baseGeo = (p, style) =>
-  (BASE_GEOS[style] ?? [sphereGeo, coneGeo])[p.cone ? 1 : 0];
+  (BASE_GEOS[style] ?? [sphereGeo, coneGeo, boxGeo])["scb".indexOf(shapeOf(p))];
 
 // Knitted yarn: a tile of stockinette "V" stitches, drawn once as a colour map (soft shading
 // between the stitches) and a bump map (each leg of the V puffs up like a strand of yarn).
@@ -99,12 +108,12 @@ export function knitGeo(p) {
   const sy = p.r * p.s[1];
   const sz = p.r * p.s[2];
   const around = Math.PI * (sx + sz);
-  const tall = p.cone ? 2 * sy : Math.PI * sy;
+  const tall = p.cone || p.box ? 2 * sy : Math.PI * sy;
   const u = Math.max(1, Math.round(around / KNIT.stitchW / KNIT.cols));
   const v = Math.max(1, Math.round(tall / KNIT.stitchH / KNIT.rows));
   const style = theme().plush.style;
   if (style === "pixel") return baseGeo(p, style);
-  const key = `${style}:${p.cone ? "c" : "s"}${u}x${v}`;
+  const key = `${style}:${shapeOf(p)}${u}x${v}`;
   if (knitGeos[key]) return knitGeos[key];
   const geo = baseGeo(p, style).clone();
   const uv = geo.attributes.uv;
@@ -113,14 +122,44 @@ export function knitGeo(p) {
   return (knitGeos[key] = geo);
 }
 
+// Shared yarn colours, plus the people palette (skin0, hair3, ...) from arcade.js.
+const DECO_YARN = {
+  cream: 0xfff4e2,
+  pink: 0xf7a8b8,
+  beak: 0xf2a65a,
+  denim: 0x4a6a9a,
+  sole: 0x2e2a28,
+  ...LOOKS,
+};
 export const DECO = {
-  cream: yarn(0xfff4e2),
-  pink: yarn(0xf7a8b8),
-  beak: yarn(0xf2a65a),
+  ...Object.fromEntries(
+    Object.entries(DECO_YARN).map(([k, color]) => [k, yarn(color)]),
+  ),
   // Button eyes: smooth and a little shiny against the yarn.
   dark: std(0x161616, 0.25),
+  // Arcade screens glow a little; glass is barely there.
+  screen: new THREE.MeshStandardMaterial({
+    color: 0x101a33,
+    emissive: 0x2f7fd8,
+    emissiveIntensity: 0.55,
+    roughness: 0.3,
+  }),
+  glass: new THREE.MeshPhysicalMaterial({
+    color: 0xd8ecff,
+    roughness: 0.05,
+    transparent: true,
+    opacity: 0.22,
+    depthWrite: false,
+  }),
 };
-export const KNITTED = new Set(["fur", "accent", "cream", "pink", "beak"]);
+// Part materials that are yarn. "skin" and "hair" stand in for a palette key picked per prize.
+export const KNITTED = new Set([
+  "fur",
+  "accent",
+  "skin",
+  "hair",
+  ...Object.keys(DECO_YARN),
+]);
 for (const t of TIERS) {
   t.mats = {
     // The warm lamp and tone mapping wash pastels out, so the 3D fur gets a little extra saturation.
@@ -130,6 +169,8 @@ for (const t of TIERS) {
     ),
   };
 }
+// Only the big parts cast shadows; buttons and trim would just speckle the floor.
+const SHADOWED = new Set(["fur", "accent", "skin", "hair", "denim"]);
 const partGeo = (p) =>
   KNITTED.has(p.mat) ? knitGeo(p) : baseGeo(p, theme().plush.style);
 
@@ -179,9 +220,11 @@ onTheme((t) => {
     styleYarn(tier.mats.fur, look);
     styleYarn(tier.mats.accent, look);
   }
-  for (const k of ["cream", "pink", "beak"]) styleYarn(DECO[k], look);
-  DECO.dark.flatShading = !!look.flat;
-  DECO.dark.needsUpdate = true;
+  for (const k in DECO_YARN) styleYarn(DECO[k], look);
+  for (const k of ["dark", "screen"]) {
+    DECO[k].flatShading = !!look.flat;
+    DECO[k].needsUpdate = true;
+  }
   for (const plush of plushies)
     plush.group.traverse((m) => {
       if (m.userData.part) m.geometry = partGeo(m.userData.part);
@@ -194,6 +237,7 @@ export const pick = (list) => list[Math.floor(Math.random() * list.length)];
 // Squash-and-stretch spring: impacts flatten it, then it puffs back up slowly, with barely a wobble.
 export const SQUISH = { stiffness: 150, damping: 20, kick: 0.75, max: 0.25 };
 
+// `animal` is any level's kind (see levels.js), not only an animal.
 export function addPlush(tier, animal, x, y, z) {
   const body = new CANNON.Body({
     mass: 1,
@@ -205,31 +249,38 @@ export function addPlush(tier, animal, x, y, z) {
     angularDamping: 0.55,
   });
   const group = new THREE.Group();
+  // Per-prize materials, e.g. { skin: "skin2", hair: "hair4" }.
+  const look = animal.dress?.() ?? {};
   for (const p of animal.parts) {
     if (p.solid)
       body.addShape(new CANNON.Sphere(p.r), new CANNON.Vec3(p.x, p.y, p.z));
     if (!p.visible) continue;
-    const m = new THREE.Mesh(partGeo(p), tier.mats[p.mat] ?? DECO[p.mat]);
+    const mat = look[p.mat] ?? p.mat;
+    const m = new THREE.Mesh(partGeo(p), tier.mats[mat] ?? DECO[mat]);
     m.userData.part = p;
     m.scale.set(p.r * p.s[0], p.r * p.s[1], p.r * p.s[2]);
     m.position.set(p.x, p.y, p.z);
     if (p.rot) m.rotation.set(...p.rot);
-    m.castShadow = p.mat === "fur" || p.mat === "accent";
+    m.castShadow = SHADOWED.has(p.mat);
     m.receiveShadow = true;
     group.add(m);
   }
   body.position.set(x, y, z);
-  body.quaternion.setFromEuler(
-    Math.random() * 6.28,
-    Math.random() * 6.28,
-    Math.random() * 6.28,
-  );
+  // Upright kinds are stocked standing, facing any way; the rest land however they tumble.
+  if (animal.upright) body.quaternion.setFromEuler(0, Math.random() * 6.28, 0);
+  else
+    body.quaternion.setFromEuler(
+      Math.random() * 6.28,
+      Math.random() * 6.28,
+      Math.random() * 6.28,
+    );
   world.addBody(body);
   // The root carries position and a world-vertical squash; the inner group carries rotation.
   const root = new THREE.Group();
   root.add(group);
   scene.add(root);
   const plush = { body, root, group, tier, animal, ghost: false };
+  if (animal.walks) plush.walk = { heading: Math.random() * 6.28, next: 0 };
   plush.squash = { a: 0, v: 0 };
   body.addEventListener("collide", (e) => {
     const hit = Math.abs(e.contact.getImpactVelocityAlongNormal());
@@ -261,10 +312,11 @@ export function restock() {
       cells.push([cx, cz]);
     }
   }
-  // Deal animals from a shuffled bag so every kind shows up before any repeats.
+  // Deal the level's kinds from a shuffled bag so every kind shows up before any repeats.
+  const kinds = currentLevel().kinds;
   const bag = [];
   const nextAnimal = () => {
-    if (!bag.length) bag.push(...[...ANIMALS].sort(() => Math.random() - 0.5));
+    if (!bag.length) bag.push(...[...kinds].sort(() => Math.random() - 0.5));
     return bag.pop();
   };
   // Stack the stock in layers so a full machine reads as a pile, not a grid.

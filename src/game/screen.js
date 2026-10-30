@@ -36,8 +36,91 @@ export const MODE_TEXT = {
   over: ["GAME", "OVER"],
 };
 
+// Level 2's prizes: cabinets drawn as boxes, customers as a head over a shirt in the tier colour.
+const SKIN = "#d5a07a";
+const GLOW = "#2f7fd8";
+const ARCADE_ICONS = {
+  cabinet: (d) => {
+    d.rect(-0.75, -1.3, 1.5, 2.3, d.color);
+    d.rect(-0.6, -1.15, 1.2, 0.3, "#fff4e2");
+    d.rect(-0.6, -0.7, 1.2, 0.75, GLOW);
+    d.rect(-0.9, 0.15, 1.8, 0.3, d.color);
+    d.dot(-0.4, 0.3, 0.12, d.ink);
+    d.dot(0.3, 0.3, 0.1, "#f7a8b8");
+  },
+  pinball: (d) => {
+    d.rect(-0.7, -1.3, 1.4, 1.0, d.color);
+    d.rect(-0.55, -1.15, 1.1, 0.7, GLOW);
+    d.rect(-1.0, -0.2, 2.0, 0.6, d.color);
+    d.rect(-0.85, 0.4, 0.15, 0.7, d.ink);
+    d.rect(0.7, 0.4, 0.15, 0.7, d.ink);
+  },
+  claw: (d) => {
+    d.rect(-0.85, -1.3, 1.7, 0.4, d.color);
+    d.rect(-0.8, -0.9, 1.6, 1.15, "#d8ecff");
+    d.rect(-0.85, 0.25, 1.7, 0.8, d.color);
+    d.dot(0.2, 0.0, 0.25, "#f7a8b8");
+    d.dot(-0.3, 0.05, 0.2, "#f2a65a");
+    d.rect(-0.04, -0.9, 0.08, 0.4, d.ink);
+  },
+  kid: (d) => {
+    d.person();
+    d.blob(0, -0.55, 0.66, 0.38, d.hair);
+  },
+  teen: (d) => {
+    d.blob(0.55, 0.0, 0.22, 0.45, d.hair);
+    d.person();
+    d.blob(0, -0.6, 0.66, 0.36, d.hair);
+    d.blob(-0.68, -0.25, 0.14, 0.24, d.ink);
+    d.blob(0.68, -0.25, 0.14, 0.24, d.ink);
+  },
+  grandpa: (d) => {
+    d.person();
+    d.blob(-0.55, -0.35, 0.18, 0.26, "#c9c4bd");
+    d.blob(0.55, -0.35, 0.18, 0.26, "#c9c4bd");
+    d.blob(0, 0.02, 0.28, 0.1, "#c9c4bd");
+  },
+};
+function drawArcadeIcon(c, draw, color, x, y, s) {
+  const ink = theme().screen.outline;
+  c.strokeStyle = ink;
+  c.lineWidth = Math.max(2, s / 6);
+  const d = {
+    color,
+    ink,
+    hair: "#3d2817",
+    rect(rx, ry, w, h, fill) {
+      c.fillStyle = fill;
+      c.fillRect(x + rx * s, y + ry * s, w * s, h * s);
+      c.strokeRect(x + rx * s, y + ry * s, w * s, h * s);
+    },
+    blob(bx, by, rx, ry, fill) {
+      c.fillStyle = fill;
+      c.beginPath();
+      c.ellipse(x + bx * s, y + by * s, rx * s, ry * s, 0, 0, Math.PI * 2);
+      c.fill();
+      c.stroke();
+    },
+    dot(bx, by, r, fill) {
+      c.fillStyle = fill;
+      c.beginPath();
+      c.arc(x + bx * s, y + by * s, r * s, 0, Math.PI * 2);
+      c.fill();
+    },
+    person() {
+      d.blob(0, 0.85, 0.85, 0.5, color);
+      d.blob(0, -0.25, 0.62, 0.62, SKIN);
+      d.dot(-0.24, -0.2, 0.1, ink);
+      d.dot(0.24, -0.2, 0.1, ink);
+    },
+  };
+  draw(d);
+}
+
 // Pixel-ish portrait of the hooked plushie, drawn in its tier colour.
 export function drawPlushIcon(c, icon, color, x, y, s) {
+  if (ARCADE_ICONS[icon])
+    return drawArcadeIcon(c, ARCADE_ICONS[icon], color, x, y, s);
   c.fillStyle = color;
   c.strokeStyle = theme().screen.outline;
   c.lineWidth = Math.max(2, s / 6);

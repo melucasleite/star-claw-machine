@@ -2,7 +2,12 @@ import { howtoEl, settingsEl } from "./dom.js";
 import { CLAW } from "./config.js";
 import { CAM_OFFSET, camera } from "./scene.js";
 import { hub } from "./claw.js";
-import { answerConfirm, askConfirm, pendingConfirm } from "./overlays.js";
+import {
+  answerConfirm,
+  askConfirm,
+  chooseLevel,
+  pendingConfirm,
+} from "./overlays.js";
 import { closeSettings, openSettings } from "./settingsui.js";
 import { closeHelp, openHelp } from "./help.js";
 import { game, startGame } from "./game.js";
@@ -46,6 +51,9 @@ addEventListener("keydown", (e) => {
       performance.now() - game.modeAt > 1200;
     if (ready && !e.repeat && (e.code === "Space" || e.code === "Enter"))
       startGame();
+    // 1, 2, ... pick a level.
+    else if (/^Digit[1-9]$/.test(e.code) && !e.repeat)
+      chooseLevel(Number(e.code.slice(5)));
     return;
   }
   if (!e.repeat) pressed[e.code] = true;

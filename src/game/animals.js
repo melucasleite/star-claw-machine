@@ -9,7 +9,9 @@ export const part = (mat, r, x, y, z, o = {}) => ({
   s: o.s ?? [1, 1, 1],
   rot: o.rot,
   cone: o.cone ?? false,
-  solid: o.solid ?? mat === "fur",
+  // Boxes are drawn only: the physics stays spheres, so give a boxy kind hidden solid spheres.
+  box: o.box ?? false,
+  solid: o.solid ?? (mat === "fur" && !o.box),
   visible: o.visible ?? true,
 });
 export const both = (f) => [f(1), f(-1)];

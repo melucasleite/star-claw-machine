@@ -64,3 +64,11 @@ export function musicDrive(left, total) {
     doubleLead: i >= 0.8,
   };
 }
+
+// A level opens once the one before it has been cleared in a single run. Levels marked `soon`
+// are only placeholders and never open. `cleared` is a Set of level ids.
+export function levelUnlocked(levels, cleared, id) {
+  const i = levels.findIndex((l) => l.id === id);
+  if (i < 0 || levels[i].soon) return false;
+  return i === 0 || cleared.has(levels[i - 1].id);
+}

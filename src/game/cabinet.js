@@ -83,6 +83,8 @@ marqueeCanvas.height = 176;
 export const marqueeTex = new THREE.CanvasTexture(marqueeCanvas);
 marqueeTex.colorSpace = THREE.SRGBColorSpace;
 export let marqueeText = "STAR CLAW";
+// A level's stage (see stages.js) can swap the marquee style and light the rail bulbs.
+export const stageDecor = { marquee: null, bulbs: null };
 export function drawMarquee(text = marqueeText) {
   marqueeText = text;
   paintMarquee(text);
@@ -90,7 +92,7 @@ export function drawMarquee(text = marqueeText) {
 let marqueeShown = "";
 function paintMarquee(text) {
   marqueeShown = text;
-  const m = theme().marquee;
+  const m = { ...theme().marquee, ...stageDecor.marquee };
   const c = marqueeCanvas.getContext("2d");
   c.fillStyle = m.background;
   c.fillRect(0, 0, 1024, 176);
@@ -223,10 +225,10 @@ export function animateDecor(now) {
     if (text !== marqueeShown) paintMarquee(text);
   } else if (marqueeShown !== marqueeText) paintMarquee(marqueeText);
   if (!bulbs.visible) return;
-  const colors = BULB_COLORS[id];
+  const colors = stageDecor.bulbs ?? BULB_COLORS[id];
   for (let i = 0; i < bulbSpots.length; i++) {
     let lit;
-    if (id === "retro") {
+    if (id === "retro" || stageDecor.bulbs) {
       // Chase lights: one bulb in four, racing along the rails.
       const k = Math.floor(i / 5) + Math.floor(now / 90);
       bulbColor.setHex(colors[Math.floor(i / 5) % colors.length]);

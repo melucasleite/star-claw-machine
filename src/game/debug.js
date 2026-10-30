@@ -8,6 +8,8 @@ import { postFxComposer } from "./postfx.js";
 import { music } from "./music.js";
 import { ac } from "./audio.js";
 import { applyTheme } from "./settings.js";
+import { LEVELS, cheat } from "./levels.js";
+import { renderTitle } from "./overlays.js";
 
 // Debug handle for playtesting from the console.
 window.__claw = {
@@ -30,4 +32,10 @@ window.__claw = {
   music,
   audioState: () => ac?.state ?? "none",
   applyTheme,
+  LEVELS,
+  // Opens every built level until the page reloads, for trying them without clearing first.
+  unlockLevels() {
+    cheat.unlockAll = true;
+    if (game.mode === "title") renderTitle();
+  },
 };

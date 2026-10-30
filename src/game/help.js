@@ -4,7 +4,8 @@ import { heartSvg } from "./hud.js";
 import { pendingConfirm } from "./overlays.js";
 import { game } from "./game.js";
 import { hold, release } from "./pause.js";
-import { COLLECTION_SIZE } from "./bag.js";
+import { collectionSize } from "./bag.js";
+import { currentLevel } from "./levels.js";
 import { sfx } from "./audio.js";
 
 // ---------- how to play ----------
@@ -55,7 +56,7 @@ export function openHelp() {
     <p>Perfect reel x1.5 &middot; streaks up to x${RULES.streakMax}</p>
     <h2>HEARTS</h2>
     <p>Miss or drop -&frac12;${heart} &middot; lost reel -1${heart} &middot; catch +&frac12;${heart}<br />Cash out +${RULES.cashOutPerHalf} per &frac12;${heart} &middot; clear it all +${RULES.clearBonus}</p>
-    <p>Collect all ${COLLECTION_SIZE} and top the world board.</p>
+    <p>Clear the machine in one run to open the next level. Collect all ${collectionSize(currentLevel())} and top the world board.</p>
     <div class="actions"><button class="btn big" type="button" data-close-help>GOT IT</button></div>`;
   howtoEl.hidden = false;
   howtoPanel.scrollTop = 0;
