@@ -5,6 +5,9 @@ import { keys, pressed } from "./input.js";
 import { game, startGame } from "./game.js";
 import { M, scene } from "./scene.js";
 import { postFxComposer } from "./postfx.js";
+import { music } from "./music.js";
+import { ac } from "./audio.js";
+import { applyTheme } from "./settings.js";
 
 // Debug handle for playtesting from the console.
 window.__claw = {
@@ -24,4 +27,7 @@ window.__claw = {
   scene,
   M,
   postFxComposer,
+  music,
+  audioState: () => ac?.state ?? "none",
+  applyTheme,
 };
