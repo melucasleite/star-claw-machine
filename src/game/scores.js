@@ -1,5 +1,6 @@
 import { makesList } from "./rules.js";
 import { refreshWorldBoard } from "./overlays.js";
+import { game } from "./game.js";
 
 // ---------- high scores ----------
 
@@ -71,7 +72,11 @@ export async function postWorld(name, score) {
   } catch {}
   await fetchWorld();
 }
+// Runs played with aim assist never reach either board.
 export const makesWorld = (score) =>
-  !!globalBoard.rows && makesList(globalBoard.rows, WORLD.size, score);
+  !game.assisted &&
+  !!globalBoard.rows &&
+  makesList(globalBoard.rows, WORLD.size, score);
 
-export const makesBoard = (score) => makesList(loadScores(), BOARD_SIZE, score);
+export const makesBoard = (score) =>
+  !game.assisted && makesList(loadScores(), BOARD_SIZE, score);

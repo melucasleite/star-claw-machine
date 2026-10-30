@@ -1,5 +1,6 @@
 import { soundEl } from "./dom.js";
 import { music, startMusic } from "./music.js";
+import { onTheme, theme } from "./settings.js";
 
 // ---------- sound ----------
 
@@ -17,6 +18,9 @@ export let musicBus;
 export let noiseBuf;
 export let motor;
 export let musicLevel = 1;
+// Theme effects: a reverb send (carousel, 4K) and a bit-crusher on the whole mix (8-bit).
+let reverbSend;
+let crusher;
 
 export function audioOn() {
   if (!ac) {
@@ -29,13 +33,30 @@ export function audioOn() {
     ac = new AC();
     const comp = ac.createDynamicsCompressor();
     comp.connect(ac.destination);
+    crusher = ac.createWaveShaper();
+    crusher.connect(comp);
     const master = ac.createGain();
     master.gain.value = 0.7;
-    master.connect(comp);
+    master.connect(crusher);
+    // Reverb: a convolver fed a second and a half of decaying noise.
+    const verb = ac.createConvolver();
+    const len = Math.floor(ac.sampleRate * 1.6);
+    const ir = ac.createBuffer(2, len, ac.sampleRate);
+    for (let ch = 0; ch < 2; ch++) {
+      const d = ir.getChannelData(ch);
+      for (let i = 0; i < len; i++)
+        d[i] = (Math.random() * 2 - 1) * (1 - i / len) ** 3;
+    }
+    verb.buffer = ir;
+    reverbSend = ac.createGain();
+    reverbSend.gain.value = 0;
+    reverbSend.connect(verb).connect(master);
     sfxBus = ac.createGain();
     sfxBus.connect(master);
+    sfxBus.connect(reverbSend);
     musicBus = ac.createGain();
     musicBus.connect(master);
+    musicBus.connect(reverbSend);
     noiseBuf = ac.createBuffer(1, ac.sampleRate, ac.sampleRate);
     const d = noiseBuf.getChannelData(0);
     for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
@@ -51,6 +72,7 @@ export function audioOn() {
     osc.connect(lp).connect(motor).connect(sfxBus);
     osc.start();
     applySound();
+    applyAudioTheme(theme());
   }
   if (ac.state !== "running") ac.resume();
   if (sound.music) startMusic();
@@ -102,6 +124,39 @@ renderSoundButtons();
 
 export const hz = (midi) => 440 * 2 ** ((midi - 69) / 12);
 
+// Extra instruments for the themes, as harmonic recipes (sine amplitudes of partials 1, 2, 3...).
+const HARMONICS = {
+  organ: [1, 0.6, 0.45, 0.3, 0.2, 0.12, 0.08, 0.05],
+  flute: [1, 0.25, 0.08],
+  bell: [1, 0, 0.55, 0, 0.35, 0, 0.2, 0, 0.15],
+  epiano: [1, 0.35, 0.1, 0.06, 0.02],
+  pad: [1, 0.5, 0.33, 0.25, 0.2, 0.16, 0.14, 0.12],
+};
+const waves = {};
+function setVoice(o, type) {
+  const name = theme().audio.voices[type] ?? type;
+  const h = HARMONICS[name];
+  if (!h) return void (o.type = name);
+  waves[name] ??= ac.createPeriodicWave(
+    new Float32Array(h.length + 1),
+    Float32Array.from([0, ...h]),
+  );
+  o.setPeriodicWave(waves[name]);
+}
+
+function applyAudioTheme(t) {
+  if (!ac) return;
+  reverbSend.gain.setTargetAtTime(t.audio.reverb, ac.currentTime, 0.1);
+  // 8-bit: squash every sample onto 16 levels, the grit of an old sound chip.
+  if (t.audio.crush) {
+    const curve = new Float32Array(1024);
+    for (let i = 0; i < curve.length; i++)
+      curve[i] = Math.round(((i / (curve.length - 1)) * 2 - 1) * 8) / 8;
+    crusher.curve = curve;
+  } else crusher.curve = null;
+}
+onTheme(applyAudioTheme);
+
 // One enveloped oscillator. `at` is an absolute time (for the music); otherwise `t` seconds from now.
 export function tone({
   f,
@@ -116,9 +171,11 @@ export function tone({
 }) {
   if (!ac || ac.state !== "running") return;
   const t0 = at ?? ac.currentTime + t;
+  // Sound effects ring a little longer in the softer themes; the music sets its own lengths.
+  if (at === undefined) dur *= theme().audio.lengthScale;
   const o = ac.createOscillator();
   const g = ac.createGain();
-  o.type = type;
+  setVoice(o, type);
   o.frequency.setValueAtTime(f, t0);
   if (f2) o.frequency.exponentialRampToValueAtTime(f2, t0 + dur);
   g.gain.setValueAtTime(0.0001, t0);
@@ -268,6 +325,31 @@ export const sfx = {
   },
   saved: () => notes([79, 84, 88], 0.07, { vol: 0.07, type: "sine" }),
 };
+
+// Some sounds get a theme-specific version instead of just a new voice.
+const THEME_SFX = {
+  retro: {
+    // The classic two-note coin.
+    coinIn: () => {
+      tone({ f: hz(83), dur: 0.08, vol: 0.1 });
+      tone({ f: hz(88), t: 0.08, dur: 0.4, vol: 0.1 });
+    },
+    // Boing.
+    drop: () => tone({ f: 220, f2: 880, dur: 0.18, vol: 0.07 }),
+    // A one-up fanfare, higher for the rarer colours.
+    prize: (tierIndex, streak) =>
+      notes(
+        [76, 79, 88, 84, 86, 91].map(
+          (m) => m + tierIndex + Math.min(streak, 6),
+        ),
+        0.07,
+        { vol: 0.08, dur: 0.1 },
+      ),
+    hurt: () => notes([67, 0, 60], 0.08, { vol: 0.09, dur: 0.12 }),
+  },
+};
+for (const [name, play] of Object.entries(sfx))
+  sfx[name] = (...args) => (THEME_SFX[theme().id]?.[name] ?? play)(...args);
 
 export function setMotor(speed) {
   if (!motor) return;

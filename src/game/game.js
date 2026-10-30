@@ -21,6 +21,7 @@ import { renderOver, setMode, submitName } from "./overlays.js";
 import { collect, flyToBag, renderBag } from "./bag.js";
 import { showReel, startReel, stepReel } from "./reel.js";
 import { setMusicLevel, sfx } from "./audio.js";
+import { settings } from "./settings.js";
 import {
   cashOutBonus as bonusForLives,
   chuteBusy,
@@ -48,6 +49,7 @@ export const game = {
   turn: null,
   // The last turn that cost a heart, kept for a moment in case its plushie drops in late.
   late: null,
+  assisted: false,
   result: null,
   bag: [],
 };
@@ -81,6 +83,8 @@ export function startGame() {
     mg: null,
     turn: null,
     late: null,
+    // Fixed for the whole run: switching aim assist restarts the run.
+    assisted: settings.aimAssist,
     result: null,
     bag: [],
   });
@@ -225,6 +229,7 @@ export function gameOver(end, bonus = 0) {
     cleared,
     quit: end === "quit",
     bonus,
+    assisted: game.assisted,
     score: game.score,
     highscore: makesBoard(game.score) || makesWorld(game.score),
     top: game.score > (loadScores()[0]?.score ?? 0),

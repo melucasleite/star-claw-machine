@@ -4,11 +4,23 @@ import { CHUTE, TIERS } from "./config.js";
 import { ANIMALS } from "./animals.js";
 import { scene, std } from "./scene.js";
 import { G_PRIZE, PRIZE_MASK, mats, world } from "./physics.js";
+import { onTheme, theme } from "./settings.js";
 
 // ---------- plushies ----------
 
 export const sphereGeo = new THREE.SphereGeometry(1, 24, 16);
 export const coneGeo = new THREE.ConeGeometry(1, 2, 16);
+// Per plush style: 8-bit gets chunky low-poly parts, 4K gets smooth high-poly ones.
+const BASE_GEOS = {
+  // Voxel critters: every round part becomes a cube, every cone a pyramid.
+  pixel: [
+    new THREE.BoxGeometry(1.55, 1.55, 1.55),
+    new THREE.ConeGeometry(1, 2, 4),
+  ],
+  real: [new THREE.SphereGeometry(1, 48, 32), new THREE.ConeGeometry(1, 2, 32)],
+};
+const baseGeo = (p, style) =>
+  (BASE_GEOS[style] ?? [sphereGeo, coneGeo])[p.cone ? 1 : 0];
 
 // Knitted yarn: a tile of stockinette "V" stitches, drawn once as a colour map (soft shading
 // between the stitches) and a bump map (each leg of the V puffs up like a strand of yarn).
@@ -19,11 +31,14 @@ export const KNIT = {
   stitchW: 0.06,
   stitchH: 0.05,
 };
-export function knitCanvas(bump) {
+// `hi` paints the tile at four times the pixels with denser fuzz, for the 4K theme.
+export function knitCanvas(bump, hi = false) {
+  const k = hi ? 4 : 1;
   const size = KNIT.cols * KNIT.cell;
   const cv = document.createElement("canvas");
-  cv.width = cv.height = size;
+  cv.width = cv.height = size * k;
   const c = cv.getContext("2d");
+  c.scale(k, k);
   c.fillStyle = bump ? "#000" : "#c6c6c6";
   c.fillRect(0, 0, size, size);
   const leg = (x, y, rot) => {
@@ -50,21 +65,25 @@ export function knitCanvas(bump) {
       leg(cx + 7, cy, 0.5);
     }
   // A little fuzz so it reads as yarn, not plastic.
-  for (let i = 0; i < 900; i++) {
+  for (let i = 0; i < 900 * k * k; i++) {
     c.fillStyle = `rgba(${bump ? "0,0,0" : "90,90,90"},${Math.random() * 0.12})`;
-    c.fillRect(Math.random() * size, Math.random() * size, 1, 2);
+    c.fillRect(Math.random() * size, Math.random() * size, 1 / k, 2 / k);
   }
   return cv;
 }
-export const knitMap = new THREE.CanvasTexture(knitCanvas(false));
-knitMap.colorSpace = THREE.SRGBColorSpace;
-export const knitBump = new THREE.CanvasTexture(knitCanvas(true));
-for (const t of [knitMap, knitBump]) {
+function knitTexture(bump, hi) {
+  const t = new THREE.CanvasTexture(knitCanvas(bump, hi));
+  if (!bump) t.colorSpace = THREE.SRGBColorSpace;
   t.wrapS = t.wrapT = THREE.RepeatWrapping;
-  t.anisotropy = 4;
+  t.anisotropy = hi ? 8 : 4;
+  return t;
 }
+export const knitMap = knitTexture(false);
+export const knitBump = knitTexture(true);
+let knitHi = null;
+// Physical rather than standard so the velvet and 4K looks can add sheen; the knit look leaves it off.
 export const yarn = (color) =>
-  new THREE.MeshStandardMaterial({
+  new THREE.MeshPhysicalMaterial({
     color,
     roughness: 1,
     map: knitMap,
@@ -83,9 +102,11 @@ export function knitGeo(p) {
   const tall = p.cone ? 2 * sy : Math.PI * sy;
   const u = Math.max(1, Math.round(around / KNIT.stitchW / KNIT.cols));
   const v = Math.max(1, Math.round(tall / KNIT.stitchH / KNIT.rows));
-  const key = `${p.cone ? "c" : "s"}${u}x${v}`;
+  const style = theme().plush.style;
+  if (style === "pixel") return baseGeo(p, style);
+  const key = `${style}:${p.cone ? "c" : "s"}${u}x${v}`;
   if (knitGeos[key]) return knitGeos[key];
-  const geo = (p.cone ? coneGeo : sphereGeo).clone();
+  const geo = baseGeo(p, style).clone();
   const uv = geo.attributes.uv;
   for (let i = 0; i < uv.count; i++)
     uv.setXY(i, uv.getX(i) * u, uv.getY(i) * v);
@@ -109,6 +130,64 @@ for (const t of TIERS) {
     ),
   };
 }
+const partGeo = (p) =>
+  KNITTED.has(p.mat) ? knitGeo(p) : baseGeo(p, theme().plush.style);
+
+// Knit (default), pixel (8-bit: flat, untextured), velvet (carousel: soft sheen) or real (4K yarn).
+const YARN_STYLES = {
+  knit: { map: "knit", bumpScale: 2.2, roughness: 1, sheen: 0 },
+  pixel: { map: null, bumpScale: 0, roughness: 1, sheen: 0, flat: true },
+  velvet: {
+    map: null,
+    bump: "knit",
+    bumpScale: 0.5,
+    roughness: 0.7,
+    sheen: 1,
+    sheenRoughness: 0.35,
+    sheenColor: 0xffe6f2,
+  },
+  real: {
+    map: "hi",
+    bumpScale: 3,
+    roughness: 0.95,
+    sheen: 0.3,
+    sheenRoughness: 0.8,
+    sheenColor: 0xffffff,
+  },
+};
+function styleYarn(mat, look) {
+  const maps = { knit: [knitMap, knitBump], hi: knitHi };
+  const [map, bump] = maps[look.map] ?? [null, null];
+  mat.map = map;
+  mat.bumpMap = look.bump ? maps[look.bump][1] : bump;
+  mat.bumpScale = look.bumpScale;
+  mat.roughness = look.roughness;
+  mat.sheen = look.sheen;
+  mat.sheenRoughness = look.sheenRoughness ?? 1;
+  mat.sheenColor.setHex(look.sheenColor ?? 0xffffff);
+  mat.flatShading = !!look.flat;
+  mat.needsUpdate = true;
+}
+onTheme((t) => {
+  const style = t.plush.style;
+  if (style === "real" && !knitHi)
+    knitHi = [knitTexture(false, true), knitTexture(true, true)];
+  const look = YARN_STYLES[style];
+  for (const tier of TIERS) {
+    // The warm lamp and tone mapping wash pastels out, so the 3D fur gets a little extra saturation.
+    tier.mats.fur.color.set(tier.color).offsetHSL(0, t.plush.saturation, 0);
+    styleYarn(tier.mats.fur, look);
+    styleYarn(tier.mats.accent, look);
+  }
+  for (const k of ["cream", "pink", "beak"]) styleYarn(DECO[k], look);
+  DECO.dark.flatShading = !!look.flat;
+  DECO.dark.needsUpdate = true;
+  for (const plush of plushies)
+    plush.group.traverse((m) => {
+      if (m.userData.part) m.geometry = partGeo(m.userData.part);
+    });
+});
+
 export const plushies = [];
 export const pick = (list) => list[Math.floor(Math.random() * list.length)];
 
@@ -130,10 +209,8 @@ export function addPlush(tier, animal, x, y, z) {
     if (p.solid)
       body.addShape(new CANNON.Sphere(p.r), new CANNON.Vec3(p.x, p.y, p.z));
     if (!p.visible) continue;
-    const m = new THREE.Mesh(
-      KNITTED.has(p.mat) ? knitGeo(p) : p.cone ? coneGeo : sphereGeo,
-      tier.mats[p.mat] ?? DECO[p.mat],
-    );
+    const m = new THREE.Mesh(partGeo(p), tier.mats[p.mat] ?? DECO[p.mat]);
+    m.userData.part = p;
     m.scale.set(p.r * p.s[0], p.r * p.s[1], p.r * p.s[2]);
     m.position.set(p.x, p.y, p.z);
     if (p.rot) m.rotation.set(...p.rot);

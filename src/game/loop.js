@@ -1,4 +1,4 @@
-import { camera, renderer, scene } from "./scene.js";
+import { renderFrame } from "./postfx.js";
 import { world } from "./physics.js";
 import { driveProngs, hub } from "./claw.js";
 import { jiggle } from "./plushies.js";
@@ -33,6 +33,6 @@ export function frame(now) {
   drawScreen();
   tallyScore(dt);
   stepFx(dt);
-  renderer.render(scene, camera);
+  renderFrame();
   requestAnimationFrame(frame);
 }

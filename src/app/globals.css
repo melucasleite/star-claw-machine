@@ -8,6 +8,16 @@
   --danger: #f07470;
   --bg: #2b1d14;
   --ink: #fff4dc;
+  --font: "Press Start 2P", monospace;
+  --panel: var(--teal);
+  --button: var(--teal);
+  --slot: rgba(20, 35, 61, 0.35);
+  --slot-strong: rgba(20, 35, 61, 0.45);
+  --input: #14233d;
+  --bag: #d8b47a;
+  --off: #8a7a5c;
+  --scrim: rgba(30, 20, 12, 0.55);
+  --radius: 14px;
 }
 html,
 body {
@@ -16,7 +26,7 @@ body {
   overflow: hidden;
   background: var(--bg);
   color: var(--ink);
-  font-family: "Press Start 2P", monospace;
+  font-family: var(--font);
   overscroll-behavior: none;
   touch-action: none;
   user-select: none;
@@ -52,7 +62,7 @@ button,
   font-size: 9px;
   padding: 8px 12px;
   color: var(--ink);
-  background: var(--teal);
+  background: var(--button);
   border: 3px solid var(--wood-dark);
   border-radius: 999px;
   text-shadow: none;
@@ -69,7 +79,7 @@ body:not([data-mode="play"]) #quit {
   z-index: 15;
   background: var(--wood);
   border: 4px solid var(--wood-dark);
-  border-radius: 14px;
+  border-radius: var(--radius);
   padding: 16px 24px;
   box-shadow:
     0 0 0 4px var(--mustard),
@@ -130,7 +140,7 @@ body.reeling .carriage {
       rgba(0, 0, 0, 0.05) 0 3px,
       transparent 3px 6px
     ),
-    #d8b47a;
+    var(--bag);
   border: 3px solid var(--wood-dark);
   border-top-width: 6px;
   border-radius: 8px 8px 28px 28px;
@@ -336,7 +346,7 @@ svg.inline {
   bottom: calc(-1 * var(--pad-y));
   margin: 12px calc(-1 * var(--pad-x)) calc(-1 * var(--pad-y));
   padding: 12px 0 16px;
-  background: var(--teal);
+  background: var(--panel);
 }
 .steps {
   display: grid;
@@ -354,7 +364,7 @@ svg.inline {
   padding: 9px 6px;
   font-size: 8px;
   line-height: 1.5;
-  background: rgba(20, 35, 61, 0.35);
+  background: var(--slot);
   border-radius: 8px;
 }
 .step svg {
@@ -383,7 +393,7 @@ svg.inline {
   fill: currentColor;
 }
 #sound button.off {
-  background: #8a7a5c;
+  background: var(--off);
   opacity: 0.75;
 }
 #sound button.off::after {
@@ -476,7 +486,7 @@ svg.inline {
   align-items: center;
   justify-content: center;
   padding: 16px;
-  background: rgba(30, 20, 12, 0.55);
+  background: var(--scrim);
 }
 .overlay[hidden] {
   display: none;
@@ -491,9 +501,9 @@ svg.inline {
   overscroll-behavior: contain;
   padding: var(--pad-y) var(--pad-x);
   text-align: center;
-  background: var(--teal);
+  background: var(--panel);
   border: 4px solid var(--wood-dark);
-  border-radius: 14px;
+  border-radius: var(--radius);
   box-shadow:
     0 0 0 4px var(--mustard),
     0 0 0 8px var(--wood-dark),
@@ -552,7 +562,7 @@ svg.inline {
 .tiers div {
   padding: 8px 2px;
   border-radius: 8px;
-  background: rgba(20, 35, 61, 0.45);
+  background: var(--slot-strong);
   line-height: 1.8;
 }
 .tiers .dot {
@@ -594,7 +604,7 @@ svg.inline {
   border-radius: 6px;
 }
 .board li:nth-child(odd) {
-  background: rgba(20, 35, 61, 0.35);
+  background: var(--slot);
 }
 .board li.you {
   color: var(--gold);
@@ -632,7 +642,7 @@ form.name .row {
   text-align: center;
   text-transform: uppercase;
   color: var(--gold);
-  background: #14233d;
+  background: var(--input);
   border: 3px solid var(--wood-dark);
   border-radius: 8px;
   outline: none;
@@ -811,4 +821,383 @@ body.spanned.reeling .carriage {
 }
 body.spanned #screen {
   height: min(calc(var(--seg2-h) * 0.62), 480px);
+}
+
+/* ---------- settings ---------- */
+#settings {
+  z-index: 22;
+}
+/* Confirms can open on top of settings (aim assist asks first). */
+#confirm {
+  z-index: 24;
+}
+#sound button[data-settings] {
+  padding: 8px;
+}
+#assist-tag {
+  align-self: flex-start;
+  padding: 5px 8px;
+  font-size: 8px;
+  color: var(--wood-dark);
+  text-shadow: none;
+  background: var(--danger);
+  border: 2px solid var(--wood-dark);
+  border-radius: 6px;
+}
+#assist-tag[hidden] {
+  display: none;
+}
+.themes {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+}
+.theme-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 8px;
+  font: inherit;
+  font-size: 10px;
+  color: var(--ink);
+  text-align: center;
+  background: var(--slot);
+  border: 3px solid transparent;
+  border-radius: calc(var(--radius) * 0.6);
+  cursor: pointer;
+}
+.theme-card.on {
+  border-color: var(--gold);
+  background: var(--slot-strong);
+}
+.theme-card b {
+  font-weight: normal;
+  color: var(--gold);
+}
+.theme-card small {
+  font-size: 7px;
+  line-height: 1.6;
+  opacity: 0.8;
+}
+.swatch {
+  display: flex;
+  overflow: hidden;
+  border: 2px solid var(--wood-dark);
+  border-radius: 6px;
+}
+.swatch i {
+  width: 18px;
+  height: 18px;
+}
+.switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 14px 6px 6px;
+  font: inherit;
+  font-size: 11px;
+  color: var(--ink);
+  background: var(--slot-strong);
+  border: 3px solid var(--wood-dark);
+  border-radius: 999px;
+  cursor: pointer;
+}
+.switch .knob {
+  width: 22px;
+  height: 22px;
+  background: var(--off);
+  border: 2px solid var(--wood-dark);
+  border-radius: 999px;
+  transition: background 0.15s;
+}
+.switch.on .knob {
+  background: var(--danger);
+}
+.panel .aside {
+  margin-top: 10px;
+  line-height: 1.7;
+}
+
+/* ---------- themes ---------- */
+/* Menus, HUD and dialogs. The 3D scene, reel screen, music and sound effects follow
+   src/game/themes.js. */
+
+body[data-theme="retro"] {
+  --wood: #a84c0c;
+  --wood-dark: #000000;
+  --teal: #0058f8;
+  --mustard: #f8b800;
+  --gold: #f8b800;
+  --heart: #f83800;
+  --danger: #f83800;
+  --bg: #0c0c3c;
+  --ink: #fcfcfc;
+  --panel: #0000bc;
+  --button: #0058f8;
+  --slot: rgba(0, 0, 0, 0.45);
+  --slot-strong: rgba(0, 0, 0, 0.7);
+  --input: #000000;
+  --bag: #ac7c00;
+  --off: #7c7c7c;
+  --scrim: rgba(0, 0, 0, 0.6);
+  --radius: 0px;
+}
+/* Real chunky pixels: the 3D view renders small and scales up with hard edges. */
+body[data-theme="retro"] #stage canvas,
+body[data-theme="retro"] .prize-icon,
+body[data-theme="retro"] .prize-flyer {
+  image-rendering: pixelated;
+}
+body[data-theme="retro"] .panel {
+  box-shadow:
+    0 0 0 4px var(--ink),
+    0 0 0 8px #000,
+    8px 8px 0 8px rgba(0, 0, 0, 0.6);
+}
+body[data-theme="retro"] .btn,
+body[data-theme="retro"] #quit,
+body[data-theme="retro"] #sound button,
+body[data-theme="retro"] .switch,
+body[data-theme="retro"] .switch .knob,
+body[data-theme="retro"] #bag,
+body[data-theme="retro"] .carriage,
+body[data-theme="retro"] .bezel,
+body[data-theme="retro"] .name input,
+body[data-theme="retro"] .swatch,
+body[data-theme="retro"] .tiers div,
+body[data-theme="retro"] .step,
+body[data-theme="retro"] .board li {
+  border-radius: 0;
+}
+
+body[data-theme="carousel"] {
+  --wood: #f29bbf;
+  --wood-dark: #7a2c5e;
+  --teal: #fff0f6;
+  --mustard: #f2c14e;
+  --gold: #ffe08a;
+  --heart: #ff7eb6;
+  --danger: #ff5fa2;
+  --bg: #2a1028;
+  --ink: #fff6fb;
+  --font: "Fredoka", "Press Start 2P", sans-serif;
+  --panel: #c2588d;
+  --button: #c2588d;
+  --slot: rgba(122, 44, 94, 0.45);
+  --slot-strong: rgba(122, 44, 94, 0.7);
+  --input: #7a2c5e;
+  --bag: #ffd6e8;
+  --off: #b9879f;
+  --scrim: rgba(42, 16, 40, 0.55);
+  --radius: 24px;
+  /* Fredoka is far narrower than the pixel font; this keeps the same visual size. */
+  font-size-adjust: 0.78;
+  font-weight: 600;
+}
+body[data-theme="carousel"] .panel {
+  /* Candy-stripe trim round every dialog. */
+  background:
+    repeating-linear-gradient(
+      -45deg,
+      rgba(255, 255, 255, 0.07) 0 14px,
+      transparent 14px 28px
+    ),
+    var(--panel);
+}
+
+body[data-theme="real"] {
+  --wood: #2b3036;
+  --wood-dark: #0a0b0d;
+  --teal: #1a1d22;
+  --mustard: #d0d4d8;
+  --gold: #ffffff;
+  --heart: #ff4d5e;
+  --danger: #ff4d5e;
+  --bg: #0e0f12;
+  --ink: #f2f4f7;
+  --font: "Inter", "Press Start 2P", sans-serif;
+  --panel: rgba(22, 24, 29, 0.78);
+  --button: rgba(255, 255, 255, 0.12);
+  --slot: rgba(255, 255, 255, 0.06);
+  --slot-strong: rgba(255, 255, 255, 0.12);
+  --input: rgba(0, 0, 0, 0.5);
+  --bag: #c9b28f;
+  --off: #4a4f57;
+  --scrim: rgba(0, 0, 0, 0.45);
+  --radius: 18px;
+  font-size-adjust: 0.72;
+  font-weight: 600;
+}
+/* Frosted glass dialogs with hairline borders, no pixel drop shadows. */
+body[data-theme="real"] .panel {
+  backdrop-filter: blur(18px) saturate(1.4);
+  -webkit-backdrop-filter: blur(18px) saturate(1.4);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.6);
+}
+body[data-theme="real"] .panel > .actions:last-child {
+  background: transparent;
+}
+body[data-theme="real"] .panel h1,
+body[data-theme="real"] .panel h2,
+body[data-theme="real"] #scoreboard,
+body[data-theme="real"] .popup,
+body[data-theme="real"] .final b {
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+}
+body[data-theme="real"] .btn {
+  color: #0a0b0d;
+  background: #f2f4f7;
+  border: none;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+}
+body[data-theme="real"] .btn.ghost {
+  color: var(--ink);
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+}
+body[data-theme="real"] #sound button,
+body[data-theme="real"] #quit {
+  color: var(--ink);
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+body[data-theme="real"] .carriage {
+  background: #1a1d22;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.6);
+}
+body[data-theme="real"] .bezel {
+  background: #0a0b0d;
+  border: none;
+}
+body[data-theme="carousel"] .panel > .actions:last-child {
+  background: inherit;
+}
+body[data-theme="real"] #bag {
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-top-width: 3px;
+}
+
+/* 8-bit: a CRT over everything, scanlines with a faint flicker. */
+body[data-theme="retro"]::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  pointer-events: none;
+  background:
+    repeating-linear-gradient(
+      to bottom,
+      rgba(0, 0, 0, 0.18) 0 2px,
+      transparent 2px 4px
+    ),
+    radial-gradient(ellipse at center, transparent 60%, rgba(0, 0, 0, 0.45));
+  animation: crt-flicker 0.12s steps(2) infinite;
+}
+@keyframes crt-flicker {
+  50% {
+    opacity: 0.85;
+  }
+}
+/* Popups hop in whole pixels, like sprites. */
+body[data-theme="retro"] .popup {
+  animation-timing-function: steps(6);
+}
+@media (prefers-reduced-motion: reduce) {
+  body[data-theme="retro"]::after {
+    animation: none;
+  }
+}
+
+/* 4K: a camcorder viewfinder framing the whole screen, for comic effect. */
+#viewfinder {
+  position: fixed;
+  inset: calc(10px + env(safe-area-inset-top)) 10px 10px;
+  z-index: 5;
+  pointer-events: none;
+  font-family: "Inter", sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  color: rgba(255, 255, 255, 0.85);
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
+}
+#viewfinder[hidden] {
+  display: none;
+}
+#viewfinder .corner {
+  position: absolute;
+  width: 28px;
+  height: 28px;
+  border: 2px solid rgba(255, 255, 255, 0.7);
+}
+#viewfinder .tl {
+  top: 0;
+  left: 0;
+  border-width: 2px 0 0 2px;
+}
+#viewfinder .tr {
+  top: 0;
+  right: 0;
+  border-width: 2px 2px 0 0;
+}
+#viewfinder .bl {
+  bottom: 0;
+  left: 0;
+  border-width: 0 0 2px 2px;
+}
+#viewfinder .br {
+  bottom: 0;
+  right: 0;
+  border-width: 0 2px 2px 0;
+}
+#viewfinder .rec {
+  position: absolute;
+  bottom: 12px;
+  left: 40px;
+}
+#viewfinder .rec::before {
+  content: "";
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  margin-right: 6px;
+  vertical-align: -1px;
+  border-radius: 50%;
+  background: #ff2a2a;
+  animation: rec-blink 1s steps(1) infinite;
+}
+@keyframes rec-blink {
+  50% {
+    opacity: 0;
+  }
+}
+#viewfinder .spec {
+  position: absolute;
+  bottom: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  white-space: nowrap;
+}
+#viewfinder .battery {
+  position: absolute;
+  top: 14px;
+  right: 40px;
+  width: 22px;
+  height: 10px;
+  border: 2px solid rgba(255, 255, 255, 0.85);
+  border-radius: 2px;
+  background: linear-gradient(90deg, #fff 0 70%, transparent 70%);
+  background-clip: content-box;
+  padding: 1px;
+}
+@media (max-width: 700px) {
+  #viewfinder .spec,
+  #viewfinder .battery {
+    display: none;
+  }
 }

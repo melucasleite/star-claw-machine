@@ -1,6 +1,7 @@
 import { fxCanvas, popupsEl } from "./dom.js";
 import { TIERS } from "./config.js";
 import { pick } from "./plushies.js";
+import { theme } from "./settings.js";
 
 // ---------- confetti ----------
 
@@ -27,7 +28,7 @@ export const piece = (x, y, vx, vy, life) => ({
   spin: (Math.random() - 0.5) * 12,
   w: 6 + Math.random() * 6,
   h: 4 + Math.random() * 4,
-  color: pick(CONFETTI_COLORS),
+  color: pick([...TIERS.map((t) => t.css), ...theme().confetti]),
 });
 export function burst(x, y, n, power = 1) {
   for (let i = 0; i < n; i++) {
@@ -56,6 +57,7 @@ export function stepFx(dt) {
   fx.clearRect(0, 0, innerWidth, innerHeight);
   fxDirty = confetti.length > 0;
   const drag = Math.pow(0.35, dt);
+  const pixel = theme().screen.pixel;
   for (let i = confetti.length - 1; i >= 0; i--) {
     const p = confetti[i];
     p.life -= dt;
@@ -66,6 +68,13 @@ export function stepFx(dt) {
     p.rot += p.spin * dt;
     if (p.life <= 0 || p.y > innerHeight + 30) {
       confetti.splice(i, 1);
+      continue;
+    }
+    if (pixel) {
+      // 8-bit confetti: unrotated squares snapped to a 6px grid, blinking out instead of fading.
+      if (p.life < 1 && Math.floor(p.life * 10) % 2) continue;
+      fx.fillStyle = p.color;
+      fx.fillRect(Math.round(p.x / 6) * 6, Math.round(p.y / 6) * 6, 6, 6);
       continue;
     }
     fx.save();

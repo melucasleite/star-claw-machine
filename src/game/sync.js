@@ -1,5 +1,15 @@
-import { LAMP_COLOR, lamp } from "./scene.js";
-import { bridge, cable, carriage, reelButton, stick } from "./cabinet.js";
+import { lamp } from "./scene.js";
+import { theme } from "./settings.js";
+import { updateLaser } from "./laser.js";
+import { animatePhoto } from "./photo.js";
+import {
+  animateDecor,
+  bridge,
+  cable,
+  carriage,
+  reelButton,
+  stick,
+} from "./cabinet.js";
 import { hub, hubMesh, prongs } from "./claw.js";
 import { plushies } from "./plushies.js";
 import { keys } from "./input.js";
@@ -36,7 +46,10 @@ export function sync(now) {
   const party =
     game.mode === "clear" || (game.mode === "over" && game.result?.cleared);
   if (party) lamp.color.setHSL((now / 4000) % 1, 0.7, 0.75);
-  else lamp.color.setHex(LAMP_COLOR);
+  else lamp.color.setHex(theme().scene.lamp);
+  animateDecor(now);
+  updateLaser(now);
+  animatePhoto(now);
 
   const ix = (keys.ArrowRight ? 1 : 0) - (keys.ArrowLeft ? 1 : 0);
   const iz = (keys.ArrowDown ? 1 : 0) - (keys.ArrowUp ? 1 : 0);

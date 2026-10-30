@@ -51,3 +51,16 @@ export const cleanName = (s) =>
 // Does `score` make a sorted (best first) list capped at `size`?
 export const makesList = (list, size, score) =>
   score > 0 && (list.length < size || score > list[list.length - 1].score);
+
+// How hard the music pushes as the machine empties: 0 with a full machine, 1 on the last plushie.
+// It speeds up by as much as 30% and stacks layers at set points.
+export function musicDrive(left, total) {
+  const i = total > 0 ? Math.min(1, Math.max(0, 1 - left / total)) : 0;
+  return {
+    intensity: i,
+    tempo: 1 + 0.3 * i,
+    busyHats: i >= 0.35,
+    pushKick: i >= 0.6,
+    doubleLead: i >= 0.8,
+  };
+}

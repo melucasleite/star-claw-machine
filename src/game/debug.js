@@ -3,6 +3,8 @@ import { claw, hub, prongs } from "./claw.js";
 import { plushies } from "./plushies.js";
 import { keys, pressed } from "./input.js";
 import { game, startGame } from "./game.js";
+import { M, scene } from "./scene.js";
+import { postFxComposer } from "./postfx.js";
 
 // Debug handle for playtesting from the console.
 window.__claw = {
@@ -19,4 +21,7 @@ window.__claw = {
   RULES,
   TIERS,
   startGame,
+  scene,
+  M,
+  postFxComposer,
 };

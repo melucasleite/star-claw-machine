@@ -8,6 +8,7 @@ import {
   cleanName,
   lateDropCounts,
   makesList,
+  musicDrive,
   overHole,
   prizePoints,
   streakMult,
@@ -100,4 +101,27 @@ test("a score makes a list when there is room or it beats the last", () => {
   assert.equal(makesList(list, 2, 150), false);
   assert.equal(makesList(list, 2, 250), true);
   assert.equal(makesList([], 5, 0), false);
+});
+
+test("the music starts relaxed with a full machine", () => {
+  const d = musicDrive(15, 15);
+  assert.equal(d.intensity, 0);
+  assert.equal(d.tempo, 1);
+  assert.equal(d.busyHats || d.pushKick || d.doubleLead, false);
+});
+
+test("the music gets faster and fuller as plushies run out", () => {
+  const half = musicDrive(8, 15);
+  const last = musicDrive(1, 15);
+  assert.ok(half.tempo > 1 && last.tempo > half.tempo);
+  assert.equal(half.busyHats, true);
+  assert.equal(half.doubleLead, false);
+  assert.equal(last.pushKick && last.doubleLead, true);
+  assert.ok(last.tempo <= 1.3);
+});
+
+test("music drive never leaves 0..1, even with odd counts", () => {
+  assert.equal(musicDrive(20, 15).intensity, 0);
+  assert.equal(musicDrive(-3, 15).intensity, 1);
+  assert.equal(musicDrive(0, 0).intensity, 0);
 });

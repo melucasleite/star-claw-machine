@@ -2,6 +2,9 @@
 // The base layer goes first, in dependency order, so nothing in the import cycles above it
 // (game <-> overlays <-> input ...) is touched before it exists.
 import "./config.js";
+import "./themes.js";
+import "./settings.js";
+import "./textures.js";
 import "./animals.js";
 import "./dom.js";
 import "./scene.js";
@@ -9,12 +12,17 @@ import "./physics.js";
 import "./cabinet.js";
 import "./claw.js";
 import "./plushies.js";
+import "./laser.js";
+import "./photo.js";
+import "./settingsui.js";
+import { applyTheme } from "./settings.js";
 import { resize } from "./scene.js";
 import { drawMarquee } from "./cabinet.js";
 import { restock } from "./plushies.js";
 import { fetchWorld } from "./scores.js";
 import { renderHud } from "./hud.js";
 import { sizeFx } from "./confetti.js";
+import { sizePostFx } from "./postfx.js";
 import { renderTitle, setMode } from "./overlays.js";
 import { HOWTO_KEY, openHelp } from "./help.js";
 import { setState } from "./game.js";
@@ -25,6 +33,7 @@ import "./debug.js";
 function onResize() {
   resize();
   sizeFx();
+  sizePostFx();
 }
 addEventListener("resize", onResize);
 // Span, unspan, rotate or fold: the layout can settle after the resize event, so also watch
@@ -36,7 +45,8 @@ document.addEventListener("visibilitychange", () => {
   if (!document.hidden) onResize();
 });
 onResize();
-document.fonts.load('16px "Press Start 2P"').then(() => drawMarquee());
+applyTheme();
+document.fonts.ready.then(() => drawMarquee());
 restock();
 setMode("title");
 setState("settle");

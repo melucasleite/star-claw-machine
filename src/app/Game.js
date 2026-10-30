@@ -21,6 +21,9 @@ export default function Game() {
           <span id="left"></span>
         </div>
         <div id="streak"></div>
+        <div id="assist-tag" hidden>
+          AIM ASSIST &middot; UNRANKED
+        </div>
         <button id="quit" type="button">
           QUIT &amp; SAVE
         </button>
@@ -46,6 +49,23 @@ export default function Game() {
           title="How to play (H)"
         >
           ?
+        </button>
+        <button
+          type="button"
+          data-settings=""
+          aria-label="Settings"
+          title="Settings (O)"
+        >
+          <svg
+            viewBox="0 0 12 12"
+            shapeRendering="crispEdges"
+            aria-hidden="true"
+          >
+            <path
+              fillRule="evenodd"
+              d="M3 2h6v1h1v6H9v1H3V9H2V3h1zM5 0h2v2H5zM5 10h2v2H5zM0 5h2v2H0zM10 5h2v2h-2zM1 1h2v2H1zM9 1h2v2H9zM1 9h2v2H1zM9 9h2v2H9zM4 4v4h4V4z"
+            />
+          </svg>
         </button>
         <button type="button" data-sound="music" aria-label="Music">
           <svg
@@ -78,6 +98,15 @@ export default function Game() {
           id="howto-panel"
         ></div>
       </div>
+      <div id="settings" className="overlay" hidden>
+        <div
+          className="panel"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Settings"
+          id="settings-panel"
+        ></div>
+      </div>
       <div id="confirm" className="overlay" hidden>
         <div className="panel small" role="dialog" aria-modal="true">
           <h1 id="confirm-title"></h1>
@@ -91,6 +120,18 @@ export default function Game() {
         </div>
       </div>
       <canvas id="fx"></canvas>
+      {/* The 4K theme's camcorder viewfinder. Decoration only. */}
+      <div id="viewfinder" hidden aria-hidden="true">
+        <span className="corner tl"></span>
+        <span className="corner tr"></span>
+        <span className="corner bl"></span>
+        <span className="corner br"></span>
+        <span className="rec">
+          REC <span id="viewfinder-time">00:00:00:00</span>
+        </span>
+        <span className="spec">4K UHD &middot; HDR10 &middot; 60P</span>
+        <span className="battery"></span>
+      </div>
     </>
   );
 }

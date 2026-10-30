@@ -3,6 +3,13 @@ import { MG } from "./config.js";
 import { screenTex } from "./cabinet.js";
 
 import { game } from "./game.js";
+import { theme } from "./settings.js";
+
+// The screen font in the active theme, at `px` pixels.
+const font = (px) => {
+  const t = theme();
+  return `${t.screen.weight ?? 400} ${px}px ${t.font}`;
+};
 
 // ---------- carriage screen ----------
 
@@ -32,7 +39,7 @@ export const MODE_TEXT = {
 // Pixel-ish portrait of the hooked plushie, drawn in its tier colour.
 export function drawPlushIcon(c, icon, color, x, y, s) {
   c.fillStyle = color;
-  c.strokeStyle = "#3a2a1a";
+  c.strokeStyle = theme().screen.outline;
   c.lineWidth = Math.max(2, s / 6);
   const blob = (bx, by, rx, ry, rot = 0) => {
     c.beginPath();
@@ -96,7 +103,7 @@ export function drawPlushIcon(c, icon, color, x, y, s) {
       c.fillStyle = color;
       blob(x + k * 0.95 * s, y + 0.05 * s, 0.3 * s, 0.6 * s, -k * 0.3);
     }
-  c.fillStyle = "#3a2a1a";
+  c.fillStyle = theme().screen.outline;
   for (const k of [-1, 1]) {
     c.beginPath();
     c.arc(x + k * 0.38 * s, y - 0.12 * s, 0.13 * s, 0, Math.PI * 2);
@@ -117,14 +124,15 @@ export function drawPlushIcon(c, icon, color, x, y, s) {
 
 export function drawScreen() {
   const c = sctx;
-  c.fillStyle = "#14233d";
+  const th = theme().screen;
+  c.fillStyle = th.background;
   c.fillRect(0, 0, SW, SH);
-  c.fillStyle = "#2a6fdb";
+  c.fillStyle = th.track;
   c.fillRect(TRACK.x, TRACK.y, TRACK.w, TRACK.h);
-  c.fillStyle = "#4b8cf0";
+  c.fillStyle = th.lines;
   for (let i = 0; i < 6; i++)
     c.fillRect(TRACK.x, TRACK.y + 20 + i * 48, TRACK.w, 2);
-  c.fillStyle = "#222";
+  c.fillStyle = th.meter;
   c.fillRect(METER.x, METER.y, METER.w, METER.h);
   c.textAlign = "center";
   const y = (n) => TRACK.y + TRACK.h - n * TRACK.h;
@@ -132,9 +140,9 @@ export function drawScreen() {
 
   if (mg) {
     const bh = mg.tier.barHeight * TRACK.h;
-    c.fillStyle = "rgba(94,224,94,0.55)";
+    c.fillStyle = th.bar;
     c.fillRect(TRACK.x + 4, y(mg.barPos) - bh, TRACK.w - 8, bh);
-    c.strokeStyle = "#5ee05e";
+    c.strokeStyle = th.barEdge;
     c.lineWidth = 2;
     c.strokeRect(TRACK.x + 4, y(mg.barPos) - bh, TRACK.w - 8, bh);
     drawPlushIcon(
@@ -154,14 +162,14 @@ export function drawScreen() {
       p * METER.h,
     );
     // time remaining
-    c.fillStyle = "#ffd75e";
+    c.fillStyle = th.text;
     c.fillRect(
       TRACK.x,
       SH - 8,
       TRACK.w * Math.max(0, 1 - mg.t / MG.timeLimit),
       4,
     );
-    c.font = '12px "Press Start 2P", monospace';
+    c.font = font(12);
     if (mg.result) {
       const label = {
         caught: mg.perfect ? "PERFECT!" : "CAUGHT!",
@@ -169,18 +177,18 @@ export function drawScreen() {
         escaped: "ESCAPED",
         timeout: "TIME!",
       };
-      c.fillStyle = "#3a2a1a";
+      c.fillStyle = th.ink;
       c.fillText(label[mg.result], TRACK.x + TRACK.w / 2 + 2, 42);
-      c.fillStyle = "#ffd75e";
+      c.fillStyle = th.text;
       c.fillText(label[mg.result], TRACK.x + TRACK.w / 2, 40);
     } else {
-      c.font = '8px "Press Start 2P", monospace';
+      c.font = font(8);
       c.fillStyle = mg.tier.css;
       c.fillText(`${mg.tier.points} PTS`, TRACK.x + TRACK.w / 2, 34);
     }
   } else {
-    c.font = '11px "Press Start 2P", monospace';
-    c.fillStyle = "#ffd75e";
+    c.font = font(11);
+    c.fillStyle = th.text;
     const lines = MODE_TEXT[game.mode] ?? IDLE_TEXT[game.state] ?? [];
     lines.forEach((l, i) =>
       c.fillText(l, TRACK.x + TRACK.w / 2, SH / 2 - 20 + i * 18),

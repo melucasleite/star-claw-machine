@@ -10,10 +10,11 @@ import {
   postWorld,
   saveScore,
 } from "./scores.js";
-import { keys } from "./input.js";
 import { esc, fmt, renderHud } from "./hud.js";
 import { cashOutBonus, game, gameOver, startGame } from "./game.js";
 import { cleanName } from "./rules.js";
+import { hold, release } from "./pause.js";
+import { setAssist } from "./settingsui.js";
 import { collectionHtml, prizeImg } from "./bag.js";
 import { sfx } from "./audio.js";
 
@@ -100,11 +101,15 @@ export function renderOver() {
       : r.highscore
         ? `<h1 class="lost">YOU LOST THE GAME,</h1><p class="hey">but hey this is a highscore</p>`
         : `<h1 class="lost">YOU LOST THE GAME</h1>`;
+  const assisted = r.assisted
+    ? `<p class="aside">Aim assist was on, so this run stays off the high score boards.</p>`
+    : "";
   const form = entering
     ? `<form class="name"><label for="name">PUT YOUR NAME ON THE LIST</label><div class="row"><input id="name" name="name" maxlength="10" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="NAME" /><button class="btn" type="submit">SAVE</button></div></form>`
     : "";
   showPanel(`
     ${head}
+    ${assisted}
     <div class="final">SCORE<b>${fmt(r.score)}</b></div>
     <h2>YOUR HAUL</h2>
     ${game.bag.length ? `<div class="haul">${game.bag.map(prizeImg).join("")}</div>` : `<p class="empty">The bag stayed empty this time.</p>`}
@@ -146,19 +151,38 @@ export const CONFIRMS = {
     text: () =>
       `End the run now and keep your ${fmt(game.score)} points, plus ${fmt(cashOutBonus())} for the hearts you have left.`,
     yes: "CASH OUT",
+    allowed: () => game.mode === "play" && !game.paused,
     run: () => gameOver("quit", cashOutBonus()),
+  },
+  assistOn: {
+    title: "AIM ASSIST?",
+    text: () =>
+      "A laser shows exactly where the claw will land. While it is on, your scores stay off the high score boards. Turning it on restarts the game.",
+    yes: "TURN ON",
+    no: "CANCEL",
+    run: () => setAssist(true),
+  },
+  assistOff: {
+    title: "AIM ASSIST OFF?",
+    text: () =>
+      game.mode === "play"
+        ? "Turning it off restarts the game, so the next run counts for high scores again."
+        : "Your next run counts for high scores again.",
+    yes: "TURN OFF",
+    no: "CANCEL",
+    run: () => setAssist(false),
   },
 };
 export let pendingConfirm = null;
 export function askConfirm(kind) {
-  if (game.mode !== "play" || game.paused) return;
   const c = CONFIRMS[kind];
+  if (pendingConfirm || (c.allowed && !c.allowed())) return;
   pendingConfirm = c;
-  game.paused = true;
-  keys.Space = false;
+  hold("confirm");
   document.getElementById("confirm-title").textContent = c.title;
   document.getElementById("confirm-text").textContent = c.text();
   document.getElementById("confirm-yes").textContent = c.yes;
+  document.getElementById("confirm-no").textContent = c.no ?? "KEEP PLAYING";
   confirmEl.hidden = false;
   sfx.blip();
   document.getElementById("confirm-no").focus();
@@ -166,7 +190,7 @@ export function askConfirm(kind) {
 export function answerConfirm(yes) {
   const c = pendingConfirm;
   pendingConfirm = null;
-  game.paused = false;
+  release("confirm");
   confirmEl.hidden = true;
   document.activeElement?.blur?.();
   if (yes) c?.run();

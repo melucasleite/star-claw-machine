@@ -1,9 +1,9 @@
 import { TOUCH, howtoEl, howtoPanel } from "./dom.js";
 import { RULES, TIERS } from "./config.js";
-import { keys } from "./input.js";
 import { heartSvg } from "./hud.js";
 import { pendingConfirm } from "./overlays.js";
 import { game } from "./game.js";
+import { hold, release } from "./pause.js";
 import { COLLECTION_SIZE } from "./bag.js";
 import { sfx } from "./audio.js";
 
@@ -11,7 +11,6 @@ import { sfx } from "./audio.js";
 
 // One help sheet, opened by the ? button, H, or automatically the first time this browser plays.
 export const HOWTO_KEY = "startclaw.howto.v1";
-export let howtoPaused = false;
 
 // The three moves of a turn, as cards with a little pixel gesture each.
 export const GESTURES = {
@@ -61,17 +60,12 @@ export function openHelp() {
   howtoEl.hidden = false;
   howtoPanel.scrollTop = 0;
   sfx.blip();
-  if (game.mode === "play" && !game.paused) {
-    game.paused = true;
-    howtoPaused = true;
-    keys.Space = false;
-  }
+  if (game.mode === "play") hold("help");
 }
 export function closeHelp() {
   if (howtoEl.hidden) return;
   howtoEl.hidden = true;
-  if (howtoPaused) game.paused = false;
-  howtoPaused = false;
+  release("help");
   try {
     localStorage.setItem(HOWTO_KEY, "1");
   } catch {}

@@ -1,8 +1,9 @@
-import { howtoEl } from "./dom.js";
+import { howtoEl, settingsEl } from "./dom.js";
 import { CLAW } from "./config.js";
 import { CAM_OFFSET, camera } from "./scene.js";
 import { hub } from "./claw.js";
-import { answerConfirm, askConfirm } from "./overlays.js";
+import { answerConfirm, askConfirm, pendingConfirm } from "./overlays.js";
+import { closeSettings, openSettings } from "./settingsui.js";
 import { closeHelp, openHelp } from "./help.js";
 import { game, startGame } from "./game.js";
 import { toggleSound } from "./audio.js";
@@ -28,11 +29,17 @@ addEventListener("keydown", (e) => {
   if (e.code === "KeyH" && !e.repeat) return openHelp();
   if ((e.code === "KeyM" || e.code === "KeyS") && !e.repeat)
     return toggleSound(e.code === "KeyM" ? "music" : "sfx");
-  if (game.paused) {
+  if (pendingConfirm) {
     if (e.code === "Enter" || e.code === "KeyY") answerConfirm(true);
     else if (e.code === "Escape" || e.code === "KeyN") answerConfirm(false);
     return;
   }
+  if (!settingsEl.hidden) {
+    if (["Escape", "Enter", "KeyO"].includes(e.code)) closeSettings();
+    return;
+  }
+  if (e.code === "KeyO" && !e.repeat) return openSettings();
+  if (game.paused) return;
   if (game.mode !== "play") {
     const ready =
       (game.mode === "title" || game.mode === "over") &&

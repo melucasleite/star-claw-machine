@@ -6,16 +6,26 @@ import { camera } from "./scene.js";
 import { game } from "./game.js";
 import { drawPlushIcon } from "./screen.js";
 import { sfx } from "./audio.js";
+import { theme } from "./settings.js";
 
 // ---------- prize bag & collection ----------
 
 export const iconUrls = {};
 export function plushIconUrl(tier, animal) {
-  const id = `${tier.name}:${animal.name}`;
+  const t = theme();
+  const id = `${t.id}:${tier.name}:${animal.name}`;
   if (iconUrls[id]) return iconUrls[id];
   const cv = document.createElement("canvas");
   cv.width = cv.height = 64;
-  drawPlushIcon(cv.getContext("2d"), animal.icon, tier.css, 32, 36, 18);
+  const c = cv.getContext("2d");
+  if (t.screen.pixel) {
+    // 8-bit icons: draw at 16 x 16, then blow them up without smoothing.
+    const small = document.createElement("canvas");
+    small.width = small.height = 16;
+    drawPlushIcon(small.getContext("2d"), animal.icon, tier.css, 8, 9, 4.5);
+    c.imageSmoothingEnabled = false;
+    c.drawImage(small, 0, 0, 64, 64);
+  } else drawPlushIcon(c, animal.icon, tier.css, 32, 36, 18);
   return (iconUrls[id] = cv.toDataURL());
 }
 export const prizeImg = (p) =>

@@ -1,4 +1,5 @@
 import {
+  assistTagEl,
   bestEl,
   heartsEl,
   leftEl,
@@ -60,6 +61,7 @@ export function renderHud() {
   bestEl.textContent = `BEST ${fmt(best)}`;
   leftEl.textContent = `${plushies.length} LEFT`;
   streakEl.textContent = game.streak > 0 ? `NEXT CATCH x${streakMult()}` : "";
+  assistTagEl.hidden = !(game.mode === "play" && game.assisted);
 }
 
 export function popup(main, detail, color, big = false) {

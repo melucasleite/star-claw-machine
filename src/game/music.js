@@ -1,81 +1,17 @@
 import { ac, hz, musicBus, noise, sound, tone } from "./audio.js";
+import { TIERS } from "./config.js";
+import { game } from "./game.js";
+import { plushies } from "./plushies.js";
+import { musicDrive } from "./rules.js";
+import { onTheme, theme } from "./settings.js";
 
 // ---------- music ----------
 
-// A loop of 16 bars of 16 steps: an 8-bar tune, then 8 bars of just groove so it never nags.
-// Chords C, Am, F, G. Notes are [step, midi, length in steps].
-export const BPM = 132;
-export const STEP = 60 / BPM / 4;
-export const CHORDS = [
-  [48, 52, 55],
-  [45, 48, 52],
-  [41, 45, 48],
-  [43, 47, 50],
-];
-export const TUNE = [
-  [
-    [0, 76, 2],
-    [2, 79, 2],
-    [4, 84, 4],
-    [8, 83, 2],
-    [10, 79, 2],
-    [12, 76, 4],
-  ],
-  [
-    [0, 81, 4],
-    [4, 79, 2],
-    [6, 76, 2],
-    [8, 72, 4],
-    [12, 74, 2],
-    [14, 76, 2],
-  ],
-  [
-    [0, 77, 2],
-    [2, 81, 2],
-    [4, 84, 4],
-    [8, 81, 2],
-    [10, 77, 2],
-    [12, 81, 4],
-  ],
-  [
-    [0, 79, 6],
-    [6, 77, 2],
-    [8, 76, 2],
-    [10, 74, 2],
-    [12, 71, 2],
-    [14, 74, 2],
-  ],
-  [
-    [0, 76, 2],
-    [2, 79, 2],
-    [4, 84, 4],
-    [8, 83, 2],
-    [10, 79, 2],
-    [12, 76, 4],
-  ],
-  [
-    [0, 81, 2],
-    [2, 84, 2],
-    [4, 88, 4],
-    [8, 86, 2],
-    [10, 84, 2],
-    [12, 81, 4],
-  ],
-  [
-    [0, 77, 2],
-    [2, 79, 2],
-    [4, 81, 2],
-    [6, 84, 2],
-    [8, 86, 4],
-    [12, 84, 4],
-  ],
-  [
-    [0, 83, 4],
-    [4, 81, 2],
-    [6, 83, 2],
-    [8, 86, 8],
-  ],
-];
+// Each theme brings its own song (see themes.js): `tune` bars of melody, then as many bars of just
+// groove so it never nags. While a run is on, the song speeds up and fills out as the machine
+// empties (musicDrive in rules.js).
+const STOCK = TIERS.reduce((n, t) => n + t.count, 0);
+
 export const music = { on: false, step: 0, next: 0, timer: 0 };
 export function startMusic() {
   if (music.on || !ac) return;
@@ -84,65 +20,144 @@ export function startMusic() {
   music.next = ac.currentTime + 0.1;
   music.timer = setInterval(scheduleMusic, 25);
 }
+// A new theme starts its song from the top.
+onTheme(() => (music.step = 0));
+
+const drive = () =>
+  musicDrive(game.mode === "play" ? plushies.length : STOCK, STOCK);
+
 export function scheduleMusic() {
   if (ac.state !== "running") return;
   // Behind (tab was hidden): skip ahead instead of firing a burst of notes.
   if (music.next < ac.currentTime) music.next = ac.currentTime + 0.05;
   while (music.next < ac.currentTime + 0.12) {
-    playStep(music.step, music.next);
-    music.step = (music.step + 1) % (16 * 16);
-    music.next += STEP;
+    const song = theme().audio.music;
+    const d = drive();
+    const step = 60 / (song.bpm * d.tempo) / 4;
+    // Swing pushes every off-beat step a little late.
+    const late = music.step % 2 ? song.swing * step : 0;
+    playStep(music.step, music.next + late, step, song, d);
+    music.step = (music.step + 1) % (song.tune.length * 2 * song.bar);
+    music.next += step;
   }
 }
-export function playStep(n, at) {
+
+const KITS = {
+  // Punchy chip drums.
+  chip: {
+    kick: (at, bus) =>
+      tone({ f: 150, f2: 45, at, dur: 0.14, vol: 0.5, type: "sine", bus }),
+    snare: (at, bus) =>
+      noise({ at, dur: 0.12, vol: 0.18, freq: 1800, q: 0.8, bus }),
+    hat: (at, bus, accent) =>
+      noise({
+        at,
+        dur: 0.03,
+        vol: accent ? 0.08 : 0.05,
+        freq: 8000,
+        type: "highpass",
+        bus,
+      }),
+  },
+  // Rounder, quieter drums: a felt kick, brushes and a whisper of hat.
+  soft: {
+    kick: (at, bus) =>
+      tone({ f: 110, f2: 40, at, dur: 0.22, vol: 0.38, type: "sine", bus }),
+    snare: (at, bus) =>
+      noise({
+        at,
+        dur: 0.22,
+        vol: 0.09,
+        freq: 1200,
+        q: 0.5,
+        type: "lowpass",
+        bus,
+      }),
+    hat: (at, bus, accent) =>
+      noise({
+        at,
+        dur: 0.04,
+        vol: accent ? 0.035 : 0.022,
+        freq: 9000,
+        type: "highpass",
+        bus,
+      }),
+  },
+};
+
+export function playStep(n, at, step, song, d) {
   if (!sound.music) return;
-  const bar = Math.floor(n / 16);
-  const s = n % 16;
-  const chord = CHORDS[bar % 4];
-  const tuneBar = bar < 8 ? TUNE[bar] : null;
+  const bar = Math.floor(n / song.bar);
+  const s = n % song.bar;
+  const chord = song.chords[bar % song.chords.length];
+  const tuneBar = bar < song.tune.length ? song.tune[bar] : null;
   const bus = musicBus;
-  // Bass: bouncy root / octave eighths.
-  if (s % 2 === 0)
+  const kit = KITS[song.drums];
+  const half = song.bar / 2;
+
+  // Bass: on its listed steps, or every `every` steps, bouncing root / octave if asked.
+  const { bass } = song;
+  if (bass.steps ? bass.steps.includes(s) : s % bass.every === 0)
     tone({
-      f: hz(chord[0] - 12 + (s % 4 === 2 ? 12 : 0)),
+      f: hz(chord[0] - 12 + (bass.bounce && s % 4 === 2 ? 12 : 0)),
       at,
-      dur: STEP * 1.6,
-      vol: 0.22,
-      type: "triangle",
+      dur: step * (bass.steps ? 3 : 1.6),
+      vol: bass.vol,
+      type: bass.type,
       bus,
     });
-  // Drums.
-  if (s === 0 || s === 8 || (s === 10 && bar % 2))
-    tone({ f: 150, f2: 45, at, dur: 0.14, vol: 0.5, type: "sine", bus });
-  if (s === 4 || s === 12)
-    noise({ at, dur: 0.12, vol: 0.18, freq: 1800, q: 0.8, bus });
-  if (s % 2 === 0)
-    noise({
+  // Chord stabs (the carousel's pah-pah, the 4K pad).
+  if (song.stab?.steps.includes(s))
+    for (const m of chord.slice(1))
+      tone({
+        f: hz(m + 12),
+        at,
+        dur: step * (song.stab.length ?? 2),
+        vol: song.stab.vol,
+        type: song.stab.type,
+        attack: song.stab.length ? 0.08 : 0.01,
+        bus,
+      });
+
+  // Drums. As the machine empties the hats go double time and the kick pushes ahead.
+  if (
+    song.kick.includes(s) ||
+    (bar % 2 && song.kickOdd?.includes(s)) ||
+    (d.pushKick && s === half + 2)
+  )
+    kit.kick(at, bus);
+  if (song.snare.includes(s)) kit.snare(at, bus);
+  if (song.hat.includes(s) || (d.busyHats && s % 2 === 1))
+    kit.hat(at, bus, s % 4 === 0);
+
+  // Arpeggio: a soft sparkle in the groove half, a whisper under the tune, louder as things heat up.
+  const { arp } = song;
+  const every = arp.every ?? 1;
+  if (s % every === 0)
+    tone({
+      f: hz(
+        chord[arp.pattern[(s / every) % arp.pattern.length] % chord.length] +
+          24,
+      ),
       at,
-      dur: 0.03,
-      vol: s % 4 ? 0.05 : 0.08,
-      freq: 8000,
-      type: "highpass",
+      dur: step * every * 0.9,
+      vol: (tuneBar ? arp.under : arp.vol) * (1 + d.intensity * 0.6),
+      type: arp.type,
       bus,
     });
-  // Arpeggio: a soft sparkle in the groove half, a whisper under the tune.
-  const arp = chord[[0, 1, 2, 1][s % 4]] + 24;
-  tone({
-    f: hz(arp),
-    at,
-    dur: STEP * 0.9,
-    vol: tuneBar ? 0.025 : 0.05,
-    bus,
-  });
+
   if (tuneBar)
     for (const [st, m, len] of tuneBar)
-      if (st === s)
-        tone({
-          f: hz(m),
-          at,
-          dur: STEP * len * 0.95,
-          vol: 0.09,
-          attack: 0.01,
-          bus,
-        });
+      if (st === s) {
+        const lead = { at, dur: step * len * 0.95, attack: 0.01, bus };
+        tone({ ...lead, f: hz(m), vol: song.lead.vol, type: song.lead.type });
+        // On the last few plushies the melody doubles an octave up.
+        if (d.doubleLead)
+          tone({
+            ...lead,
+            f: hz(m + 12),
+            vol: song.lead.vol * 0.4,
+            type: song.lead.type,
+          });
+      }
 }
