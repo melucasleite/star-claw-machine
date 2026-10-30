@@ -1,0 +1,90 @@
+import { bagCountEl, bagEl, bagItemsEl } from "./dom.js";
+import * as THREE from "three";
+import { CHUTE, TIERS } from "./config.js";
+import { ANIMALS } from "./animals.js";
+import { camera } from "./scene.js";
+import { game } from "./game.js";
+import { drawPlushIcon } from "./screen.js";
+import { sfx } from "./audio.js";
+
+// ---------- prize bag & collection ----------
+
+export const iconUrls = {};
+export function plushIconUrl(tier, animal) {
+  const id = `${tier.name}:${animal.name}`;
+  if (iconUrls[id]) return iconUrls[id];
+  const cv = document.createElement("canvas");
+  cv.width = cv.height = 64;
+  drawPlushIcon(cv.getContext("2d"), animal.icon, tier.css, 32, 36, 18);
+  return (iconUrls[id] = cv.toDataURL());
+}
+export const prizeImg = (p) =>
+  `<img class="prize-icon${p.fresh ? " fresh" : ""}" src="${plushIconUrl(p.tier, p.animal)}" alt="${p.tier.name} ${p.animal.name}" title="${p.tier.name} ${p.animal.name}${p.fresh ? " (new!)" : ""}" />`;
+
+// Every colour + animal combo you have ever won, across runs.
+export const COLLECTION_KEY = "startclaw.collection.v1";
+export const COLLECTION_SIZE = TIERS.length * ANIMALS.length;
+export let collection;
+try {
+  collection = new Set(JSON.parse(localStorage.getItem(COLLECTION_KEY)) ?? []);
+} catch {
+  collection = new Set();
+}
+export function collect(plush) {
+  const id = `${plush.tier.name}:${plush.animal.name}`;
+  if (collection.has(id)) return false;
+  collection.add(id);
+  try {
+    localStorage.setItem(COLLECTION_KEY, JSON.stringify([...collection]));
+  } catch {}
+  return true;
+}
+export const collectionHtml = () =>
+  `<p class="collection">COLLECTION ${collection.size}/${COLLECTION_SIZE}</p>`;
+
+export function renderBag() {
+  bagItemsEl.innerHTML = game.bag.map(prizeImg).join("");
+  bagCountEl.textContent = game.bag.length ? `x${game.bag.length}` : "";
+}
+
+// The won plushie pops out of the chute and arcs into the bag.
+export function flyToBag(plush, prize) {
+  const v = new THREE.Vector3(CHUTE.x, 0.5, CHUTE.z).project(camera);
+  const x0 = ((v.x + 1) / 2) * innerWidth;
+  const y0 = ((1 - v.y) / 2) * innerHeight;
+  bagItemsEl.insertAdjacentHTML("beforeend", prizeImg(prize));
+  const slot = bagItemsEl.lastElementChild;
+  slot.style.visibility = "hidden";
+  bagCountEl.textContent = `x${game.bag.length}`;
+  const r = slot.getBoundingClientRect();
+  const x1 = r.left + r.width / 2;
+  const y1 = r.top + r.height / 2;
+  const fly = document.createElement("img");
+  fly.className = "prize-flyer";
+  fly.src = slot.src;
+  document.body.appendChild(fly);
+  const k = r.width / 44;
+  const peak = Math.min(y0, y1) - 120;
+  fly
+    .animate(
+      [
+        { transform: `translate(${x0}px, ${y0}px) scale(0.4)` },
+        {
+          transform: `translate(${(x0 + x1) / 2}px, ${peak}px) scale(1.5) rotate(-12deg)`,
+          offset: 0.45,
+        },
+        {
+          transform: `translate(${x1}px, ${y1}px) scale(${k}) rotate(0deg)`,
+        },
+      ],
+      { duration: 900, easing: "cubic-bezier(.3,.7,.4,1)" },
+    )
+    .finished.then(() => {
+      fly.remove();
+      slot.style.visibility = "";
+      sfx.plop();
+      bagEl.classList.remove("bump");
+      void bagEl.offsetWidth;
+      bagEl.classList.add("bump");
+    });
+}

@@ -1,0 +1,208 @@
+import * as THREE from "three";
+import * as CANNON from "cannon-es";
+import { CHUTE, TIERS } from "./config.js";
+import { ANIMALS } from "./animals.js";
+import { scene, std } from "./scene.js";
+import { G_PRIZE, PRIZE_MASK, mats, world } from "./physics.js";
+
+// ---------- plushies ----------
+
+export const sphereGeo = new THREE.SphereGeometry(1, 24, 16);
+export const coneGeo = new THREE.ConeGeometry(1, 2, 16);
+
+// Knitted yarn: a tile of stockinette "V" stitches, drawn once as a colour map (soft shading
+// between the stitches) and a bump map (each leg of the V puffs up like a strand of yarn).
+export const KNIT = {
+  cols: 4,
+  rows: 4,
+  cell: 32,
+  stitchW: 0.06,
+  stitchH: 0.05,
+};
+export function knitCanvas(bump) {
+  const size = KNIT.cols * KNIT.cell;
+  const cv = document.createElement("canvas");
+  cv.width = cv.height = size;
+  const c = cv.getContext("2d");
+  c.fillStyle = bump ? "#000" : "#c6c6c6";
+  c.fillRect(0, 0, size, size);
+  const leg = (x, y, rot) => {
+    const g = c.createRadialGradient(0, 0, 1, 0, 0, 15);
+    g.addColorStop(0, bump ? "#fff" : "#ffffff");
+    g.addColorStop(0.6, bump ? "#aaa" : "#ececec");
+    g.addColorStop(1, bump ? "#000" : "#d2d2d2");
+    c.save();
+    c.translate(x, y);
+    c.rotate(rot);
+    c.scale(0.48, 1);
+    c.fillStyle = g;
+    c.beginPath();
+    c.arc(0, 0, 15, 0, Math.PI * 2);
+    c.fill();
+    c.restore();
+  };
+  // Draw a row above and below the tile too, so the stitches wrap without a seam.
+  for (let row = -1; row <= KNIT.rows; row++)
+    for (let col = 0; col < KNIT.cols; col++) {
+      const cx = col * KNIT.cell + KNIT.cell / 2;
+      const cy = row * KNIT.cell + KNIT.cell / 2;
+      leg(cx - 7, cy, -0.5);
+      leg(cx + 7, cy, 0.5);
+    }
+  // A little fuzz so it reads as yarn, not plastic.
+  for (let i = 0; i < 900; i++) {
+    c.fillStyle = `rgba(${bump ? "0,0,0" : "90,90,90"},${Math.random() * 0.12})`;
+    c.fillRect(Math.random() * size, Math.random() * size, 1, 2);
+  }
+  return cv;
+}
+export const knitMap = new THREE.CanvasTexture(knitCanvas(false));
+knitMap.colorSpace = THREE.SRGBColorSpace;
+export const knitBump = new THREE.CanvasTexture(knitCanvas(true));
+for (const t of [knitMap, knitBump]) {
+  t.wrapS = t.wrapT = THREE.RepeatWrapping;
+  t.anisotropy = 4;
+}
+export const yarn = (color) =>
+  new THREE.MeshStandardMaterial({
+    color,
+    roughness: 1,
+    map: knitMap,
+    bumpMap: knitBump,
+    bumpScale: 2.2,
+  });
+
+// Every part shares the same stitch size, so each scaled sphere or cone gets UVs that repeat
+// the tile by its own size. Geometries are cached per repeat count.
+export const knitGeos = {};
+export function knitGeo(p) {
+  const sx = p.r * p.s[0];
+  const sy = p.r * p.s[1];
+  const sz = p.r * p.s[2];
+  const around = Math.PI * (sx + sz);
+  const tall = p.cone ? 2 * sy : Math.PI * sy;
+  const u = Math.max(1, Math.round(around / KNIT.stitchW / KNIT.cols));
+  const v = Math.max(1, Math.round(tall / KNIT.stitchH / KNIT.rows));
+  const key = `${p.cone ? "c" : "s"}${u}x${v}`;
+  if (knitGeos[key]) return knitGeos[key];
+  const geo = (p.cone ? coneGeo : sphereGeo).clone();
+  const uv = geo.attributes.uv;
+  for (let i = 0; i < uv.count; i++)
+    uv.setXY(i, uv.getX(i) * u, uv.getY(i) * v);
+  return (knitGeos[key] = geo);
+}
+
+export const DECO = {
+  cream: yarn(0xfff4e2),
+  pink: yarn(0xf7a8b8),
+  beak: yarn(0xf2a65a),
+  // Button eyes: smooth and a little shiny against the yarn.
+  dark: std(0x161616, 0.25),
+};
+export const KNITTED = new Set(["fur", "accent", "cream", "pink", "beak"]);
+for (const t of TIERS) {
+  t.mats = {
+    // The warm lamp and tone mapping wash pastels out, so the 3D fur gets a little extra saturation.
+    fur: yarn(new THREE.Color(t.color).offsetHSL(0, 0.28, 0)),
+    accent: yarn(
+      new THREE.Color(t.color).lerp(new THREE.Color(0x3a2a1a), 0.22),
+    ),
+  };
+}
+export const plushies = [];
+export const pick = (list) => list[Math.floor(Math.random() * list.length)];
+
+// Squash-and-stretch spring: impacts flatten it, then it puffs back up slowly, with barely a wobble.
+export const SQUISH = { stiffness: 150, damping: 20, kick: 0.75, max: 0.25 };
+
+export function addPlush(tier, animal, x, y, z) {
+  const body = new CANNON.Body({
+    mass: 1,
+    material: mats.prize,
+    collisionFilterGroup: G_PRIZE,
+    collisionFilterMask: PRIZE_MASK,
+    // Cotton drags: plushies slump and settle instead of rolling around.
+    linearDamping: 0.22,
+    angularDamping: 0.55,
+  });
+  const group = new THREE.Group();
+  for (const p of animal.parts) {
+    if (p.solid)
+      body.addShape(new CANNON.Sphere(p.r), new CANNON.Vec3(p.x, p.y, p.z));
+    if (!p.visible) continue;
+    const m = new THREE.Mesh(
+      KNITTED.has(p.mat) ? knitGeo(p) : p.cone ? coneGeo : sphereGeo,
+      tier.mats[p.mat] ?? DECO[p.mat],
+    );
+    m.scale.set(p.r * p.s[0], p.r * p.s[1], p.r * p.s[2]);
+    m.position.set(p.x, p.y, p.z);
+    if (p.rot) m.rotation.set(...p.rot);
+    m.castShadow = p.mat === "fur" || p.mat === "accent";
+    m.receiveShadow = true;
+    group.add(m);
+  }
+  body.position.set(x, y, z);
+  body.quaternion.setFromEuler(
+    Math.random() * 6.28,
+    Math.random() * 6.28,
+    Math.random() * 6.28,
+  );
+  world.addBody(body);
+  // The root carries position and a world-vertical squash; the inner group carries rotation.
+  const root = new THREE.Group();
+  root.add(group);
+  scene.add(root);
+  const plush = { body, root, group, tier, animal, ghost: false };
+  plush.squash = { a: 0, v: 0 };
+  body.addEventListener("collide", (e) => {
+    const hit = Math.abs(e.contact.getImpactVelocityAlongNormal());
+    if (hit > 0.4) plush.squash.v += Math.min(hit, 6) * SQUISH.kick;
+  });
+  plushies.push(plush);
+}
+
+export function jiggle(dt) {
+  for (const { squash: q } of plushies) {
+    q.v += (-SQUISH.stiffness * q.a - SQUISH.damping * q.v) * dt;
+    q.a = Math.max(-SQUISH.max, Math.min(SQUISH.max, q.a + q.v * dt));
+  }
+}
+
+export function removePlush(plush) {
+  world.removeBody(plush.body);
+  scene.remove(plush.root);
+  plushies.splice(plushies.indexOf(plush), 1);
+}
+
+export function restock() {
+  while (plushies.length) removePlush(plushies[0]);
+  const stock = TIERS.flatMap((t) => Array(t.count).fill(t));
+  const cells = [];
+  for (const cx of [-2.7, -0.9, 0.9, 2.7]) {
+    for (const cz of [-2.7, -0.9, 0.9, 2.7]) {
+      if (cx < -CHUTE.edge && cz > CHUTE.edge) continue;
+      cells.push([cx, cz]);
+    }
+  }
+  // Deal animals from a shuffled bag so every kind shows up before any repeats.
+  const bag = [];
+  const nextAnimal = () => {
+    if (!bag.length) bag.push(...[...ANIMALS].sort(() => Math.random() - 0.5));
+    return bag.pop();
+  };
+  // Stack the stock in layers so a full machine reads as a pile, not a grid.
+  const j = () => (Math.random() - 0.5) * 0.6;
+  stock.sort(() => Math.random() - 0.5);
+  stock.forEach((tier, i) => {
+    const layer = Math.floor(i / cells.length);
+    if (i % cells.length === 0) cells.sort(() => Math.random() - 0.5);
+    const [cx, cz] = cells[i % cells.length];
+    addPlush(
+      tier,
+      nextAnimal(),
+      cx + j(),
+      1.0 + layer * 1.5 + Math.random() * 0.5,
+      cz + j(),
+    );
+  });
+}
