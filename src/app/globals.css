@@ -1169,6 +1169,51 @@ body[data-theme="real"] #bag {
   border-top-width: 3px;
 }
 
+body[data-theme="halloween"] {
+  --wood: #1c1222;
+  --wood-dark: #07040a;
+  --teal: #2a1638;
+  --mustard: #ff7a1a;
+  --gold: #ff9a3c;
+  --heart: #ff7a8a;
+  --danger: #ff4a3a;
+  --bg: #0b0710;
+  --ink: #f6e7d2;
+  --panel: #241330;
+  --button: #3a1f4a;
+  --slot: rgba(0, 0, 0, 0.35);
+  --slot-strong: rgba(0, 0, 0, 0.55);
+  --input: #120a1a;
+  --bag: #ff7a1a;
+  --off: #5a4a66;
+  --scrim: rgba(8, 4, 12, 0.6);
+}
+/* Dripping horror titles; everything else keeps the pixel font so it stays readable. */
+body[data-theme="halloween"] .panel h1 {
+  font-family: "Creepster", "Press Start 2P", cursive;
+  font-size: 40px;
+  letter-spacing: 0.06em;
+  color: var(--mustard);
+  text-shadow:
+    0 0 14px rgba(255, 122, 26, 0.6),
+    3px 3px 0 #000;
+}
+body[data-theme="halloween"] .panel {
+  box-shadow:
+    0 0 0 4px var(--mustard),
+    0 0 0 8px #000,
+    0 0 40px rgba(255, 122, 26, 0.35),
+    0 18px 40px rgba(0, 0, 0, 0.6);
+}
+/* The prize bag is a trick-or-treat sack: orange, with a black band round the bottom. */
+body[data-theme="halloween"] #bag {
+  color: #000;
+  background:
+    linear-gradient(to top, transparent 0 8px, #000 8px 14px, transparent 14px),
+    var(--bag);
+  border-color: #000;
+}
+
 /* 8-bit: a CRT over everything, scanlines with a faint flicker. */
 body[data-theme="retro"]::after {
   content: "";

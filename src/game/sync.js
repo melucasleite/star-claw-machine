@@ -2,6 +2,7 @@ import { lamp } from "./scene.js";
 import { theme } from "./settings.js";
 import { updateLaser } from "./laser.js";
 import { animatePhoto } from "./photo.js";
+import { animateHalloween } from "./halloween.js";
 import {
   animateDecor,
   bridge,
@@ -50,6 +51,7 @@ export function sync(now) {
   animateDecor(now);
   updateLaser(now);
   animatePhoto(now);
+  animateHalloween(now);
 
   const ix = (keys.ArrowRight ? 1 : 0) - (keys.ArrowLeft ? 1 : 0);
   const iz = (keys.ArrowDown ? 1 : 0) - (keys.ArrowUp ? 1 : 0);

@@ -128,6 +128,82 @@ export function arcadeCarpet() {
   );
 }
 
+// Halloween: a dark purple floor with fallen leaves in orange, rust and brown.
+export function leaves() {
+  return canvasTexture(
+    "leaves",
+    256,
+    256,
+    (c, w, h) => {
+      const r = rng(31);
+      c.fillStyle = "#1e1428";
+      c.fillRect(0, 0, w, h);
+      const colors = ["#ff7a1a", "#c4501a", "#8a3a1a", "#e0a030", "#5a2a1a"];
+      for (let i = 0; i < 26; i++) {
+        const x = r() * w;
+        const y = r() * h;
+        const s = 6 + r() * 7;
+        c.fillStyle = colors[i % colors.length];
+        c.globalAlpha = 0.55 + r() * 0.35;
+        // A leaf: two arcs meeting at the tips, plus a stem; drawn in all nine tile positions.
+        for (const dx of [-w, 0, w])
+          for (const dy of [-h, 0, h]) {
+            c.save();
+            c.translate(x + dx, y + dy);
+            c.rotate(r() * 6.28);
+            c.beginPath();
+            c.moveTo(-s, 0);
+            c.quadraticCurveTo(0, -s * 0.7, s, 0);
+            c.quadraticCurveTo(0, s * 0.7, -s, 0);
+            c.fill();
+            c.fillRect(s, -0.5, s * 0.4, 1);
+            c.restore();
+          }
+      }
+      c.globalAlpha = 1;
+    },
+    { repeat: [12, 12] },
+  );
+}
+
+// A cobweb: radial threads and a sagging spiral, white on transparent.
+export function cobweb() {
+  return canvasTexture("cobweb", 256, 256, (c, w) => {
+    c.strokeStyle = "rgba(255,255,255,0.75)";
+    c.lineWidth = 1.5;
+    const spokes = 9;
+    // Anchored in the top-left corner and fanning out a quarter turn.
+    const angle = (i) => (i / (spokes - 1)) * (Math.PI / 2);
+    for (let i = 0; i < spokes; i++) {
+      c.beginPath();
+      c.moveTo(0, 0);
+      c.lineTo(Math.cos(angle(i)) * w, Math.sin(angle(i)) * w);
+      c.stroke();
+    }
+    for (let ring = 1; ring <= 7; ring++) {
+      const rad = ring * (w / 7.5);
+      c.beginPath();
+      for (let i = 0; i < spokes; i++) {
+        const a = angle(i);
+        const x = Math.cos(a) * rad;
+        const y = Math.sin(a) * rad;
+        if (i === 0) c.moveTo(x, y);
+        else {
+          // Each thread sags toward the corner between spokes.
+          const m = angle(i - 0.5);
+          c.quadraticCurveTo(
+            Math.cos(m) * rad * 0.86,
+            Math.sin(m) * rad * 0.86,
+            x,
+            y,
+          );
+        }
+      }
+      c.stroke();
+    }
+  });
+}
+
 // Wood grain for the cabinet in the realistic theme. Tinted by the material colour.
 export function woodGrain() {
   return canvasTexture(

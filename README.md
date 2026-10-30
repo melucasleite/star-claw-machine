@@ -43,15 +43,16 @@ The music speeds up as the machine empties. With one plushie left it's 30% faste
 
 ## Themes
 
-Settings has four themes. They change how the game looks and sounds: the cabinet, the floor, the plushies, the menus, the reel screen, the music and the sound effects. The physics and the scoring are the same in all four.
+Settings has five themes. They change how the game looks and sounds: the cabinet, the floor, the plushies, the menus, the reel screen, the music and the sound effects. The physics and the scoring are the same in all five.
 
-| 8-bit                                      | Pink carousel                                         | Ultra real 4K                                     |
-| ------------------------------------------ | ----------------------------------------------------- | ------------------------------------------------- |
-| ![8-bit theme](docs/screenshots/retro.jpg) | ![Pink carousel theme](docs/screenshots/carousel.jpg) | ![Ultra real 4K theme](docs/screenshots/real.jpg) |
+| 8-bit                                      | Pink carousel                                         | Ultra real 4K                                     | Halloween                                          |
+| ------------------------------------------ | ----------------------------------------------------- | ------------------------------------------------- | -------------------------------------------------- |
+| ![8-bit theme](docs/screenshots/retro.jpg) | ![Pink carousel theme](docs/screenshots/carousel.jpg) | ![Ultra real 4K theme](docs/screenshots/real.jpg) | ![Halloween theme](docs/screenshots/halloween.jpg) |
 
 - **8-bit**: voxel plushies on an arcade carpet, chase lights, pixel-art outlines and CRT scanlines. The music is a bit-crushed chiptune, and the coin and one-up sounds are the classic ones. The marquee blinks INSERT COIN.
 - **Pink carousel**: candy-striped posts, twinkling bulbs, velvet plushies and an organ waltz.
 - **Ultra real 4K**: chrome, wood grain, glass with fingerprints on it, dust in the lamp light, tilt-shift and film grain. Somebody left their coffee on the floor, and a camcorder is recording the whole thing. It renders at up to 3x the screen's pixels with a 4096px shadow map and seven post-processing passes, so older phones will stutter.
+- **Halloween**: a black and orange cabinet with candle-flicker bulbs, jack-o'-lanterns on a floor of fallen leaves, a skeleton sitting against the machine with a pumpkin on its lap, a cobweb in the corner, bats across a full moon, and a haunted organ in D minor.
 
 **Aim assist** draws a laser from the claw to whatever it would land on. Runs played with it on stay off both high score boards, and switching it on or off restarts the current run, so you can't switch it mid-game.
 

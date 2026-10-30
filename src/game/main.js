@@ -17,6 +17,7 @@ import "./claw.js";
 import "./plushies.js";
 import "./laser.js";
 import "./photo.js";
+import "./halloween.js";
 import "./settingsui.js";
 import { applyTheme } from "./settings.js";
 import { resize } from "./scene.js";

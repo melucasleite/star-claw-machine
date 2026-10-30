@@ -10,6 +10,7 @@ import {
   candy,
   floorboards,
   harlequin,
+  leaves,
   wedges,
   woodGrain,
   wool,
@@ -99,7 +100,7 @@ function paintMarquee(text) {
   c.strokeStyle = m.border;
   c.lineWidth = 12;
   c.strokeRect(10, 10, 1004, 156);
-  c.font = `${m.weight ?? 400} ${m.size}px ${theme().font}`;
+  c.font = `${m.weight ?? 400} ${m.size}px ${m.font ?? theme().font}`;
   c.textAlign = "center";
   c.textBaseline = "middle";
   c.fillStyle = m.shadow;
@@ -191,6 +192,7 @@ scene.add(cable);
 const BULB_COLORS = {
   carousel: [0xfff2c4, 0xffb3d9],
   retro: [0xf83800, 0xf8b800, 0x00a800, 0x3cbcfc],
+  halloween: [0xff7a1a, 0xff9a3c, 0x9b4dff],
 };
 const bulbSpots = [];
 for (let t = -4; t <= 4.01; t += 0.5) {
@@ -233,6 +235,13 @@ export function animateDecor(now) {
       const k = Math.floor(i / 5) + Math.floor(now / 90);
       bulbColor.setHex(colors[Math.floor(i / 5) % colors.length]);
       lit = k % 4 === 0 ? 1 : 0.2;
+    } else if (id === "halloween") {
+      // Candles: each bulb flickers on its own, never quite steady.
+      bulbColor.setHex(colors[i % colors.length]);
+      lit =
+        0.55 +
+        0.3 * Math.sin(now / 90 + i * 7.3) * Math.sin(now / 230 + i * 2.1) +
+        0.15 * Math.sin(now / 37 + i);
     } else {
       // Carousel: two colours swapping, every third bulb dimmed.
       const phase = Math.floor(now / 450) % 2;
@@ -252,11 +261,13 @@ onTheme((t) => {
   ground.material.map =
     decor === "real"
       ? floorboards()
-      : t.id === "retro"
-        ? arcadeCarpet()
-        : decor === "carousel"
-          ? harlequin()
-          : null;
+      : decor === "halloween"
+        ? leaves()
+        : t.id === "retro"
+          ? arcadeCarpet()
+          : decor === "carousel"
+            ? harlequin()
+            : null;
   if (ground.material.map) ground.material.color.setHex(0xffffff);
   rug.material.color.setHex(s.rug);
   rug.material.map =
@@ -279,8 +290,11 @@ onTheme((t) => {
     M.post.map = candy("#fff6fb", "#ff7eb6");
     M.post.needsUpdate = true;
   }
-  bulbs.visible = decor === "carousel" || t.id === "retro";
+  bulbs.visible =
+    decor === "carousel" || decor === "halloween" || t.id === "retro";
   drawMarquee();
   // Theme fonts load on demand; redraw once this one is in.
-  document.fonts.load(`64px ${t.font}`).then(() => drawMarquee());
+  document.fonts
+    .load(`64px ${t.marquee.font ?? t.font}`)
+    .then(() => drawMarquee());
 });

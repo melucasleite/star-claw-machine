@@ -171,6 +171,40 @@ const REAL_TUNE = [
   ],
 ];
 
+// A haunted organ in D minor: creeping chromatic lines over a slow, swung waltz-ish pulse.
+const HALLOWEEN_TUNE = [
+  [
+    [0, 74, 2],
+    [2, 77, 2],
+    [4, 81, 4],
+    [8, 80, 2],
+    [10, 77, 2],
+    [12, 74, 4],
+  ],
+  [
+    [0, 73, 4],
+    [4, 76, 2],
+    [6, 73, 2],
+    [8, 70, 6],
+    [14, 69, 2],
+  ],
+  [
+    [0, 74, 2],
+    [2, 77, 2],
+    [4, 81, 2],
+    [6, 86, 2],
+    [8, 82, 4],
+    [12, 81, 4],
+  ],
+  [
+    [0, 80, 2],
+    [2, 79, 2],
+    [4, 78, 2],
+    [6, 77, 2],
+    [8, 74, 8],
+  ],
+];
+
 export const THEMES = {
   default: {
     label: "DEFAULT",
@@ -523,6 +557,100 @@ export const THEMES = {
         kick: [0, 10],
         snare: [8],
         hat: [0, 4, 8, 12],
+        drums: "soft",
+      },
+    },
+  },
+
+  halloween: {
+    label: "HALLOWEEN",
+    blurb:
+      "Jack-o'-lanterns, a skeleton, bats across the moon and a haunted organ.",
+    swatch: ["#120a1a", "#ff7a1a", "#7a3cc2", "#eae0c8"],
+    font: '"Press Start 2P", monospace',
+    scene: {
+      background: 0x0b0710,
+      ground: 0x24182e,
+      rug: 0x3a1f4a,
+      // Cool moonlight from above, a warm lamp inside: tinted only a little, so the tier
+      // colours still read true.
+      hemi: [0xe4dcff, 0x3a2540, 1.0],
+      sun: [0xd8e0ff, 1.9],
+      lamp: 0xffd6a8,
+      toneMapping: "aces",
+      pixelRatio: 2,
+      shadows: "soft",
+      shadowSize: 2048,
+      environment: 0,
+      materials: {
+        walnut: [0x1c1222, 0.6],
+        post: [0x1c1222, 0.6],
+        walnutDark: [0x0c0710, 0.8],
+        teal: [0xff7a1a, 0.5],
+        mustard: [0x7a3cc2, 0.4],
+        felt: [0x2e2238, 1],
+        brass: [0xeae0c8, 0.6],
+        black: [0x0a0a0a, 0.5],
+        red: [0xff7a1a, 0.4],
+        glass: [0xd8d0ff, 0.05, 0, 0.1],
+        acrylic: [0xffb36b, 0.1, 0, 0.3],
+      },
+      // Pumpkins, a skeleton, the moon and bats, cobwebs, candle-flicker bulbs (halloween.js).
+      decor: "halloween",
+    },
+    plush: { style: "knit", saturation: 0.28 },
+    marquee: {
+      background: "#120a1a",
+      border: "#ff7a1a",
+      shadow: "#000000",
+      text: "#ff9a3c",
+      glow: "#ff7a1a",
+      emoji: "🎃",
+      size: 104,
+      font: '"Creepster", "Press Start 2P", cursive',
+    },
+    screen: {
+      background: "#120a1a",
+      track: "#2a1438",
+      lines: "#4a2466",
+      meter: "#0a0610",
+      bar: "rgba(255,122,26,0.5)",
+      barEdge: "#ff9a3c",
+      text: "#ff9a3c",
+      ink: "#000000",
+      outline: "#1a0f22",
+      pixel: false,
+    },
+    laser: 0x7dff5a,
+    confetti: ["#ff7a1a", "#9b4dff", "#7dff5a", "#eae0c8"],
+    audio: {
+      voices: { square: "organ", sawtooth: "organ", triangle: "flute" },
+      lengthScale: 1.4,
+      reverb: 0.4,
+      crush: 0,
+      music: {
+        bpm: 116,
+        bar: 16,
+        swing: 0.1,
+        chords: [
+          [50, 53, 57],
+          [46, 50, 53],
+          [43, 46, 50],
+          [45, 49, 52],
+        ],
+        tune: HALLOWEEN_TUNE,
+        lead: { type: "organ", vol: 0.08 },
+        bass: { type: "flute", vol: 0.26, steps: [0, 8], bounce: false },
+        arp: {
+          type: "bell",
+          vol: 0.03,
+          under: 0.015,
+          pattern: [0, 2, 1, 2],
+          every: 2,
+        },
+        kick: [0, 8],
+        snare: [12],
+        hat: [4, 12],
         drums: "soft",
       },
     },
