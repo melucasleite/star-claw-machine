@@ -1,38 +1,27 @@
 # STAR CLAW
 
-A claw machine where the claw's grip isn't left to a hidden payout timer. **You earn it.**
+A claw machine where the grip isn't left to a hidden payout timer. **You earn it.**
 
-The gantry carriage, the box that rides the rails and holds the claw motor, has a tall, narrow screen on its front face. When you press **REEL** to drop the claw, a fishing minigame in the style of Stardew Valley starts on that screen. It runs while the claw descends. How well you play decides how hard the claw grips.
+**[Play it at starclawmachine.com](https://starclawmachine.com)**. It's free, runs in any browser with WebGL, and works on phones. The world high score board needs a connection; everything else works offline once loaded.
 
-![Concept render](designs/concept-render.png)
+![The default theme: a walnut cabinet full of knitted plushies](docs/screenshots/default.jpg)
 
-## Repo layout
+Drop the claw on a knitted plushie. As it lifts, a fishing-style reel game starts on the little screen on the claw's carriage, and how well you play it sets how hard the claw grips on the way to the chute. Win the reel and it holds tight. Lose it and the plushie slips out.
 
-| Path                         | What                                                                  |
-| ---------------------------- | --------------------------------------------------------------------- |
-| `docs/concept.md`            | Product concept, player flow, and why the screen sits on the carriage |
-| `docs/minigame.md`           | Minigame rules, tuning parameters, and prize tiers                    |
-| `docs/hardware.md`           | Carriage box layout, electronics, and draft BOM                       |
-| `designs/concept-render.png` | AI concept render (GPT Image)                                         |
-| `designs/carriage-box.svg`   | Dimensioned front and side views of the carriage box                  |
-| `prototype/index.html`       | Isometric 3D claw machine with physics grab and the teddy reel game   |
-| `prototype/minigame-2d.html` | First 2D-only sketch of the reel minigame                             |
+The physics is real (cannon-es), so a sloppy grab can still nudge a plushie into the chute, and a perfect reel can still drop one on the edge.
 
-## Try the prototype
+## How to play
 
-Open `prototype/index.html` in a browser. It loads three.js and cannon-es from a CDN, so you need to be online.
+|                | Keyboard   | Touch          |
+| -------------- | ---------- | -------------- |
+| Move the claw  | Arrow keys | Drag           |
+| Drop           | Space      | Tap            |
+| Reel           | Hold Space | Hold anywhere  |
+| Cash out       | Q          | QUIT & SAVE    |
+| Help, settings | H, O       | ?, gear button |
+| Music, sound   | M, S       | Note, speaker  |
 
-- **Arrow keys** move the claw. There's no landing guide, so judge it by eye.
-- **Space** drops the claw. It grabs whatever the physics lets it grab.
-- **Hold Space** during the reel game to lift the green bar. Keep the plushie in the bar to keep the grip strong.
-- **M** toggles the music and **S** the sound effects (or the note and speaker buttons in the corner).
-- **Q** (or the QUIT & SAVE button, top left) cashes out: the run ends and your score goes to the high score list (it asks first).
-
-On a phone: **drag** to move the claw, **tap** to drop, and **hold your finger down** to reel.
-
-### Scoring
-
-The machine is stocked with 15 plushies, dealt from ten animals (bears, cats, dogs, bunnies, axolotls, frogs, penguins, pigs, ducks and foxes). The animal sets the shape; the colour sets the reel difficulty and the points:
+The machine holds 15 plushies: ten animals, five colours. The animal is only the shape. The colour sets how hard the reel is and what it's worth:
 
 | Colour | Points | Stocked |
 | ------ | ------ | ------- |
@@ -42,18 +31,69 @@ The machine is stocked with 15 plushies, dealt from ten animals (bears, cats, do
 | Peach  | 100    | 2       |
 | Cherry | 250    | 1       |
 
-A perfect reel (never leaving the bar) is worth x1.5, and back-to-back catches build a streak up to x3. You have 5 hearts: a grab that comes up empty or a plushie dropped on the way to the chute costs half a heart, and losing the reel costs a whole one. Every successful grab heals half a heart, up to the full 5. Cashing out with QUIT & SAVE pays 25 points per half heart you have left. Clearing the machine pays 500 plus 100 per heart left. Your top 5 scores are kept in `localStorage`, next to a world top 10 stored in Supabase (the `star_claw_scores` table in the `lucas-crafts` project; anyone can read it and add a score, nobody can edit or delete). Only names you type go to the world board.
+- A perfect reel (the plushie never leaves the green bar) pays x1.5. Back-to-back catches build a streak up to x3.
+- You start with 5 hearts. An empty grab or a dropped plushie costs half a heart. Losing the reel costs a whole one. Every catch heals half a heart.
+- Cashing out pays 25 points per half heart left. Clearing the machine pays 500, plus 100 per heart.
+- Your top 5 stays in the browser. The world top 10 lives in a Supabase table that anyone can read and add to, and nobody can edit.
+- Every colour and animal pair you win goes into your collection: 50 in all.
 
-Every plushie you win flies into the prize bag under the score, and the end screen shows the haul. Each colour and animal pair you have ever won counts toward your collection (50 in all), and a first-time catch is marked NEW!
+The music speeds up as the machine empties. With one plushie left it's 30% faster than at the start, with double-time hats and the melody doubled an octave up.
 
-## Formatting
+## Themes
+
+Settings has four themes. They change how the game looks and sounds: the cabinet, the floor, the plushies, the menus, the reel screen, the music and the sound effects. The physics and the scoring are the same in all four.
+
+| 8-bit                                      | Pink carousel                                         | Ultra real 4K                                     |
+| ------------------------------------------ | ----------------------------------------------------- | ------------------------------------------------- |
+| ![8-bit theme](docs/screenshots/retro.jpg) | ![Pink carousel theme](docs/screenshots/carousel.jpg) | ![Ultra real 4K theme](docs/screenshots/real.jpg) |
+
+- **8-bit**: voxel plushies on an arcade carpet, chase lights, pixel-art outlines and CRT scanlines. The music is a bit-crushed chiptune, and the coin and one-up sounds are the classic ones. The marquee blinks INSERT COIN.
+- **Pink carousel**: candy-striped posts, twinkling bulbs, velvet plushies and an organ waltz.
+- **Ultra real 4K**: chrome, wood grain, glass with fingerprints on it, dust in the lamp light, tilt-shift and film grain. Somebody left their coffee on the floor, and a camcorder is recording the whole thing. It renders at up to 3x the screen's pixels with a 4096px shadow map and seven post-processing passes, so older phones will stutter.
+
+**Aim assist** draws a laser from the claw to whatever it would land on. Runs played with it on stay off both high score boards, and switching it on or off restarts the current run, so you can't switch it mid-game.
+
+## Develop
+
+You need Node 22 or later and Yarn 1.
 
 ```bash
-yarn format
+git clone https://github.com/melucasleite/star-claw-machine.git
+cd star-claw-machine
+yarn            # install
+yarn dev        # http://localhost:3000
+yarn test       # rule unit tests (node:test, no browser)
+yarn test:e2e   # browser tests; start yarn dev first (BASE_URL, default http://localhost:3000)
+yarn format     # prettier
 ```
 
-### Look and sound
+The app is Next.js (App Router), but the game is plain JavaScript that writes to the DOM directly. `src/app/Game.js` renders the markup once, then loads `src/game/main.js`, and the modules under `src/game/` take it from there. They're split by job:
 
-The plushies are knitted: one procedural stitch tile (a colour map plus a bump map) is wrapped around every part with UVs scaled to the part's size, so the stitches stay the same size on a big belly and a small ear. Eyes are smooth, shiny buttons.
+| Module                                           | What it does                                                                        |
+| ------------------------------------------------ | ----------------------------------------------------------------------------------- |
+| `config.js`, `rules.js`                          | Tuning numbers, and the scoring and turn rules as pure functions                    |
+| `game.js`, `reel.js`                             | The turn state machine (aim, drop, grab, lift, reel, release) and the reel game     |
+| `scene.js`, `physics.js`                         | Renderer, camera, lights, materials; the cannon-es world                            |
+| `cabinet.js`, `claw.js`, `plushies.js`           | The machine, the claw and its servo-driven prongs, and the knitted plushies         |
+| `input.js`, `hud.js`, `overlays.js`, `help.js`   | Keys and touch, the scoreboard, the title and end screens, help                     |
+| `settings.js`, `settingsui.js`, `themes.js`      | Saved settings, the settings dialog, and every theme's look and sound               |
+| `textures.js`, `postfx.js`, `photo.js`           | Procedural textures, post-processing passes, the 4K theme's props                   |
+| `audio.js`, `music.js`                           | Synthesised sound effects and music (Web Audio, no sound files)                     |
+| `laser.js`, `confetti.js`, `bag.js`, `screen.js` | Aim assist, confetti, the prize bag, the carriage screen                            |
+| `loop.js`, `sync.js`, `main.js`, `debug.js`      | Fixed-step loop, physics to mesh sync, boot, and the `window.__claw` console handle |
 
-All audio is synthesised with Web Audio, so there are no sound files: a looping chiptune (8 bars of tune, 8 of groove), a motor hum that follows the claw, clacks and whirrs for the claw, pings, buzzes and a ratchet for the reel game, and jingles for prizes, hearts, high scores and clearing the machine. Browsers only start audio after a tap or key press, so it wakes up on the first one; on iPhone it is set to play even with the silent switch on.
+Pushes to `main` deploy to [starclawmachine.com](https://starclawmachine.com) on Vercel.
+
+## The physical machine
+
+This started as a design for a real cabinet, and the docs for it are here too:
+
+| Path                         | What                                                                   |
+| ---------------------------- | ---------------------------------------------------------------------- |
+| `docs/concept.md`            | Product concept, player flow, and why the screen rides on the carriage |
+| `docs/minigame.md`           | Reel game rules, tuning and prize tiers                                |
+| `docs/hardware.md`           | Carriage box layout, electronics and draft BOM                         |
+| `cad/claw/`                  | The printed claw and drop winch (OpenSCAD, STLs, renders)              |
+| `designs/carriage-box.svg`   | Dimensioned views of the carriage box                                  |
+| `designs/concept-render.png` | Concept render                                                         |
+| `public/minigame-2d.html`    | The first 2D sketch of the reel game                                   |

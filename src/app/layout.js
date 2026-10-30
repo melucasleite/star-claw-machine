@@ -1,6 +1,6 @@
 import "./globals.css";
 
-const SITE = "https://star-claw-machine.vercel.app";
+const SITE = "https://starclawmachine.com";
 const TITLE = "Star Claw: a cozy knitted claw machine game";
 const DESCRIPTION =
   "Grab knitted plushies in a free claw machine you play in the browser. Win the reel, fill your prize bag, collect all 50 and climb the world top 10. Works on phones and desktop.";
