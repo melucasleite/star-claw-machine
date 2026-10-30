@@ -52,6 +52,7 @@ export const game = {
   late: null,
   assisted: false,
   result: null,
+  level: 1,
   // The level a clear in this run opened, if any.
   unlocked: null,
   bag: [],
@@ -88,6 +89,8 @@ export function startGame() {
     late: null,
     // Fixed for the whole run: switching aim assist restarts the run.
     assisted: settings.aimAssist,
+    // The level this run is played on; its scores go on that level's boards.
+    level: currentLevel().id,
     result: null,
     unlocked: null,
     bag: [],
@@ -237,6 +240,7 @@ export function gameOver(end, bonus = 0) {
   }
   game.result = {
     cleared,
+    level: game.level,
     unlocked: cleared ? game.unlocked : null,
     quit: end === "quit",
     bonus,
@@ -387,8 +391,10 @@ export function tick(dt) {
         const plush = findHeldPlush();
         if (plush) startReel(plush);
         else {
+          // Nothing to carry, so no trip to the chute: open up and aim again from right here.
           sfx.empty();
-          setState("return");
+          claw.closing = false;
+          endTurn();
         }
       }
       break;

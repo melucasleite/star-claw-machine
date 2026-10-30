@@ -8,7 +8,7 @@ import { postFxComposer } from "./postfx.js";
 import { music } from "./music.js";
 import { ac } from "./audio.js";
 import { applyTheme } from "./settings.js";
-import { LEVELS, cheat } from "./levels.js";
+import { LEVELS, enterCheat } from "./levels.js";
 import { renderTitle } from "./overlays.js";
 
 // Debug handle for playtesting from the console.
@@ -33,9 +33,9 @@ window.__claw = {
   audioState: () => ac?.state ?? "none",
   applyTheme,
   LEVELS,
-  // Opens every built level until the page reloads, for trying them without clearing first.
+  // Same as typing FART in the settings cheats box.
   unlockLevels() {
-    cheat.unlockAll = true;
+    enterCheat("FART");
     if (game.mode === "title") renderTitle();
   },
 };

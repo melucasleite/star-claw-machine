@@ -624,6 +624,9 @@ svg.inline {
 form.name {
   margin-top: 18px;
 }
+form.name.cheat {
+  margin-top: 0;
+}
 form.name label {
   display: block;
   font-size: 9px;

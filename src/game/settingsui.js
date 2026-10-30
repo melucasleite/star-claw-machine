@@ -2,7 +2,8 @@ import { settingsEl, settingsPanel } from "./dom.js";
 import { THEMES, THEME_IDS } from "./themes.js";
 import { applyTheme, setAimAssist, settings } from "./settings.js";
 import { hold, release } from "./pause.js";
-import { askConfirm } from "./overlays.js";
+import { askConfirm, renderOver, renderTitle } from "./overlays.js";
+import { enterCheat } from "./levels.js";
 import { game, startGame } from "./game.js";
 import { renderBag } from "./bag.js";
 import { renderHud } from "./hud.js";
@@ -30,11 +31,30 @@ function render() {
       <span class="knob"></span><span>${settings.aimAssist ? "ON" : "OFF"}</span>
     </button>
     <p class="aside">A laser shows where the claw will land. Scores made with it on stay off the high score boards, and switching it either way restarts the game.</p>
+    <h2>CHEATS</h2>
+    <form class="name cheat"><div class="row"><input name="cheat" maxlength="16" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="CODE" aria-label="Cheat code" /><button class="btn" type="submit">ENTER</button></div><p class="aside" aria-live="polite">${cheatNote}</p></form>
     <div class="actions"><button class="btn big" type="button" data-close-settings>DONE</button></div>`;
 }
 
+let cheatNote = "";
+settingsPanel.addEventListener("submit", (e) => {
+  if (!e.target.matches("form.cheat")) return;
+  e.preventDefault();
+  const message = enterCheat(e.target.elements.cheat.value);
+  cheatNote = message ?? "NOTHING HAPPENS.";
+  if (message) {
+    sfx.fresh();
+    // The level picker behind the dialog shows the newly opened levels.
+    if (game.mode === "title") renderTitle();
+    else if (game.mode === "over") renderOver();
+  } else sfx.empty();
+  render();
+  settingsPanel.querySelector("form.cheat input").focus();
+});
+
 export function openSettings() {
   if (!settingsEl.hidden) return;
+  cheatNote = "";
   render();
   settingsEl.hidden = false;
   settingsPanel.scrollTop = 0;

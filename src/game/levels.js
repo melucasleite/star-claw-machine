@@ -43,8 +43,25 @@ try {
 } catch {
   cleared = new Set();
 }
-// Playtesting only (window.__claw.unlockLevels): opens every built level until the page reloads.
+// Cheat codes, typed into the settings dialog. Each sets a flag that sticks in this browser.
+const CHEATS_KEY = "startclaw.cheats.v1";
+export const CHEATS = {
+  FART: { flag: "unlockAll", message: "ALL LEVELS UNLOCKED" },
+};
 export const cheat = { unlockAll: false };
+try {
+  Object.assign(cheat, JSON.parse(localStorage.getItem(CHEATS_KEY)));
+} catch {}
+// Returns the cheat's message, or null for a code that does nothing.
+export function enterCheat(code) {
+  const c = CHEATS[code.trim().toUpperCase()];
+  if (!c) return null;
+  cheat[c.flag] = true;
+  try {
+    localStorage.setItem(CHEATS_KEY, JSON.stringify(cheat));
+  } catch {}
+  return c.message;
+}
 
 export const levelById = (id) => LEVELS.find((l) => l.id === id);
 export const isUnlocked = (level) =>

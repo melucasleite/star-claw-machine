@@ -3,6 +3,7 @@ import { TIERS } from "./config.js";
 import {
   BOARD_SIZE,
   WORLD,
+  fetchWorld,
   globalBoard,
   loadScores,
   makesBoard,
@@ -72,7 +73,11 @@ export function levelsHtml() {
 
 // Picking a level restocks the machine with its prizes, so the title shows what you'll play.
 export function chooseLevel(id) {
-  if (game.mode === "play" || !pickLevel(id)) return;
+  if (game.mode === "play") return;
+  // A score still waiting for a name belongs to the level it was played on: save it first.
+  if (game.result) submitName("PLAYER");
+  if (!pickLevel(id)) return;
+  fetchWorld();
   restock();
   drawMarquee(currentLevel().marquee);
   // Re-styling from the theme puts the cabinet back, then the new level's stage dresses it.
@@ -112,12 +117,12 @@ export function refreshWorldBoard() {
   const el = document.getElementById("world-board");
   if (el) el.innerHTML = worldHtml();
 }
-// Local top 5 and world top 10, side by side when there is room.
+// Local top 5 and world top 10 for the picked level, side by side when there is room.
 export function boardsHtml(title, pending, highlight) {
   worldPending = pending && makesWorld(pending) ? pending : 0;
   return `<div class="boards">
-    <div><h2>${title}</h2>${boardHtml(pending && makesBoard(pending) ? pending : 0, highlight)}</div>
-    <div><h2>WORLD TOP ${WORLD.size}</h2><div id="world-board">${worldHtml()}</div></div>
+    <div><h2>${title} &middot; LV ${currentLevel().id}</h2>${boardHtml(pending && makesBoard(pending) ? pending : 0, highlight)}</div>
+    <div><h2>WORLD TOP ${WORLD.size} &middot; LV ${currentLevel().id}</h2><div id="world-board">${worldHtml()}</div></div>
   </div>`;
 }
 
@@ -179,9 +184,9 @@ export function submitName(fallback) {
   const typed = cleanName(input?.value ?? "");
   const name = typed || fallback || "";
   if (!name) return input?.focus();
-  if (makesBoard(r.score)) r.savedDate = saveScore(name, r.score).date;
+  if (makesBoard(r.score)) r.savedDate = saveScore(name, r.score, r.level).date;
   // Only names people actually typed go to the world board, not the PLAYER fallback.
-  if (typed && makesWorld(r.score)) postWorld(name, r.score);
+  if (typed && makesWorld(r.score)) postWorld(name, r.score, r.level);
   if (typed) sfx.saved();
   r.saved = true;
 }
