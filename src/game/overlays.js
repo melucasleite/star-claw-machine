@@ -3,7 +3,6 @@ import { TIERS } from "./config.js";
 import {
   BOARD_SIZE,
   WORLD,
-  cleanName,
   globalBoard,
   loadScores,
   makesBoard,
@@ -14,6 +13,7 @@ import {
 import { keys } from "./input.js";
 import { esc, fmt, renderHud } from "./hud.js";
 import { cashOutBonus, game, gameOver, startGame } from "./game.js";
+import { cleanName } from "./rules.js";
 import { collectionHtml, prizeImg } from "./bag.js";
 import { sfx } from "./audio.js";
 

@@ -46,6 +46,11 @@ export const RULES = {
   heartBonus: 100,
   catchHeal: 0.5,
   cashOutPerHalf: 25,
+  // The turn is judged once nothing near the chute moves faster than this (or after settleMax s).
+  settleSpeed: 0.35,
+  settleMax: 6,
+  // A plushie that still drops in this long after a turn was penalised refunds the heart.
+  lateGrace: 2.5,
 };
 
 // Colour is the tier: it sets the reel difficulty and the points. `count` is how many get stocked.

@@ -21,6 +21,14 @@ import { renderOver, setMode, submitName } from "./overlays.js";
 import { collect, flyToBag, renderBag } from "./bag.js";
 import { showReel, startReel, stepReel } from "./reel.js";
 import { setMusicLevel, sfx } from "./audio.js";
+import {
+  cashOutBonus as bonusForLives,
+  chuteBusy,
+  clearBonus,
+  lateDropCounts,
+  prizePoints,
+  turnPenalty,
+} from "./rules.js";
 
 // ---------- game state ----------
 
@@ -30,12 +38,16 @@ export const game = {
   paused: false,
   state: "settle",
   t: 0,
+  // Seconds of unpaused play; the late-drop grace window is measured on it.
+  clock: 0,
   held: null,
   mg: null,
   score: 0,
   lives: RULES.lives,
   streak: 0,
   turn: null,
+  // The last turn that cost a heart, kept for a moment in case its plushie drops in late.
+  late: null,
   result: null,
   bag: [],
 };
@@ -68,6 +80,7 @@ export function startGame() {
     held: null,
     mg: null,
     turn: null,
+    late: null,
     result: null,
     bag: [],
   });
@@ -84,21 +97,31 @@ export function awardPrize(plush) {
   if (game.mode !== "play") return;
   const perfect =
     plush === game.held && game.mg?.result === "caught" && game.mg.perfect;
+  // A plushie that bounced off the chute guard and dropped in after its turn was judged a miss:
+  // hand back the heart and the streak, and credit the prize to that turn after all.
+  const late = !game.turn && lateDropCounts(game.late, game.clock) && game.late;
+  if (late) {
+    game.late = null;
+    game.lives = Math.min(RULES.lives, game.lives + late.cost);
+    game.streak = late.streak;
+    flashHearts("heal");
+    if (game.state === "grace") setState("aim");
+  }
+  const turn = game.turn ?? late?.turn;
   const mult = streakMult();
-  const pts = Math.round(
-    plush.tier.points * (perfect ? 1 + RULES.perfectBonus : 1) * mult,
-  );
+  const pts = prizePoints(plush.tier.points, perfect, mult);
   game.score += pts;
   game.streak++;
   // The first prize of a grab heals half a heart, up to the full five.
   let healed = false;
-  if (game.turn && game.turn.prizes++ === 0 && game.lives < RULES.lives) {
+  if (turn && turn.prizes++ === 0 && game.lives < RULES.lives) {
     game.lives = Math.min(RULES.lives, game.lives + RULES.catchHeal);
     healed = true;
     flashHearts("heal");
   }
   const tags = [
     `${plush.tier.name} ${plush.animal.name}`.toUpperCase(),
+    late && "SAVED!",
     perfect && "PERFECT x1.5",
     mult > 1 && `STREAK x${mult}`,
     healed && `+&frac12; ${heartSvg("inline")}`,
@@ -140,27 +163,32 @@ export function flashHearts(kind) {
   heartsEl.classList.add(kind);
 }
 
-// Cashing out pays for the hearts you didn't spend.
-export const cashOutBonus = () =>
-  Math.round(game.lives / 0.5) * RULES.cashOutPerHalf;
+export const cashOutBonus = () => bonusForLives(game.lives);
 
 export function endTurn() {
   const turn = game.turn;
   game.held = null;
   game.mg = null;
   game.turn = null;
-  if (turn && turn.prizes === 0) {
-    if (turn.kind === "miss") loseLife(RULES.missCost, "MISSED THE GRAB");
-    else if (turn.result === "escaped") loseLife(RULES.failCost, "IT GOT AWAY");
-    else loseLife(RULES.dropCost, "DROPPED IT");
+  game.late = null;
+  const penalty = turnPenalty(turn);
+  if (penalty) {
+    game.late = {
+      turn,
+      cost: penalty.cost,
+      streak: game.streak,
+      at: game.clock,
+    };
+    loseLife(penalty.cost, penalty.why);
   }
   if (!plushies.length) return clearMachine();
-  if (game.lives <= 0) return gameOver("lost");
+  // Out of hearts: hold the game over for the grace window in case something still drops in.
+  if (game.lives <= 0) return setState("grace");
   setState("aim");
 }
 
 export function clearMachine() {
-  const bonus = RULES.clearBonus + RULES.heartBonus * game.lives;
+  const bonus = clearBonus(game.lives);
   game.score += bonus;
   setMode("clear");
   setState("idle");
@@ -186,6 +214,7 @@ export function gameOver(end, bonus = 0) {
     game.held = null;
     game.mg = null;
     game.turn = null;
+    game.late = null;
     showReel(false);
     setState("home");
     game.score += bonus;
@@ -286,6 +315,7 @@ export function steerTo(v, tx, tz, speed, dt) {
 
 export function tick(dt) {
   game.t += dt;
+  game.clock += dt;
   const v = hub.velocity;
   v.set(0, 0, 0);
   switch (game.state) {
@@ -316,6 +346,7 @@ export function tick(dt) {
         v.z = clampAxis(hub.position.z, iz * CLAW.moveSpeed);
       }
       if (pressed.Space) {
+        game.late = null;
         game.turn = { kind: "miss", prizes: 0, result: null };
         setState("drop");
       }
@@ -356,13 +387,17 @@ export function tick(dt) {
       }
       break;
     case "release": {
-      // Give whatever we let go of time to land before judging the turn.
-      const held = game.held;
-      const falling =
-        held && plushies.includes(held) && held.body.position.y > 0.8;
-      if (game.t > CLAW.releaseTime && (!falling || game.t > 3)) endTurn();
+      // Give whatever we let go of time to land before judging the turn. A plushie can bounce off
+      // the chute guard or the glass and roll around the hole for a while, so wait until nothing
+      // near the chute is moving (or settleMax runs out) rather than a fixed delay.
+      const busy = chuteBusy(plushies.map((b) => b.body));
+      if (game.t > CLAW.releaseTime && (!busy || game.t > RULES.settleMax))
+        endTurn();
       break;
     }
+    case "grace":
+      if (game.t > RULES.lateGrace) gameOver("lost");
+      break;
   }
 
   restoreGhosts();

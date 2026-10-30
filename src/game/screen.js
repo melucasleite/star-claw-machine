@@ -21,6 +21,7 @@ export const IDLE_TEXT = {
   top: ["..."],
   return: ["MISSED"],
   release: ["OPEN"],
+  grace: ["..."],
 };
 export const MODE_TEXT = {
   title: ["PRESS", "START"],

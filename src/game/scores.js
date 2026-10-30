@@ -1,3 +1,4 @@
+import { makesList } from "./rules.js";
 import { refreshWorldBoard } from "./overlays.js";
 
 // ---------- high scores ----------
@@ -40,12 +41,6 @@ export const worldHeaders = {
   apikey: WORLD.key,
   Authorization: `Bearer ${WORLD.key}`,
 };
-export const cleanName = (s) =>
-  s
-    .toUpperCase()
-    .replace(/[^A-Z0-9 ._!?-]/g, "")
-    .trim()
-    .slice(0, 10);
 export async function fetchWorld() {
   try {
     const res = await fetch(
@@ -76,19 +71,7 @@ export async function postWorld(name, score) {
   } catch {}
   await fetchWorld();
 }
-export function makesWorld(score) {
-  const rows = globalBoard.rows;
-  return (
-    !!rows &&
-    score > 0 &&
-    (rows.length < WORLD.size || score > rows[rows.length - 1].score)
-  );
-}
+export const makesWorld = (score) =>
+  !!globalBoard.rows && makesList(globalBoard.rows, WORLD.size, score);
 
-export function makesBoard(score) {
-  const list = loadScores();
-  return (
-    score > 0 &&
-    (list.length < BOARD_SIZE || score > list[list.length - 1].score)
-  );
-}
+export const makesBoard = (score) => makesList(loadScores(), BOARD_SIZE, score);

@@ -7,6 +7,7 @@ import {
   streakEl,
 } from "./dom.js";
 import { RULES } from "./config.js";
+import { streakMult as multForStreak } from "./rules.js";
 import { plushies } from "./plushies.js";
 import { loadScores } from "./scores.js";
 import { game } from "./game.js";
@@ -51,8 +52,7 @@ export function renderHearts() {
   }).join("");
 }
 
-export const streakMult = () =>
-  Math.min(RULES.streakMax, 1 + RULES.streakStep * game.streak);
+export const streakMult = () => multForStreak(game.streak);
 
 export function renderHud() {
   renderHearts();
