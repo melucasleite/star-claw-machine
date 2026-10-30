@@ -24,7 +24,7 @@ Claw machines feel rigged because they usually are: most cabinets pay out on a t
 
 ## Grip mapping
 
-`torque = 1.5 + 26.5 × meter` in prototype units. The bear weighs 20 N and each prong is about 1.4 units long. At the starting meter (35 %), the grip holds a well-centred bear but not one hanging by a paw. On the cabinet, this value is the claw coil's PWM duty cycle. Because the grip is earned openly, there is no payout timer.
+`torque = 1.5 + 26.5 × meter` in prototype units. The bear weighs 20 N and each prong is about 1.4 units long. At the starting meter (35 %), the grip holds a well-centred bear but not one hanging by a paw. On the cabinet, this value is the claw servo's grip: the carriage drives the servo past contact until its supply current matches the meter. Because the grip is earned openly, there is no payout timer.
 
 ## Visual direction
 
