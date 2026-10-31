@@ -62,12 +62,7 @@ export function renderHud() {
   const best = Math.max(loadScores()[0]?.score ?? 0, game.score);
   bestEl.innerHTML = `BEST <b>${fmt(best)}</b>`;
   leftEl.innerHTML = `<b>${plushies.length}</b> LEFT`;
-  const hot = game.streak > 0;
-  streakEl.innerHTML = hot
-    ? `<b>x${streakMult()}</b> STREAK${game.streak > 1 ? ` &middot; ${game.streak} IN A ROW` : ""}`
-    : "";
-  streakEl.classList.toggle("on", hot);
-  streakEl.classList.toggle("fire", game.streak >= 3);
+  renderStreak();
   assistTagEl.hidden = !(game.mode === "play" && game.assisted);
 }
 
@@ -79,6 +74,39 @@ export function floatScore(text) {
   // Anchored to the score box, so it floats up right beside the number.
   scoreEl.parentElement.appendChild(el);
   el.addEventListener("animationend", () => el.remove());
+}
+
+// The combo counter: a multiplier that punches in when the streak grows, heats from gold to red
+// as it climbs, and shakes off when the streak breaks. Only changes animate, so the many
+// re-renders in between leave it still.
+let shownStreak = 0;
+// Once it has shaken off, it takes up no room.
+streakEl.addEventListener("animationend", (e) => {
+  if (e.animationName === "streak-break") streakEl.classList.remove("break");
+});
+const replay = (el, cls) => {
+  el.classList.remove(cls);
+  void el.offsetWidth;
+  el.classList.add(cls);
+};
+function renderStreak() {
+  const n = game.mode === "play" ? game.streak : 0;
+  if (n === shownStreak) return;
+  const grew = n > shownStreak;
+  shownStreak = n;
+  if (!n) {
+    if (streakEl.classList.contains("on")) replay(streakEl, "break");
+    streakEl.classList.remove("on");
+    return;
+  }
+  const mult = streakMult();
+  streakEl.classList.remove("break");
+  streakEl.classList.add("on");
+  // 1 = x1.5 ... 4 = x3, the cap.
+  streakEl.dataset.heat = String(Math.round((mult - 1) / RULES.streakStep));
+  streakEl.innerHTML = `<b>x${mult}</b>`;
+  streakEl.setAttribute("aria-label", `Streak x${mult}`);
+  if (grew) replay(streakEl.querySelector("b"), "up");
 }
 
 export function popup(main, detail, color, big = false) {

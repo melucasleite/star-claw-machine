@@ -238,54 +238,88 @@ body.reeling .carriage {
     border-color: var(--gold);
   }
 }
-/* The streak badge: hidden until a streak starts, then on fire. */
+/* The combo counter. Hidden until a streak starts; it pops in, its number punches on every
+   catch, its colour heats up with the multiplier, and it shakes off when the streak breaks. */
 #streak {
-  padding: 6px 12px;
-  font-size: 9px;
-  text-shadow: 1px 1px 0 rgba(0, 0, 0, 0.4);
-  color: #fff;
-  background: linear-gradient(90deg, #ff7a1a, #ff3d6e, #ffb21a, #ff7a1a);
-  background-size: 300% 100%;
+  --heat: var(--gold);
+  display: none;
+  align-items: center;
+  padding: 5px 12px 5px 10px;
+  text-shadow: none;
+  background: var(--slot-strong);
   border: 2px solid var(--wood-dark);
-  border-radius: 999px;
-  transform: scale(0);
+  border-left: 5px solid var(--heat);
+  border-radius: 10px;
   transform-origin: left center;
-  transition: transform 0.3s cubic-bezier(0.3, 1.6, 0.5, 1);
 }
-#streak:empty {
-  padding: 0;
-  border: 0;
+#streak.on,
+#streak.break {
+  display: inline-flex;
 }
 #streak.on {
-  transform: scale(1);
-  animation: streak-flow 1.6s linear infinite;
+  animation: streak-in 0.35s cubic-bezier(0.3, 1.5, 0.5, 1);
 }
-#streak.fire {
+#streak[data-heat="2"] {
+  --heat: #ffb02e;
+}
+#streak[data-heat="3"] {
+  --heat: #ff7a2a;
+}
+#streak[data-heat="4"] {
+  --heat: #ff4a3d;
   animation:
-    streak-flow 0.8s linear infinite,
-    streak-wiggle 0.5s ease-in-out infinite;
-  box-shadow: 0 0 16px rgba(255, 90, 40, 0.7);
+    streak-in 0.35s cubic-bezier(0.3, 1.5, 0.5, 1),
+    streak-glow 1.4s ease-in-out 0.35s infinite;
 }
 #streak b {
+  display: inline-block;
   font-weight: normal;
-  font-size: 13px;
+  font-size: 22px;
+  line-height: 1;
+  color: var(--heat);
+  text-shadow:
+    0 2px 0 var(--wood-dark),
+    0 0 12px color-mix(in srgb, var(--heat) 55%, transparent);
 }
-@keyframes streak-flow {
+#streak b.up {
+  animation: streak-punch 0.45s cubic-bezier(0.3, 1.7, 0.5, 1);
+}
+#streak.break {
+  animation: streak-break 0.45s ease-in forwards;
+}
+@keyframes streak-in {
+  from {
+    opacity: 0;
+    transform: scale(0.5) translateX(-10px);
+  }
+}
+@keyframes streak-punch {
+  from {
+    transform: scale(1.6) rotate(-6deg);
+  }
+}
+@keyframes streak-glow {
+  50% {
+    box-shadow: 0 0 18px rgba(255, 74, 61, 0.55);
+  }
+}
+@keyframes streak-break {
+  20% {
+    transform: translateX(-5px);
+  }
+  40% {
+    transform: translateX(4px);
+    opacity: 1;
+  }
   to {
-    background-position: 300% 0;
-  }
-}
-@keyframes streak-wiggle {
-  25% {
-    transform: rotate(-3deg) scale(1.05);
-  }
-  75% {
-    transform: rotate(3deg) scale(1.05);
+    transform: translateY(10px) scale(0.85);
+    opacity: 0;
   }
 }
 @media (prefers-reduced-motion: reduce) {
   #streak.on,
-  #streak.fire,
+  #streak b.up,
+  #streak.break,
   #score.bump,
   .score-float {
     animation: none;
@@ -814,11 +848,10 @@ form.name .row {
     font-size: 11px;
   }
   #streak {
-    padding: 4px 9px;
-    font-size: 7px;
+    padding: 4px 9px 4px 7px;
   }
   #streak b {
-    font-size: 10px;
+    font-size: 16px;
   }
   .heart,
   .heart svg {
