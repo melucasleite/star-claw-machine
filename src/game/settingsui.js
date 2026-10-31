@@ -4,6 +4,7 @@ import { applyTheme, setAimAssist, setFamily, settings } from "./settings.js";
 import { hold, release } from "./pause.js";
 import {
   askConfirm,
+  boardsHtml,
   levelsHtml,
   playLevel,
   renderOver,
@@ -23,6 +24,7 @@ import { TANK } from "./tank.js";
 import { collection } from "./bag.js";
 import { helpBodyHtml } from "./help.js";
 import { closeDetail, fillThumbs, showDetail } from "./showcase.js";
+import { fetchWorld } from "./scores.js";
 import { restock } from "./plushies.js";
 import { LOVE_NAME, openLove } from "./love.js";
 import { cleanName } from "./rules.js";
@@ -92,6 +94,7 @@ const MENU = [
   ["new", "&#9654;", "NEW GAME", "Pick a level and play"],
   ["help", "?", "HOW TO PLAY", "The claw, the reel, the hearts"],
   ["collection", "&#9733;", "COLLECTION", "Every prize you've caught, in 3D"],
+  ["leaderboard", "&#9819;", "LEADERBOARD", "Your best, and the world's"],
   ["settings", "&#9881;", "SETTINGS", "Themes, aim assist, cheats"],
 ];
 const homeView = () => `<h1>MENU</h1>
@@ -165,7 +168,22 @@ const itemView = () => `<h1 class="item-name">${item.name.toUpperCase()}</h1>
   </div>
   <p class="aside">Drag to spin &middot; tap to poke &middot; scroll or pinch to zoom</p>`;
 
+// LEADERBOARD: your top 5 and the world top 10, a tab per level.
+let boardLevel = 1;
+function leaderboardView() {
+  const tabs = LEVELS.filter((l) => !l.soon)
+    .map(
+      (l) =>
+        `<button type="button" class="tab${l.id === boardLevel ? " on" : ""}" data-board-level="${l.id}">LV ${l.id}</button>`,
+    )
+    .join("");
+  return `<h1>LEADERBOARD</h1>
+    <div class="tabs">${tabs}</div>
+    ${boardsHtml("YOUR TOP 5", 0, null, boardLevel)}`;
+}
+
 const BACK = {
+  leaderboard: "home",
   new: "home",
   help: "home",
   collection: "home",
@@ -182,6 +200,7 @@ function render() {
     new: newView,
     help: helpBodyHtml,
     collection: collectionView,
+    leaderboard: leaderboardView,
     item: itemView,
     settings: settingsView,
   }[view]();
@@ -197,12 +216,14 @@ function render() {
   settingsPanel.innerHTML = `${back}${body}<div class="actions">${action}</div>`;
   settingsPanel.dataset.view = view;
   if (view === "collection") stopThumbs = fillThumbs(settingsPanel, shownItems);
+  if (view === "leaderboard") fetchWorld(boardLevel);
   if (view === "item")
     showDetail(settingsPanel.querySelector("#showcase"), item.tier, item.kind);
 }
 function go(next) {
   view = next;
   if (next === "new") menuLevel = currentLevel();
+  if (next === "leaderboard") boardLevel = currentLevel().id;
   render();
   settingsPanel.scrollTop = 0;
 }
@@ -302,6 +323,11 @@ addEventListener("click", (e) => {
   if (t.closest("[data-menu-play]")) {
     closeSettings();
     return playLevel(menuLevel.id);
+  }
+  const bl = t.closest("[data-board-level]");
+  if (bl) {
+    boardLevel = Number(bl.dataset.boardLevel);
+    return render();
   }
   const gal = t.closest("[data-gallery]");
   if (gal) {

@@ -50,15 +50,17 @@ export const globalBoard = {
   level: null,
   failed: false,
   mine: null,
+  // Every level's rows fetched so far, for the menu's leaderboard.
+  byLevel: {},
 };
 export const worldHeaders = {
   apikey: WORLD.key,
   Authorization: `Bearer ${WORLD.key}`,
 };
-export async function fetchWorld() {
-  const level = currentLevel().id;
+export async function fetchWorld(level = currentLevel().id) {
   // Switching levels: don't show the old level's rows while the new ones load.
-  if (globalBoard.level !== level) globalBoard.rows = null;
+  if (level === currentLevel().id && globalBoard.level !== level)
+    globalBoard.rows = null;
   try {
     const res = await fetch(
       `${WORLD.url}?select=id,name,score&level=eq.${level}&order=score.desc,created_at.asc&limit=${WORLD.size}`,
@@ -66,10 +68,12 @@ export async function fetchWorld() {
     );
     if (!res.ok) throw new Error(res.status);
     const rows = await res.json();
-    // A newer fetch for another level wins.
-    if (level !== currentLevel().id) return;
-    globalBoard.rows = rows;
-    globalBoard.level = level;
+    globalBoard.byLevel[level] = rows;
+    // The picked level's rows also back the high score checks.
+    if (level === currentLevel().id) {
+      globalBoard.rows = rows;
+      globalBoard.level = level;
+    }
     globalBoard.failed = false;
   } catch {
     globalBoard.failed = !globalBoard.rows;

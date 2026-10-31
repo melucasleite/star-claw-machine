@@ -16,12 +16,7 @@ import { cashOutBonus, game, gameOver, startGame } from "./game.js";
 import { cleanName } from "./rules.js";
 import { hold, release } from "./pause.js";
 import { setAssist } from "./settingsui.js";
-import {
-  collectedIn,
-  collectionHtml,
-  collectionSize,
-  prizeImg,
-} from "./bag.js";
+import { collectedIn, collectionSize, prizeImg } from "./bag.js";
 import {
   LEVELS,
   currentLevel,
@@ -119,29 +114,36 @@ export function listHtml(rows, size, pending, isMine) {
     )
     .join("")}</ol>`;
 }
-export const boardHtml = (pending, highlight) =>
-  listHtml(loadScores(), BOARD_SIZE, pending, (r) => r.date === highlight);
+export const boardHtml = (pending, highlight, level = currentLevel().id) =>
+  listHtml(loadScores(level), BOARD_SIZE, pending, (r) => r.date === highlight);
 export let worldPending = 0;
-export function worldHtml() {
-  if (globalBoard.rows)
+export function worldHtml(level = currentLevel().id) {
+  const current = level === currentLevel().id;
+  const rows = current ? globalBoard.rows : globalBoard.byLevel[level];
+  if (rows)
     return listHtml(
-      globalBoard.rows,
+      rows,
       WORLD.size,
-      worldPending,
+      current ? worldPending : 0,
       (r) => r.id === globalBoard.mine,
     );
   return `<p class="empty">${globalBoard.failed ? "World board is offline." : "Loading..."}</p>`;
 }
 export function refreshWorldBoard() {
-  const el = document.getElementById("world-board");
-  if (el) el.innerHTML = worldHtml();
+  for (const el of document.querySelectorAll(".world-board"))
+    el.innerHTML = worldHtml(Number(el.dataset.level));
 }
-// Local top 5 and world top 10 for the picked level, side by side when there is room.
-export function boardsHtml(title, pending, highlight) {
+// Local top 5 and world top 10 for a level, side by side when there is room.
+export function boardsHtml(
+  title,
+  pending,
+  highlight,
+  level = currentLevel().id,
+) {
   worldPending = pending && makesWorld(pending) ? pending : 0;
   return `<div class="boards">
-    <div><h2>${title} &middot; LV ${currentLevel().id}</h2>${boardHtml(pending && makesBoard(pending) ? pending : 0, highlight)}</div>
-    <div><h2>WORLD TOP ${WORLD.size} &middot; LV ${currentLevel().id}</h2><div id="world-board">${worldHtml()}</div></div>
+    <div><h2>${title} &middot; LV ${level}</h2>${boardHtml(pending && makesBoard(pending) ? pending : 0, highlight, level)}</div>
+    <div><h2>WORLD TOP ${WORLD.size} &middot; LV ${level}</h2><div class="world-board" data-level="${level}">${worldHtml(level)}</div></div>
   </div>`;
 }
 
@@ -182,17 +184,26 @@ export function renderOver() {
   const form = entering
     ? `<form class="name"><label for="name">PUT YOUR NAME ON THE LIST</label><div class="row"><input id="name" name="name" maxlength="10" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="NAME" /><button class="btn" type="submit">SAVE</button></div></form>`
     : "";
+  // Just the result: the score and what made it, what's new in the collection, the name box when
+  // it's earned, and PLAY AGAIN. The boards live in the menu's LEADERBOARD.
+  const caughtCount = game.bag.length;
+  const fresh = game.bag.filter((p) => p.fresh);
+  const tally = [
+    `${caughtCount} ${caughtCount === 1 ? "prize" : "prizes"} caught`,
+    r.bonus && `bonus +${fmt(r.bonus)}`,
+  ]
+    .filter(Boolean)
+    .join(" &middot; ");
   showPanel(`
     ${head}
     ${assisted}
     <div class="final">SCORE<b>${fmt(r.score)}</b></div>
-    <h2>YOUR HAUL</h2>
-    ${game.bag.length ? `<div class="haul">${game.bag.map(prizeImg).join("")}</div>` : `<p class="empty">The bag stayed empty this time.</p>`}
-    ${collectionHtml()}
-    ${levelsHtml()}
+    <p class="tally">${tally}</p>
+    <h2>NEW IN YOUR COLLECTION</h2>
+    ${fresh.length ? `<div class="haul">${fresh.map(prizeImg).join("")}</div>` : `<p class="empty">Nothing new this time.</p>`}
     ${r.top && !r.saved ? `<p class="hey">NEW #1 HIGH SCORE!</p>` : ""}
     ${form}
-    ${boardsHtml(entering ? "PREVIOUS WINNERS" : "YOUR TOP 5", entering ? r.score : 0, r.savedDate)}
+    ${r.saved && r.highscore ? `<p class="aside">Saved! Find it in Menu &rsaquo; Leaderboard.</p>` : ""}
     <div class="actions"><button class="btn big" type="button" data-action="play">${TOUCH ? "PLAY AGAIN" : "PLAY AGAIN (SPACE)"}</button></div>`);
   if (entering && !TOUCH) panelEl.querySelector("input").focus();
 }

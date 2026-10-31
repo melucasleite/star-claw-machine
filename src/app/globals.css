@@ -577,6 +577,10 @@ svg.inline {
   font-size: 10px;
   color: var(--gold);
 }
+.tally {
+  font-size: 9px;
+  opacity: 0.85;
+}
 .final {
   margin-top: 16px;
   font-size: 10px;
