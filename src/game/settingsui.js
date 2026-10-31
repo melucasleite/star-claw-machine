@@ -4,6 +4,8 @@ import { applyTheme, setAimAssist, settings } from "./settings.js";
 import { hold, release } from "./pause.js";
 import { askConfirm, renderOver, renderTitle } from "./overlays.js";
 import { enterCheat } from "./levels.js";
+import { LOVE_NAME, openLove } from "./love.js";
+import { cleanName } from "./rules.js";
 import { game, startGame } from "./game.js";
 import { renderBag } from "./bag.js";
 import { renderHud } from "./hud.js";
@@ -40,7 +42,13 @@ let cheatNote = "";
 settingsPanel.addEventListener("submit", (e) => {
   if (!e.target.matches("form.cheat")) return;
   e.preventDefault();
-  const message = enterCheat(e.target.elements.cheat.value);
+  const code = e.target.elements.cheat.value;
+  // Her name opens the letter straight away, no machine to clear.
+  if (cleanName(code).startsWith(LOVE_NAME)) {
+    closeSettings();
+    return openLove();
+  }
+  const message = enterCheat(code);
   cheatNote = message ?? "NOTHING HAPPENS.";
   if (message) {
     sfx.fresh();

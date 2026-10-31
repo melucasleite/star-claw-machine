@@ -1,5 +1,7 @@
 import { loveEl, lovePanel } from "./dom.js";
 import { notes } from "./audio.js";
+import { game } from "./game.js";
+import { hold, release } from "./pause.js";
 
 // ---------- for Mikaela ----------
 
@@ -269,6 +271,8 @@ function heartsHtml() {
 }
 
 export function openLove() {
+  // Opened from the cheats box mid-run, the game waits while she reads.
+  if (game.mode === "play") hold("love");
   render();
   loveEl.querySelector(".love-hearts").innerHTML = heartsHtml();
   loveEl.hidden = false;
@@ -287,6 +291,7 @@ export function openLove() {
 export function closeLove() {
   if (loveEl.hidden) return;
   loveEl.hidden = true;
+  release("love");
 }
 
 addEventListener("click", (e) => {
