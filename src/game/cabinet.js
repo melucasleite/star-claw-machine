@@ -53,19 +53,22 @@ export const floorMeshes = [
   addStaticBox(-2.9, 0.5, CHUTE.edge, 1.1, 0.5, 0.05, M.acrylic),
 ];
 
-// Walls: wood at the back and left, glass on the two sides facing the camera.
-addStaticBox(-4.1, 4.65, 0, 0.1, 4.75, 4.2, M.walnut, G_WALL);
-addStaticBox(0, 4.65, -4.1, 4.2, 4.75, 0.1, M.walnut, G_WALL);
+// Walls: glass all round, like a real claw machine, framed by the corner posts.
+addStaticBox(-4.1, 4.65, 0, 0.1, 4.75, 4.2, undefined, G_WALL);
+addStaticBox(0, 4.65, -4.1, 4.2, 4.75, 0.1, undefined, G_WALL);
 addStaticBox(4.1, 4.65, 0, 0.1, 4.75, 4.2, undefined, G_WALL);
 addStaticBox(0, 4.65, 4.1, 4.2, 4.75, 0.1, undefined, G_WALL);
-export const glassX = new THREE.Mesh(new THREE.PlaneGeometry(8, 9.4), M.glass);
-glassX.rotation.y = Math.PI / 2;
-glassX.position.set(4.0, 4.7, 0);
-export const glassZ = new THREE.Mesh(new THREE.PlaneGeometry(8, 9.4), M.glass);
-glassZ.position.set(0, 4.7, 4.0);
-scene.add(glassX, glassZ);
-box(8.0, 0.3, 0.05, M.teal, 0, 3.0, -3.98);
-box(0.05, 0.3, 8.0, M.teal, -3.98, 3.0, 0);
+const pane = (x, z, turned) => {
+  const m = new THREE.Mesh(new THREE.PlaneGeometry(8, 9.4), M.glass);
+  if (turned) m.rotation.y = Math.PI / 2;
+  m.position.set(x, 4.7, z);
+  scene.add(m);
+  return m;
+};
+export const glassX = pane(4.0, 0, true);
+export const glassZ = pane(0, 4.0, false);
+export const glassBackX = pane(-4.0, 0, true);
+export const glassBackZ = pane(0, -4.0, false);
 
 for (const sx of [-1, 1]) {
   for (const sz of [-1, 1]) {
