@@ -8,7 +8,6 @@ import {
   levelsHtml,
   playLevel,
   renderOver,
-  renderTitle,
 } from "./overlays.js";
 import {
   LEVELS,
@@ -90,18 +89,53 @@ function settingsView() {
     <div class="settings-page" role="tabpanel">${body}</div>`;
 }
 
+// Pixel icons for the menu, drawn on a 12 x 12 grid like the corner buttons.
+const ICON = (d) =>
+  `<svg viewBox="0 0 12 12" shape-rendering="crispEdges" aria-hidden="true"><path fill-rule="evenodd" d="${d}"/></svg>`;
 const MENU = [
-  ["new", "&#9654;", "NEW GAME", "Pick a level and play"],
-  ["help", "?", "HOW TO PLAY", "The claw, the reel, the hearts"],
-  ["collection", "&#9733;", "COLLECTION", "Every prize you've caught, in 3D"],
-  ["leaderboard", "&#9819;", "LEADERBOARD", "Your best, and the world's"],
-  ["settings", "&#9881;", "SETTINGS", "Themes, aim assist, cheats"],
+  [
+    "new",
+    ICON("M3 1h2v1h1v1h1v1h1v1h1v2H8v1H7v1H6v1H5v1H3z"),
+    "NEW GAME",
+    "Pick a machine and play",
+  ],
+  [
+    "help",
+    ICON("M3 1h6v1h1v4H9v1H7v2H5V6h1V5h2V2H4v2H2V2h1zM5 10h2v2H5z"),
+    "HOW TO PLAY",
+    "The claw, the reel, the hearts",
+  ],
+  [
+    "collection",
+    ICON("M5 0h2v3h5v2h-1v1h-1v2h1v4H9v-1H7v-1H5v1H3v1H1V8h1V6H1V5H0V3h5z"),
+    "COLLECTION",
+    "Every prize you've caught, in 3D",
+  ],
+  [
+    "leaderboard",
+    ICON("M0 2h2v2h2V1h1V0h2v1h1v3h2V2h2v8H0zM1 11h10v1H1z"),
+    "LEADERBOARD",
+    "Your best, and the world's",
+  ],
+  [
+    "settings",
+    ICON(
+      "M3 2h6v1h1v6H9v1H3V9H2V3h1zM5 0h2v2H5zM5 10h2v2H5zM0 5h2v2H0zM10 5h2v2h-2zM1 1h2v2H1zM9 1h2v2H9zM1 9h2v2H1zM9 9h2v2H9zM4 4v4h4V4z",
+    ),
+    "SETTINGS",
+    "Themes, aim assist, cheats",
+  ],
 ];
-const homeView = () => `<h1>MENU</h1>
-  <div class="menu-list">${MENU.map(
-    ([id, icon, label, sub]) =>
-      `<button type="button" class="menu-item" data-menu="${id}"><span class="menu-icon">${icon}</span><b>${label}</b><small>${sub}</small></button>`,
-  ).join("")}</div>`;
+// The first screen: the logo over the live machine, then the menu, arcade style.
+const homeView = () => `<header class="menu-hero">
+    <div class="menu-logo" aria-label="Star Claw"><span class="star s1">&#9733;</span><span class="star s2">&#10022;</span><span class="star s3">&#10022;</span><b>STAR</b><b>CLAW</b></div>
+    <p class="menu-tag">${game.mode === "play" ? "PAUSED" : "GRAB &middot; REEL &middot; WIN"}</p>
+  </header>
+  <nav class="menu-list" aria-label="Menu">${MENU.map(
+    ([id, icon, label, sub], i) =>
+      `<button type="button" class="menu-item" data-menu="${id}" style="--i:${i}"><span class="menu-icon">${icon}</span><b>${label}</b><small>${sub}</small></button>`,
+  ).join("")}</nav>
+  <p class="menu-foot"><span class="blink">INSERT COIN</span><span class="keys">&uarr;&darr; + ENTER</span></p>`;
 
 // NEW GAME: the level cards, then PLAY.
 let menuLevel = null;
@@ -212,8 +246,10 @@ function render() {
       ? `<button class="btn big" type="button" data-menu-play>PLAY</button>`
       : view === "help"
         ? `<button class="btn big" type="button" data-menu-back>BACK</button>`
-        : `<button class="btn big" type="button" data-close-settings>${view === "home" ? "CLOSE" : "DONE"}</button>`;
-  settingsPanel.innerHTML = `${back}${body}<div class="actions">${action}</div>`;
+        : view === "home" && game.mode === "title"
+          ? ""
+          : `<button class="btn big" type="button" data-close-settings>${view === "home" ? "CLOSE" : "DONE"}</button>`;
+  settingsPanel.innerHTML = `${back}${body}${action ? `<div class="actions">${action}</div>` : ""}`;
   settingsPanel.dataset.view = view;
   if (view === "collection") stopThumbs = fillThumbs(settingsPanel, shownItems);
   if (view === "leaderboard") fetchWorld(boardLevel);
@@ -239,7 +275,18 @@ export function stepItem(d) {
 
 export function menuBack() {
   if (BACK[view]) go(BACK[view]);
-  else closeSettings();
+  // On the first screen there's nothing behind the menu to go back to.
+  else if (game.mode !== "title") closeSettings();
+}
+// Up and down arrows walk the menu's buttons.
+export function menuFocus(d) {
+  const all = [...settingsPanel.querySelectorAll("button:not(:disabled)")];
+  const i = all.indexOf(document.activeElement);
+  all[(i + d + all.length) % all.length]?.focus();
+}
+// Re-renders the menu if it's up, e.g. after a cheat opened levels.
+export function refreshMenu() {
+  if (!settingsEl.hidden) render();
 }
 
 let cheatNote = "";
@@ -259,19 +306,17 @@ settingsPanel.addEventListener("submit", (e) => {
     // A cheat can change what's in the machine (FAMILY); restock it unless a run is on.
     if (game.mode !== "play") restock();
     // The level picker behind the dialog shows the newly opened levels.
-    if (game.mode === "title") renderTitle();
-    else if (game.mode === "over") renderOver();
+    if (game.mode === "over") renderOver();
   } else sfx.empty();
   render();
   settingsPanel.querySelector("form.cheat input").focus();
 });
 
-export function openSettings() {
+export function openSettings(start = "home") {
   if (!settingsEl.hidden) return;
   cheatNote = "";
   page = "theme";
-  view = "home";
-  render();
+  go(start);
   settingsEl.hidden = false;
   settingsPanel.scrollTop = 0;
   sfx.blip();
@@ -309,8 +354,9 @@ addEventListener("click", (e) => {
   if (!(e.target instanceof Element)) return;
   const t = e.target;
   if (t.closest("[data-settings]")) return openSettings();
-  if (t.closest("[data-close-settings]") || t === settingsEl)
-    return closeSettings();
+  if (t.closest("[data-close-settings]")) return closeSettings();
+  // Clicking outside closes it, except on the first screen.
+  if (t === settingsEl && game.mode !== "title") return closeSettings();
   const to = t.closest("[data-menu]");
   if (to) return go(to.dataset.menu);
   if (t.closest("[data-menu-back]")) return menuBack();

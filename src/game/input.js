@@ -1,4 +1,4 @@
-import { howtoEl, loveEl, settingsEl } from "./dom.js";
+import { loveEl, settingsEl } from "./dom.js";
 import { CLAW } from "./config.js";
 import { CAM_OFFSET, camera } from "./scene.js";
 import { hub } from "./claw.js";
@@ -11,10 +11,10 @@ import {
 import {
   closeSettings,
   menuBack,
+  menuFocus,
   openSettings,
   stepItem,
 } from "./settingsui.js";
-import { closeHelp, openHelp } from "./help.js";
 import { closeLove, stepLove } from "./love.js";
 import { game, startGame } from "./game.js";
 import { toggleSound } from "./audio.js";
@@ -44,11 +44,8 @@ addEventListener("keydown", (e) => {
     }
     return;
   }
-  if (!howtoEl.hidden) {
-    if (["Escape", "Enter", "Space", "KeyH"].includes(e.code)) closeHelp();
-    return;
-  }
-  if (e.code === "KeyH" && !e.repeat) return openHelp();
+  if (e.code === "KeyH" && !e.repeat && settingsEl.hidden)
+    return openSettings("help");
   if ((e.code === "KeyM" || e.code === "KeyS") && !e.repeat)
     return toggleSound(e.code === "KeyM" ? "music" : "sfx");
   if (pendingConfirm) {
@@ -59,6 +56,8 @@ addEventListener("keydown", (e) => {
   if (!settingsEl.hidden) {
     if (e.code === "Escape") menuBack();
     else if (e.code === "KeyO") closeSettings();
+    else if (e.code === "ArrowUp") menuFocus(-1);
+    else if (e.code === "ArrowDown") menuFocus(1);
     else if (e.code === "ArrowLeft") stepItem(-1);
     else if (e.code === "ArrowRight") stepItem(1);
     return;

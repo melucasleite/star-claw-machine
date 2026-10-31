@@ -9,7 +9,7 @@ import { music } from "./music.js";
 import { ac } from "./audio.js";
 import { applyTheme } from "./settings.js";
 import { LEVELS, enterCheat } from "./levels.js";
-import { renderTitle } from "./overlays.js";
+import { refreshMenu } from "./settingsui.js";
 
 // Debug handle for playtesting from the console.
 window.__claw = {
@@ -36,6 +36,6 @@ window.__claw = {
   // Same as typing FART in the settings cheats box.
   unlockLevels() {
     enterCheat("FART");
-    if (game.mode === "title") renderTitle();
+    refreshMenu();
   },
 };

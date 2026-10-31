@@ -18,6 +18,7 @@ import {
 } from "./hud.js";
 import { burst, popupPoint, rain } from "./confetti.js";
 import { renderOver, setMode, submitName } from "./overlays.js";
+import { closeSettings } from "./settingsui.js";
 import { collect, flyToBag, renderBag } from "./bag.js";
 import { showReel, startReel, stepReel } from "./reel.js";
 import { setMusicLevel, sfx } from "./audio.js";
@@ -73,6 +74,8 @@ export function setState(state) {
 export function startGame() {
   // Leaving the end screen without typing a name still keeps the score.
   if (game.result) submitName("PLAYER");
+  // Whatever page of the menu was up, the run starts with it closed.
+  closeSettings();
   fetchWorld();
   sfx.coinIn();
   setMusicLevel(1);

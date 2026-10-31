@@ -44,14 +44,6 @@ export default function Game() {
       <div id="sound">
         <button
           type="button"
-          data-help=""
-          aria-label="How to play"
-          title="How to play (H)"
-        >
-          ?
-        </button>
-        <button
-          type="button"
           data-settings=""
           aria-label="Menu"
           title="Menu (O)"
@@ -84,16 +76,9 @@ export default function Game() {
         </button>
       </div>
       <div id="popups"></div>
-      <div id="overlay" className="overlay">
+      {/* The end-of-run screen; the menu is the first screen now. */}
+      <div id="overlay" className="overlay" hidden>
         <div className="panel" id="panel"></div>
-      </div>
-      <div id="howto" className="overlay" hidden>
-        <div
-          className="panel"
-          role="dialog"
-          aria-modal="true"
-          id="howto-panel"
-        ></div>
       </div>
       <div id="settings" className="overlay" hidden>
         <div

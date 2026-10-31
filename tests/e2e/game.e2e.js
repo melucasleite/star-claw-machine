@@ -21,7 +21,7 @@ before(async () => {
 });
 after(() => browser?.close());
 
-// A fresh page with the help sheet dismissed. Collects page errors into `errors`.
+// A fresh page, on the menu (the first screen). Collects page errors into `errors`.
 async function open(settings) {
   const page = await browser.newPage({
     viewport: { width: 1100, height: 760 },
@@ -35,7 +35,9 @@ async function open(settings) {
     );
   await page.goto(BASE_URL, { waitUntil: "networkidle" });
   await page.waitForFunction(() => window.__claw);
-  await page.click("[data-close-help]");
+  await page.waitForSelector("#settings:not([hidden])");
+  // A player's first click is what lets the browser start the sound.
+  await page.mouse.click(5, 5);
   return { page, errors, g: (expr, arg) => page.evaluate(expr, arg) };
 }
 // Menu > SETTINGS > GAME, from wherever the menu is (or isn't).

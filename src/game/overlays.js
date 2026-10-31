@@ -39,12 +39,6 @@ export function setMode(mode) {
   document.body.dataset.mode = mode;
 }
 
-export const tiersHtml = () =>
-  `<div class="tiers">${TIERS.map(
-    (t) =>
-      `<div><i class="dot" style="background:${t.css}"></i>${t.name.toUpperCase()}<b>${t.points}</b></div>`,
-  ).join("")}</div><p>Easy &rarr; hard. Cherry is the tough one.</p>`;
-
 const LOCK_SVG = `<svg viewBox="0 0 12 12" shape-rendering="crispEdges" role="img" aria-label="Locked"><path fill-rule="evenodd" d="M4 1h4v1h1v3h1v6H2V5h1V2h1zM4 2h4v3H4zM5 7h2v2H5z"/></svg>`;
 
 // One card per level: open ones can be picked, locked ones say what opens them.
@@ -91,7 +85,6 @@ export function chooseLevel(id) {
   applyTheme();
   sfx.coinIn();
   if (game.mode === "over") renderOver();
-  else renderTitle();
 }
 
 // Start a run on a level, from the menu: mid-run too (the current run is abandoned).
@@ -153,18 +146,6 @@ export function showPanel(html) {
   panelEl.scrollTop = 0;
 }
 
-export function renderTitle() {
-  showPanel(`
-    <h1>STAR CLAW</h1>
-    <p>Grab plushies, win the reel, drop them in the chute.</p>
-    ${tiersHtml()}
-    ${levelsHtml()}
-    ${boardsHtml("YOUR TOP 5")}
-    <div class="actions">
-      <button class="btn big" type="button" data-action="play">${TOUCH ? "TAP TO PLAY" : "PLAY (SPACE)"}</button>
-    </div>`);
-}
-
 export function renderOver() {
   const r = game.result;
   // Clearing the machine always lets you sign it, high score or not.
@@ -204,7 +185,7 @@ export function renderOver() {
     ${r.top && !r.saved ? `<p class="hey">NEW #1 HIGH SCORE!</p>` : ""}
     ${form}
     ${r.saved && r.highscore ? `<p class="aside">Saved! Find it in Menu &rsaquo; Leaderboard.</p>` : ""}
-    <div class="actions"><button class="btn big" type="button" data-action="play">${TOUCH ? "PLAY AGAIN" : "PLAY AGAIN (SPACE)"}</button></div>`);
+    <div class="actions"><button class="btn ghost big" type="button" data-settings>MENU</button><button class="btn big" type="button" data-action="play">${TOUCH ? "PLAY AGAIN" : "PLAY AGAIN (SPACE)"}</button></div>`);
   if (entering && !TOUCH) panelEl.querySelector("input").focus();
 }
 

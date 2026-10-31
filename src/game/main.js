@@ -29,8 +29,8 @@ import { fetchWorld } from "./scores.js";
 import { renderHud } from "./hud.js";
 import { sizeFx } from "./confetti.js";
 import { sizePostFx } from "./postfx.js";
-import { renderTitle, setMode } from "./overlays.js";
-import { HOWTO_KEY, openHelp } from "./help.js";
+import { setMode } from "./overlays.js";
+import { openSettings } from "./settingsui.js";
 import { setState } from "./game.js";
 import { frame } from "./loop.js";
 import "./debug.js";
@@ -58,9 +58,7 @@ restock();
 setMode("title");
 setState("settle");
 renderHud();
-renderTitle();
-try {
-  if (!localStorage.getItem(HOWTO_KEY)) openHelp();
-} catch {}
+// The menu is the first screen.
+openSettings();
 fetchWorld();
 requestAnimationFrame(frame);

@@ -1,17 +1,12 @@
-import { TOUCH, howtoEl, howtoPanel } from "./dom.js";
+import { TOUCH } from "./dom.js";
 import { RULES, TIERS } from "./config.js";
 import { heartSvg } from "./hud.js";
-import { pendingConfirm } from "./overlays.js";
-import { game } from "./game.js";
-import { hold, release } from "./pause.js";
 import { collectionSize } from "./bag.js";
 import { currentLevel } from "./levels.js";
-import { sfx } from "./audio.js";
 
 // ---------- how to play ----------
 
-// One help sheet, opened by the ? button, H, or automatically the first time this browser plays.
-export const HOWTO_KEY = "startclaw.howto.v1";
+// The rules, shown on the menu's HOW TO PLAY page (the menu button, or H).
 
 // The three moves of a turn, as cards with a little pixel gesture each.
 export const GESTURES = {
@@ -38,10 +33,8 @@ export function stepsHtml() {
     )
     .join("")}</div>`;
 }
-// The rules, shared by the help sheet and the menu's HOW TO PLAY page.
 export function helpBodyHtml() {
   const heart = heartSvg("inline");
-  // Kept short enough to fit a phone screen without scrolling; GOT IT also sticks to the bottom.
   const tiers = TIERS.map(
     (t) =>
       `<div><i class="dot" style="background:${t.css}"></i>${t.name.toUpperCase()}<b>${t.points}</b></div>`,
@@ -50,7 +43,7 @@ export function helpBodyHtml() {
     <h1>HOW TO PLAY</h1>
     <p>Drop the claw on a plushie, then keep it in the green bar to reel it into the chute.</p>
     ${stepsHtml()}
-    <p class="aside">${TOUCH ? "QUIT &amp; SAVE cashes out &middot; &#9835; / &#128264; toggle sound" : "Q cashes out &middot; M / S toggle sound &middot; H opens this"}</p>
+    <p class="aside">${TOUCH ? "QUIT &amp; SAVE cashes out &middot; &#9835; / &#128264; toggle sound" : "Q cashes out &middot; M / S toggle sound &middot; H opens this page"}</p>
     <h2>POINTS</h2>
     <div class="tiers">${tiers}</div>
     <p>Perfect reel x1.5 &middot; streaks up to x${RULES.streakMax}</p>
@@ -58,27 +51,3 @@ export function helpBodyHtml() {
     <p>Miss or drop -&frac12;${heart} &middot; lost reel -1${heart} &middot; catch +&frac12;${heart}<br />Cash out +${RULES.cashOutPerHalf} per &frac12;${heart} &middot; clear it all +${RULES.clearBonus}</p>
     <p>Clear the machine in one run to open the next level. Collect all ${collectionSize(currentLevel())} and top the world board.</p>`;
 }
-
-export function openHelp() {
-  if (!howtoEl.hidden || pendingConfirm) return;
-  howtoPanel.innerHTML = `${helpBodyHtml()}
-    <div class="actions"><button class="btn big" type="button" data-close-help>GOT IT</button></div>`;
-  howtoEl.hidden = false;
-  howtoPanel.scrollTop = 0;
-  sfx.blip();
-  if (game.mode === "play") hold("help");
-}
-export function closeHelp() {
-  if (howtoEl.hidden) return;
-  howtoEl.hidden = true;
-  release("help");
-  try {
-    localStorage.setItem(HOWTO_KEY, "1");
-  } catch {}
-}
-addEventListener("click", (e) => {
-  if (!(e.target instanceof Element)) return;
-  if (e.target.closest("[data-help]")) openHelp();
-  else if (e.target.closest("[data-close-help]") || e.target === howtoEl)
-    closeHelp();
-});
