@@ -131,6 +131,7 @@ const DECO_YARN = {
   beak: 0xf2a65a,
   denim: 0x4a6a9a,
   sole: 0x2e2a28,
+  plume: 0xd41f2a,
   ...LOOKS,
 };
 export const DECO = {
@@ -141,6 +142,8 @@ export const DECO = {
   dark: std(0x161616, 0.25),
   // Noses that stay black when a pet's eyes are recoloured.
   nose: std(0x161616, 0.3),
+  // A gladiator's helmet: brushed steel.
+  helmet: std(0xc3c8cf, 0.35, 0.55),
   // Arcade screens glow a little; glass is barely there.
   screen: new THREE.MeshStandardMaterial({
     color: 0x101a33,
@@ -241,7 +244,7 @@ onTheme((t) => {
     if (tier.mats.cream) styleYarn(tier.mats.cream, look);
   }
   for (const k in DECO_YARN) styleYarn(DECO[k], look);
-  for (const k of ["dark", "screen", "nose"]) {
+  for (const k of ["dark", "screen", "nose", "helmet"]) {
     DECO[k].flatShading = !!look.flat;
     DECO[k].needsUpdate = true;
   }

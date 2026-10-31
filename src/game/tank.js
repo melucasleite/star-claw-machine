@@ -6,7 +6,7 @@ import { both, part } from "./animals.js";
 
 // A fish lying on its side looks fine, so these tumble like the plushies. Forward is +z.
 const BODY = [0.231, 0.357, 0.483];
-const fish = (bands) => [
+const fish = (bands, width = 0.05) => [
   part("fur", 0.42, 0, 0, 0, { s: [0.55, 0.85, 1.15] }),
   part("fur", 0.3, 0, 0, 0.26, { visible: false }),
   part("fur", 0.3, 0, 0, -0.26, { visible: false }),
@@ -14,7 +14,7 @@ const fish = (bands) => [
   ...bands.map((z) => {
     const k = Math.sqrt(1 - (z / BODY[2]) ** 2) * 1.06;
     return part("cream", 1, 0, 0, z, {
-      s: [BODY[0] * k, BODY[1] * k, 0.05],
+      s: [BODY[0] * k, BODY[1] * k, width],
     });
   }),
   // Tail fan, dorsal fin and side fins.
@@ -86,9 +86,95 @@ function shrimp({ bands = false, spots = false } = {}) {
   ];
 }
 
+// A gladiator's helmet, Roman style: a steel dome over the head, cheek guards and a red crest.
+const helmet = () => [
+  part("helmet", 0.2, 0, 0.26, 0.24, { s: [1.25, 0.72, 1.1] }),
+  ...both((s) =>
+    part("helmet", 1, 0.2 * s, 0.16, 0.3, {
+      box: true,
+      s: [0.014, 0.08, 0.06],
+    }),
+  ),
+  part("helmet", 1, 0, 0.2, 0.46, { box: true, s: [0.16, 0.02, 0.03] }),
+  ...[
+    [0.43, 0.36],
+    [0.48, 0.24],
+    [0.48, 0.12],
+    [0.44, 0.0],
+    [0.38, -0.1],
+  ].map(([y, z]) => part("plume", 0.07, 0, y, z, { s: [0.55, 1, 1] })),
+];
+
 export const TANK = [
   { name: "Fish", icon: "fish", parts: fish([]) },
   { name: "Banded Fish", icon: "clownfish", parts: fish([0.26, -0.05, -0.34]) },
+  // Our clownfish are gladiators: the morph that's mostly white, orange showing through in patches,
+  // and here in their helmets.
+  {
+    name: "Gladiator Clown",
+    icon: "gladiator",
+    tag: "GLADIATOR &#9876;",
+    parts: [
+      ...fish([0.26, -0.06, -0.34], 0.11),
+      ...both((s) =>
+        part("cream", 0.2, 0.13 * s, -0.12, 0.06, { s: [0.6, 0.7, 1.4] }),
+      ),
+      ...both((s) =>
+        part("cream", 0.16, 0.13 * s, 0.13, -0.22, { s: [0.55, 0.8, 1.2] }),
+      ),
+      ...helmet(),
+    ],
+  },
+  // Angel koi: a tall, flat angelfish with long sail fins and streamers, in koi colours (white,
+  // with orange patches from `belly`, an orange cap and a few black spots).
+  {
+    name: "Koi Angel",
+    icon: "angel",
+    tag: "KOI ANGEL",
+    parts: [
+      part("fur", 0.38, 0, 0, 0, { s: [0.35, 1, 0.9] }),
+      part("fur", 0.22, 0, 0.25, -0.05, { visible: false }),
+      part("fur", 0.22, 0, -0.25, -0.05, { visible: false }),
+      part("accent", 0.16, 0, 0.55, -0.14, {
+        cone: true,
+        rot: [-0.5, 0, 0],
+        s: [0.15, 1.8, 1],
+      }),
+      part("accent", 0.16, 0, -0.55, -0.14, {
+        cone: true,
+        rot: [Math.PI + 0.5, 0, 0],
+        s: [0.15, 1.8, 1],
+      }),
+      part("accent", 0.2, 0, 0, -0.48, {
+        cone: true,
+        rot: [Math.PI / 2, 0, 0],
+        s: [0.15, 1, 1],
+      }),
+      ...both((s) =>
+        part("accent", 1, 0.05 * s, -0.5, 0.12, {
+          box: true,
+          s: [0.01, 0.26, 0.01],
+          rot: [0.35, 0, 0],
+        }),
+      ),
+      // Koi patches and the cap.
+      ...both((s) =>
+        part("cream", 0.16, 0.08 * s, 0.14, 0.02, { s: [0.45, 0.85, 1.1] }),
+      ),
+      ...both((s) =>
+        part("cream", 0.12, 0.08 * s, -0.2, -0.2, { s: [0.45, 0.9, 1] }),
+      ),
+      part("cream", 0.12, 0, 0.24, 0.2, { s: [0.55, 0.6, 0.8] }),
+      ...[
+        [0.11, -0.05, -0.12],
+        [-0.11, 0.18, -0.24],
+        [0.11, 0.3, -0.02],
+      ].map(([x, y, z]) => part("nose", 0.035, x, y, z, { s: [0.5, 1, 1] })),
+      ...both((s) =>
+        part("dark", 0.05, 0.12 * s, 0.1, 0.24, { s: [0.5, 1, 1] }),
+      ),
+    ],
+  },
   { name: "Shrimp", icon: "shrimp", parts: shrimp({ spots: true }) },
   { name: "Tiger Shrimp", icon: "shrimp", parts: shrimp({ bands: true }) },
 ];

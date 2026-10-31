@@ -52,6 +52,19 @@ const ARCADE_ICONS = {
     for (const x of [-0.45, 0.05, 0.5]) d.rect(x, -0.62, 0.16, 1.24, "#fff4e2");
     d.dot(0.7, -0.15, 0.12, d.ink);
   },
+  gladiator: (d) => {
+    ARCADE_ICONS.clownfish(d);
+    d.blob(0.55, -0.55, 0.4, 0.28, "#c3c8cf");
+    for (const x of [0.25, 0.5, 0.75]) d.rect(x, -1.05, 0.18, 0.3, "#d41f2a");
+  },
+  angel: (d) => {
+    d.blob(0, -0.95, 0.15, 0.55, d.color);
+    d.blob(0, 0.95, 0.15, 0.55, d.color);
+    d.blob(-0.95, 0, 0.3, 0.4, d.color);
+    d.blob(0, 0, 0.8, 0.8, d.color);
+    d.blob(0.15, -0.2, 0.3, 0.25, "#ff7a1f");
+    d.dot(0.45, -0.1, 0.12, d.ink);
+  },
   shrimp: (d) => {
     for (let i = 0; i < 5; i++)
       d.blob(

@@ -136,7 +136,7 @@ export function awardPrize(plush) {
       ? plush.tier.name
       : `${plush.tier.name} ${plush.animal.name}`
     ).toUpperCase(),
-    plush.tier.pet && "OUR BABY &#9829;",
+    plush.animal.tag,
     late && "SAVED!",
     perfect && "PERFECT x1.5",
     mult > 1 && `STREAK x${mult}`,

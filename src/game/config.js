@@ -168,7 +168,7 @@ export const PETS = [
   {
     name: "Moo Moo",
     as: "Lilac",
-    animal: "Banded Fish",
+    animal: "Gladiator Clown",
     color: 0xff7417,
     accent: 0xe8650f,
     belly: 0xffffff,
@@ -177,7 +177,7 @@ export const PETS = [
   {
     name: "Mia",
     as: "Lilac",
-    animal: "Banded Fish",
+    animal: "Gladiator Clown",
     color: 0xff7f24,
     accent: 0xe8650f,
     belly: 0xffffff,
@@ -200,8 +200,6 @@ export const PETS = [
   ...[
     ["Sky", 0x1f1d22, 0xffffff],
     ["Mint", 0x1f1d22, 0xffffff],
-    ["Mint", 0xf4f2ee, 0x1f1d22],
-    ["Mint", 0xf4f2ee, 0x1f1d22],
   ].map(([as, color, bands]) => ({
     name: "Fish",
     as,
@@ -213,6 +211,16 @@ export const PETS = [
     bright: color === 0xf4f2ee ? 1.15 : undefined,
     eyes: color === 0x1f1d22 ? 0xf2f0e6 : undefined,
     ui: "#e8e6e1",
+  })),
+  ...[0, 1].map(() => ({
+    name: "Fish",
+    as: "Mint",
+    animal: "Koi Angel",
+    color: 0xf6f3ee,
+    bright: 1.15,
+    accent: 0xf3efe8,
+    belly: 0xff7a1f,
+    ui: "#ffb27a",
   })),
 ];
 for (const t of PETS) {
