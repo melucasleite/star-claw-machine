@@ -253,3 +253,40 @@ export const ANIMALS = [
     ],
   },
 ];
+
+// Not in the machine's usual line-up: our husky, who only turns up on Mikaela's machine (see PETS
+// in config.js). Upright ears, a white mask, muzzle, chest and socks, and a curled tail.
+export const HUSKY = {
+  name: "Husky",
+  icon: "fox",
+  parts: [
+    part("fur", 0.4, 0, 0, 0),
+    part("cream", 0.31, 0, -0.04, 0.16, { s: [1, 1.05, 0.8] }),
+    part("fur", 0.33, 0, 0.62, 0),
+    part("cream", 0.27, 0, 0.53, 0.14, { s: [1.05, 0.85, 0.75] }),
+    part("cream", 0.16, 0, 0.53, 0.3, { s: [1, 0.8, 1.15] }),
+    part("nose", 0.06, 0, 0.58, 0.47),
+    ...both((s) => part("cream", 0.045, 0.12 * s, 0.85, 0.27, { s: FLAT })),
+    ...eyes(0.13, 0.73, 0.28),
+    ...both((s) =>
+      part("fur", 0.13, 0.2 * s, 0.95, 0, {
+        cone: true,
+        rot: [0, 0, -0.25 * s],
+        solid: false,
+      }),
+    ),
+    ...both((s) =>
+      part("pink", 0.07, 0.2 * s, 0.92, 0.07, {
+        cone: true,
+        rot: [0, 0, -0.25 * s],
+        s: [1, 1, 0.4],
+      }),
+    ),
+    ...both((s) => part("fur", 0.1, 0.2 * s, 0.9, 0, { visible: false })),
+    ...both((s) => part("fur", 0.15, 0.42 * s, 0.1, 0.08)),
+    ...both((s) => part("cream", 0.17, 0.22 * s, -0.38, 0.14)),
+    part("fur", 0.12, 0.08, 0.02, -0.42),
+    part("fur", 0.11, 0.14, 0.2, -0.47),
+    part("cream", 0.1, 0.12, 0.35, -0.42),
+  ],
+};

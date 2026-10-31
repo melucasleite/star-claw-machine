@@ -1,8 +1,9 @@
 import * as THREE from "three";
 import * as CANNON from "cannon-es";
-import { CHUTE, DISH, TIERS } from "./config.js";
+import { CHUTE, DISH, PETS, TIERS } from "./config.js";
 import { LOOKS } from "./arcade.js";
-import { currentLevel } from "./levels.js";
+import { currentLevel, love } from "./levels.js";
+import { HUSKY } from "./animals.js";
 import { scene, std } from "./scene.js";
 import { G_PRIZE, PRIZE_MASK, mats, world } from "./physics.js";
 import { onTheme, theme } from "./settings.js";
@@ -137,6 +138,8 @@ export const DECO = {
   ),
   // Button eyes: smooth and a little shiny against the yarn.
   dark: std(0x161616, 0.25),
+  // Noses that stay black when a pet's eyes are recoloured.
+  nose: std(0x161616, 0.3),
   // Arcade screens glow a little; glass is barely there.
   screen: new THREE.MeshStandardMaterial({
     color: 0x101a33,
@@ -160,7 +163,7 @@ export const KNITTED = new Set([
   "hair",
   ...Object.keys(DECO_YARN),
 ]);
-for (const t of TIERS) {
+for (const t of [...TIERS, ...PETS]) {
   t.mats = {
     // The warm lamp and tone mapping wash pastels out, so the 3D fur gets a little extra saturation.
     fur: yarn(new THREE.Color(t.color).offsetHSL(0, 0.28, 0)),
@@ -168,6 +171,10 @@ for (const t of TIERS) {
       new THREE.Color(t.color).lerp(new THREE.Color(0x3a2a1a), 0.22),
     ),
   };
+  // A pet's own belly and eyes (a black cat's eyes would vanish into black yarn).
+  if (t.belly) t.mats.cream = yarn(t.belly);
+  if (t.white) t.mats.cream.color.setScalar(1.3);
+  if (t.eyes) t.mats.dark = std(t.eyes, 0.25);
 }
 // Only the big parts cast shadows; buttons and trim would just speckle the floor.
 const SHADOWED = new Set(["fur", "accent", "skin", "hair", "denim"]);
@@ -214,14 +221,15 @@ onTheme((t) => {
   if (style === "real" && !knitHi)
     knitHi = [knitTexture(false, true), knitTexture(true, true)];
   const look = YARN_STYLES[style];
-  for (const tier of TIERS) {
+  for (const tier of [...TIERS, ...PETS]) {
     // The warm lamp and tone mapping wash pastels out, so the 3D fur gets a little extra saturation.
     tier.mats.fur.color.set(tier.color).offsetHSL(0, t.plush.saturation, 0);
     styleYarn(tier.mats.fur, look);
     styleYarn(tier.mats.accent, look);
+    if (tier.mats.cream) styleYarn(tier.mats.cream, look);
   }
   for (const k in DECO_YARN) styleYarn(DECO[k], look);
-  for (const k of ["dark", "screen"]) {
+  for (const k of ["dark", "screen", "nose"]) {
     DECO[k].flatShading = !!look.flat;
     DECO[k].needsUpdate = true;
   }
@@ -319,7 +327,16 @@ export function removePlush(plush) {
 
 export function restock() {
   while (plushies.length) removePlush(plushies[0]);
-  const stock = TIERS.flatMap((t) => Array(t.count).fill(t));
+  const level = currentLevel();
+  let stock = TIERS.flatMap((t) => Array(t.count).fill(t));
+  // Mikaela's machine: our pets take the place of a few of the usual plushies on level 1.
+  const pets = love.unlocked && level.id === 1 ? PETS : [];
+  for (const pet of pets)
+    stock.splice(
+      stock.findIndex((t) => t.name === pet.as),
+      1,
+    );
+  stock = [...stock, ...pets];
   const cells = [];
   for (const cx of [-2.7, -0.9, 0.9, 2.7]) {
     for (const cz of [-2.7, -0.9, 0.9, 2.7]) {
@@ -328,7 +345,7 @@ export function restock() {
     }
   }
   // Deal the level's kinds from a shuffled bag so every kind shows up before any repeats.
-  const kinds = currentLevel().kinds;
+  const kinds = level.kinds;
   const bag = [];
   const nextAnimal = () => {
     if (!bag.length) bag.push(...[...kinds].sort(() => Math.random() - 0.5));
@@ -343,7 +360,9 @@ export function restock() {
     const [cx, cz] = cells[i % cells.length];
     addPlush(
       tier,
-      nextAnimal(),
+      tier.pet
+        ? [...kinds, HUSKY].find((k) => k.name === tier.animal)
+        : nextAnimal(),
       cx + j(),
       1.0 + layer * 1.5 + Math.random() * 0.5,
       cz + j(),

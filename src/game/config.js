@@ -108,3 +108,44 @@ export const TIERS = [
   },
 ];
 for (const t of TIERS) t.css = `#${t.color.toString(16).padStart(6, "0")}`;
+
+// Mikaela's unlock: once she has beaten the game, every level-1 machine has our four pets in it
+// (Ray Ray, Jo Jo and Tom Tom the cats, and Mojo the husky). Each stands in for one of the usual
+// plushies (`as`) and plays exactly like it, same points and same reel, so the machine is worth
+// the same. Their own colours: `belly` and `eyes` override the usual cream and button eyes, `white`
+// brightens the belly past the grey the knit texture lays over it, and `ui` is a colour light
+// enough for text on the dark screens.
+export const PETS = [
+  { name: "Ray Ray", as: "Mint", animal: "Cat", color: 0xe58a3a },
+  {
+    name: "Tom Tom",
+    as: "Sky",
+    animal: "Cat",
+    color: 0x2a262e,
+    belly: 0x3d3843,
+    eyes: 0xd8e04a,
+    ui: "#c9c4d4",
+  },
+  { name: "Jo Jo", as: "Lilac", animal: "Cat", color: 0x8d939b },
+  {
+    name: "Mojo",
+    as: "Mint",
+    animal: "Husky",
+    color: 0xd9813a,
+    belly: 0xffffff,
+    white: true,
+    eyes: 0x7cc4ff,
+  },
+];
+for (const t of PETS) {
+  const like = TIERS.find((tier) => tier.name === t.as);
+  Object.assign(t, {
+    pet: true,
+    points: like.points,
+    behaviors: like.behaviors,
+    difficulty: like.difficulty,
+    barHeight: like.barHeight,
+    rank: TIERS.indexOf(like),
+    css: `#${t.color.toString(16).padStart(6, "0")}`,
+  });
+}

@@ -310,7 +310,7 @@ export function drawScreen() {
       c.fillText(label[mg.result], TRACK.x + TRACK.w / 2, 40);
     } else {
       c.font = font(8);
-      c.fillStyle = mg.tier.css;
+      c.fillStyle = mg.tier.ui ?? mg.tier.css;
       c.fillText(`${mg.tier.points} PTS`, TRACK.x + TRACK.w / 2, 34);
     }
   } else {

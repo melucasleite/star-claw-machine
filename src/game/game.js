@@ -131,7 +131,12 @@ export function awardPrize(plush) {
     flashHearts("heal");
   }
   const tags = [
-    `${plush.tier.name} ${plush.animal.name}`.toUpperCase(),
+    // Pets go by their names.
+    (plush.tier.pet
+      ? plush.tier.name
+      : `${plush.tier.name} ${plush.animal.name}`
+    ).toUpperCase(),
+    plush.tier.pet && "OUR BABY &#9829;",
     late && "SAVED!",
     perfect && "PERFECT x1.5",
     mult > 1 && `STREAK x${mult}`,
@@ -145,12 +150,14 @@ export function awardPrize(plush) {
   if (prize.fresh) tags.push("NEW!");
   game.bag.push(prize);
   flyToBag(plush, prize);
-  sfx.prize(TIERS.indexOf(plush.tier), game.streak - 1);
+  // Pets aren't in TIERS; they carry their own rank.
+  const rank = plush.tier.rank ?? TIERS.indexOf(plush.tier);
+  sfx.prize(rank, game.streak - 1);
   if (prize.fresh) sfx.fresh();
   if (healed) sfx.heal();
-  popup(`+${fmt(pts)}`, tags.join(" · "), plush.tier.css);
+  popup(`+${fmt(pts)}`, tags.join(" · "), plush.tier.ui ?? plush.tier.css);
   const [px, py] = popupPoint();
-  burst(px, py, 10 + TIERS.indexOf(plush.tier) * 8, 0.8);
+  burst(px, py, 10 + rank * 8, 0.8);
   bumpScore();
   renderHud();
 }
