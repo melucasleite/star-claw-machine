@@ -1,7 +1,7 @@
 import { heartsEl, overlayEl } from "./dom.js";
 import * as CANNON from "cannon-es";
 import { CHUTE, CLAW, GRIP, RULES, TIERS } from "./config.js";
-import { G_PRIZE, G_STATIC, PRIZE_MASK, world } from "./physics.js";
+import { G_PRIZE, G_STATIC, G_WALL, PRIZE_MASK, world } from "./physics.js";
 import { drawMarquee } from "./cabinet.js";
 import { claw, hub, prongBodies, prongs } from "./claw.js";
 import { plushies, removePlush, restock } from "./plushies.js";
@@ -305,7 +305,7 @@ export function dropBlocked() {
 export function letGo() {
   for (const b of plushies) {
     if (horizDist(b.body) < 1.5 && b.body.position.y > 1.5) {
-      b.body.collisionFilterMask = G_STATIC | G_PRIZE;
+      b.body.collisionFilterMask = G_STATIC | G_PRIZE | G_WALL;
       b.ghost = true;
     }
   }

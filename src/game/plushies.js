@@ -1,6 +1,6 @@
 import * as THREE from "three";
 import * as CANNON from "cannon-es";
-import { CHUTE, TIERS } from "./config.js";
+import { CHUTE, DISH, TIERS } from "./config.js";
 import { LOOKS } from "./arcade.js";
 import { currentLevel } from "./levels.js";
 import { scene, std } from "./scene.js";
@@ -293,6 +293,21 @@ export function jiggle(dt) {
   for (const { squash: q } of plushies) {
     q.v += (-SQUISH.stiffness * q.a - SQUISH.damping * q.v) * dt;
     q.a = Math.max(-SQUISH.max, Math.min(SQUISH.max, q.a + q.v * dt));
+  }
+}
+
+// The dished floor: a prize lying against the glass slides back in, slowly.
+export function dish() {
+  for (const { body: b, ghost } of plushies) {
+    if (ghost || b.position.y > DISH.maxY) continue;
+    const v = b.velocity;
+    if (Math.hypot(v.x, v.y, v.z) > DISH.still) continue;
+    for (const axis of ["x", "z"]) {
+      const p = b.position[axis];
+      // Set outright, like the walkers: floor friction would eat a gentler push.
+      if (Math.abs(p) > DISH.edge && -Math.sign(p) * v[axis] < DISH.speed)
+        v[axis] = -Math.sign(p) * DISH.speed;
+    }
   }
 }
 

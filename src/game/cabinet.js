@@ -2,7 +2,7 @@ import { screenCanvas } from "./dom.js";
 import * as THREE from "three";
 import { CHUTE } from "./config.js";
 import { M, box, scene, std } from "./scene.js";
-import { addStaticBox } from "./physics.js";
+import { G_WALL, addStaticBox } from "./physics.js";
 import { onTheme, theme } from "./settings.js";
 import { game } from "./game.js";
 import {
@@ -54,10 +54,10 @@ export const floorMeshes = [
 ];
 
 // Walls: wood at the back and left, glass on the two sides facing the camera.
-addStaticBox(-4.1, 4.65, 0, 0.1, 4.75, 4.2, M.walnut);
-addStaticBox(0, 4.65, -4.1, 4.2, 4.75, 0.1, M.walnut);
-addStaticBox(4.1, 4.65, 0, 0.1, 4.75, 4.2);
-addStaticBox(0, 4.65, 4.1, 4.2, 4.75, 0.1);
+addStaticBox(-4.1, 4.65, 0, 0.1, 4.75, 4.2, M.walnut, G_WALL);
+addStaticBox(0, 4.65, -4.1, 4.2, 4.75, 0.1, M.walnut, G_WALL);
+addStaticBox(4.1, 4.65, 0, 0.1, 4.75, 4.2, undefined, G_WALL);
+addStaticBox(0, 4.65, 4.1, 4.2, 4.75, 0.1, undefined, G_WALL);
 export const glassX = new THREE.Mesh(new THREE.PlaneGeometry(8, 9.4), M.glass);
 glassX.rotation.y = Math.PI / 2;
 glassX.position.set(4.0, 4.7, 0);

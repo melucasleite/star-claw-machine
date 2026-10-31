@@ -1,7 +1,7 @@
 import { renderFrame } from "./postfx.js";
 import { world } from "./physics.js";
 import { driveProngs, hub } from "./claw.js";
-import { jiggle } from "./plushies.js";
+import { dish, jiggle } from "./plushies.js";
 import { wander } from "./walkers.js";
 import { tallyScore } from "./hud.js";
 import { stepFx } from "./confetti.js";
@@ -23,6 +23,7 @@ export function frame(now) {
     while (acc >= FIXED) {
       tick(FIXED);
       wander(FIXED);
+      dish();
       driveProngs();
       world.step(FIXED);
       jiggle(FIXED);

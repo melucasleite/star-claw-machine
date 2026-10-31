@@ -5,7 +5,9 @@ export const CHUTE = { x: -2.9, z: 2.9, edge: 1.8 };
 export const CLAW = {
   topY: 7.4,
   minY: 1.5,
-  reach: 3.1,
+  // Open prongs reach 1.2 from the hub, so at the edge they poke a little past the glass; the
+  // walls don't collide with them (see G_WALL), so that no longer stops the drop.
+  reach: 3.25,
   moveSpeed: 3.2,
   dropSpeed: 3.8,
   liftSpeed: 2.6,
@@ -18,6 +20,10 @@ export const CLAW = {
   topPause: 0.5,
   releaseTime: 1.4,
 };
+// The floor is gently dished like a real cabinet's: anything resting this close to the glass
+// slides back toward the middle at `speed`, so nothing stays pinned out of the claw's reach.
+export const DISH = { edge: 3.2, speed: 0.25, maxY: 1, still: 0.5 };
+
 // Prong torque. The reel meter (0..1) maps onto this range while the plushie is in the air.
 export const GRIP = { min: 18, max: 38 };
 export const gripAt = (p) => GRIP.min + (GRIP.max - GRIP.min) * p;

@@ -10,7 +10,10 @@ world.solver.iterations = 20;
 export const G_STATIC = 1;
 export const G_PRIZE = 2;
 export const G_CLAW = 4;
-export const PRIZE_MASK = G_STATIC | G_PRIZE | G_CLAW;
+// The cabinet walls. Prizes bounce off them; the prongs pass through, so a claw dropped next to
+// the glass isn't splayed open by it (which used to stop the drop halfway and cost a heart).
+export const G_WALL = 8;
+export const PRIZE_MASK = G_STATIC | G_PRIZE | G_CLAW | G_WALL;
 export const mats = {
   static: new CANNON.Material("static"),
   prize: new CANNON.Material("prize"),
@@ -32,12 +35,12 @@ contact(mats.prize, mats.prize, 0.45, COTTON);
 contact(mats.prize, mats.claw, 0.9);
 contact(mats.claw, mats.static, 0.3);
 
-export function addStaticBox(cx, cy, cz, hx, hy, hz, mat) {
+export function addStaticBox(cx, cy, cz, hx, hy, hz, mat, group = G_STATIC) {
   const body = new CANNON.Body({
     type: CANNON.Body.STATIC,
     material: mats.static,
-    collisionFilterGroup: G_STATIC,
-    collisionFilterMask: G_PRIZE | G_CLAW,
+    collisionFilterGroup: group,
+    collisionFilterMask: group === G_WALL ? G_PRIZE : G_PRIZE | G_CLAW,
   });
   body.addShape(new CANNON.Box(new CANNON.Vec3(hx, hy, hz)));
   body.position.set(cx, cy, cz);
