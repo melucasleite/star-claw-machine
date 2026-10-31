@@ -253,6 +253,21 @@ export const CONFIRMS = {
     no: "CANCEL",
     run: () => setAssist(false),
   },
+  // Wipes everything this browser saved (every startclaw.* key) and starts fresh.
+  erase: {
+    title: "ERASE DATA?",
+    text: () =>
+      "Wipes this browser's scores, collection, unlocked levels, settings and cheats. The world board keeps its scores. This can't be undone.",
+    yes: "ERASE",
+    no: "CANCEL",
+    run: () => {
+      try {
+        for (const key of Object.keys(localStorage))
+          if (key.startsWith("startclaw.")) localStorage.removeItem(key);
+      } catch {}
+      location.reload();
+    },
+  },
   // OUR FAMILY works like aim assist: the first machine holds our pets and fish instead, those
   // runs stay off the boards, and a level-1 run in progress restarts when it's switched.
   familyOn: {

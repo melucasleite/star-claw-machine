@@ -71,7 +71,8 @@ function gamePage() {
       <span class="knob"></span><span>${settings.aimAssist ? "ON" : "OFF"}</span>
     </button>
     <p class="aside">Shows where the claw lands. Unranked.</p>
-    ${family}`;
+    ${family}
+    <button type="button" class="btn ghost erase" data-erase>ERASE DATA</button>`;
 }
 
 const cheatsPage = () =>
@@ -406,6 +407,7 @@ addEventListener("click", (e) => {
       settingsPanel.querySelector("form.cheat input").focus();
     return;
   }
+  if (t.closest("[data-erase]")) return askConfirm("erase");
   if (t.closest("[data-family]"))
     return askConfirm(familyOn() ? "familyOff" : "familyOn");
   if (t.closest("[data-assist]"))

@@ -1432,6 +1432,14 @@ body[data-theme="halloween"] .menu-logo {
 .settings-page > h2:first-child {
   margin-top: 4px;
 }
+/* Erase data: tucked at the bottom of the GAME page, in the danger colour. */
+.settings-page .erase {
+  display: block;
+  margin: 26px auto 0;
+  font-size: 9px;
+  color: var(--danger);
+  border-color: var(--danger);
+}
 .settings-page form.cheat {
   margin-top: 8px;
 }
