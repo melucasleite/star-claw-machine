@@ -2152,8 +2152,7 @@ body[data-theme="retro"] .popup {
   right: -2px;
   bottom: -34px;
 }
-/* Each slide's words sit in a speech bubble, its tail pointing up at the doodle, with big
-   quote marks around the lot: he's saying it to her. */
+/* Each slide's words sit in a speech bubble, its tail pointing up at the doodle. */
 .love-card .bubble {
   position: relative;
   display: flex;
@@ -2178,28 +2177,6 @@ body[data-theme="retro"] .popup {
   border-top: 1.5px solid #ecd0b4;
   border-left: 1.5px solid #ecd0b4;
   transform: translateX(-50%) rotate(45deg);
-}
-.love-card .bubble::after {
-  content: "\201C";
-  position: absolute;
-  top: 4px;
-  left: 10px;
-  font-family: "Cormorant Garamond", Georgia, serif;
-  font-size: 64px;
-  font-style: normal;
-  line-height: 1;
-  color: #e6b8a0;
-}
-.love-card .bubble > :last-child::after {
-  content: "\201D";
-  position: absolute;
-  right: 10px;
-  bottom: -26px;
-  font-family: "Cormorant Garamond", Georgia, serif;
-  font-size: 64px;
-  font-style: normal;
-  line-height: 1;
-  color: #e6b8a0;
 }
 .love-card .vow {
   background: transparent;
@@ -2605,10 +2582,6 @@ body[data-theme="retro"] .popup {
   }
   .love-card .bubble {
     padding: 20px 22px;
-  }
-  .love-card .bubble::after,
-  .love-card .bubble > :last-child::after {
-    font-size: 48px;
   }
   .love-card h1 {
     font-size: 40px;
