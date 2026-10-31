@@ -8,6 +8,7 @@ import { postFxComposer } from "./postfx.js";
 import { music } from "./music.js";
 import { ac } from "./audio.js";
 import { applyTheme } from "./settings.js";
+import { eelState } from "./eel.js";
 import { LEVELS, enterCheat } from "./levels.js";
 import { refreshMenu } from "./settingsui.js";
 
@@ -33,6 +34,7 @@ window.__claw = {
   audioState: () => ac?.state ?? "none",
   applyTheme,
   LEVELS,
+  eel: eelState,
   // Same as typing FART in the settings cheats box.
   unlockLevels() {
     enterCheat("FART");

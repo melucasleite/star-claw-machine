@@ -8,6 +8,7 @@ import { plushies, removePlush, restock } from "./plushies.js";
 import { fetchWorld, loadScores, makesBoard, makesWorld } from "./scores.js";
 import { dragTarget, keys, pressed } from "./input.js";
 import { viewAxes } from "./peek.js";
+import { cancelEel, eelReady, startEel, stepEel } from "./eel.js";
 import {
   bumpScore,
   floatScore,
@@ -73,6 +74,7 @@ export const STATE_SFX = {
   release: () => sfx.release(),
 };
 export function setState(state) {
+  if (game.state === "eel" && state !== "eel") cancelEel();
   if (state !== game.state) STATE_SFX[state]?.();
   game.state = state;
   game.t = 0;
@@ -387,7 +389,12 @@ export function tick(dt) {
         v.x = clampAxis(hub.position.x, ix * CLAW.moveSpeed);
         v.z = clampAxis(hub.position.z, iz * CLAW.moveSpeed);
       }
-      if (pressed.Space) {
+      if (pressed.Space && eelReady()) {
+        // Halloween's secret, down the chute hole. Not a turn: nothing to win or lose.
+        game.late = null;
+        startEel();
+        setState("eel");
+      } else if (pressed.Space) {
         game.late = null;
         game.turn = { kind: "miss", prizes: 0, result: null };
         setState("drop");
@@ -419,6 +426,9 @@ export function tick(dt) {
           endTurn();
         }
       }
+      break;
+    case "eel":
+      if (stepEel(dt, v)) setState("aim");
       break;
     case "reel":
       stepReel(dt);

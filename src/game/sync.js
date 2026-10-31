@@ -4,6 +4,7 @@ import { updateLaser } from "./laser.js";
 import { animatePhoto } from "./photo.js";
 import { animateHalloween } from "./halloween.js";
 import { animateSpace } from "./space.js";
+import { animateEel } from "./eel.js";
 import {
   animateDecor,
   bridge,
@@ -55,6 +56,7 @@ export function sync(now) {
   glowPets(now);
   animateHalloween(now);
   animateSpace(now);
+  animateEel(now);
 
   const ix = (keys.ArrowRight ? 1 : 0) - (keys.ArrowLeft ? 1 : 0);
   const iz = (keys.ArrowDown ? 1 : 0) - (keys.ArrowUp ? 1 : 0);

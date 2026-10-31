@@ -20,6 +20,7 @@ export const TRACK = { x: 14, y: 12, w: 110, h: SH - 24 };
 export const METER = { x: 136, y: 12, w: 20, h: SH - 24 };
 export const IDLE_TEXT = {
   home: ["RESET"],
+  eel: ["???"],
   settle: ["STOCKING"],
   aim: ["ALIGN", "", TOUCH ? "TAP" : "SPACE", "TO DROP"],
   drop: ["DROP!"],
