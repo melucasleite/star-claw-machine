@@ -64,13 +64,13 @@ function gamePage() {
     <button type="button" class="switch${familyOn() ? " on" : ""}" data-family role="switch" aria-checked="${familyOn()}">
       <span class="knob"></span><span>${familyOn() ? "ON" : "OFF"}</span>
     </button>
-    <p class="aside">Our pets and our fish fill the first machine. Runs with it on stay off the high score boards, and switching it mid-run on that machine restarts the game.</p>`
+    <p class="aside">Pets and fish in machine 1. Unranked.</p>`
     : "";
   return `<h2>AIM ASSIST</h2>
     <button type="button" class="switch${settings.aimAssist ? " on" : ""}" data-assist role="switch" aria-checked="${settings.aimAssist}">
       <span class="knob"></span><span>${settings.aimAssist ? "ON" : "OFF"}</span>
     </button>
-    <p class="aside">A laser shows where the claw will land. Scores made with it on stay off the high score boards, and switching it either way restarts the game.</p>
+    <p class="aside">Shows where the claw lands. Unranked.</p>
     ${family}`;
 }
 
