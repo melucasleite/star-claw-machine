@@ -1744,6 +1744,210 @@ body[data-theme="retro"] .popup {
 .slide.on .doodle .blush {
   animation: doodle-fade 0.8s ease 1.1s forwards;
 }
+/* Story scenes are wider, and play out in beats: each beat draws in at its own --d, its colour
+   and labels follow, and a "pop" beat springs in like a thought bubble. */
+.doodle.scene {
+  width: 330px;
+  height: 206px;
+}
+.doodle .blush.hair {
+  fill: #5a3420;
+}
+.doodle .blush.skin {
+  fill: #f8dfcc;
+}
+.doodle .blush.eye {
+  fill: #3a2228;
+}
+.doodle .blush.veil {
+  fill: rgba(255, 255, 255, 0.92);
+}
+.doodle .blush.cloud {
+  fill: #ffffff;
+}
+.doodle .blush.sky {
+  fill: #d6e6f5;
+}
+.doodle .ink.sky {
+  stroke: #8fb4d8;
+}
+.doodle .label {
+  font-family: "Great Vibes", cursive;
+  font-size: 15px;
+  fill: #b07a86;
+  opacity: 0;
+}
+.slide.on .doodle .beat .ink {
+  animation-delay: var(--d);
+}
+.slide.on .doodle .beat .ink.dot {
+  animation-delay: var(--d);
+}
+.slide.on .doodle .beat .blush {
+  animation-delay: calc(var(--d) + 0.6s);
+}
+.slide.on .doodle .label {
+  animation: doodle-fade 0.6s ease forwards;
+  animation-delay: calc(var(--d, 0.3s) + 0.9s);
+}
+.doodle .pop {
+  transform-box: fill-box;
+  transform-origin: 30% 90%;
+  transform: scale(0);
+}
+.slide.on .doodle .pop {
+  animation: doodle-pop 0.55s cubic-bezier(0.3, 1.6, 0.5, 1) var(--d) forwards;
+}
+@keyframes doodle-pop {
+  to {
+    transform: scale(1);
+  }
+}
+/* Idle life once a scene has drawn in: figures sway, hearts beat, thoughts float, water drips,
+   the sun turns and glows, stars twinkle, and the gaze line marches toward her. */
+.doodle .sway,
+.doodle .throb,
+.doodle .float,
+.doodle .spin,
+.doodle .glow,
+.doodle .twinkle {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+.doodle .sway {
+  transform-origin: 50% 100%;
+}
+.slide.on .doodle .sway {
+  animation: idle-sway 2.6s ease-in-out var(--sway, 0s) infinite;
+}
+.slide.on .doodle .throb {
+  animation: idle-throb 1.3s ease-in-out calc(var(--d, 0.3s) + 1.4s) infinite;
+}
+.slide.on .doodle .float {
+  animation: idle-float 3s ease-in-out calc(var(--d) + 1.2s) infinite;
+}
+.slide.on .doodle .drip {
+  animation: idle-drip 1.1s linear calc(var(--d) + 0.6s) infinite;
+}
+.slide.on .doodle .spin {
+  animation: idle-spin 14s linear calc(var(--d) + 1s) infinite;
+}
+.slide.on .doodle .glow {
+  transform-origin: 50% 100%;
+  animation: idle-glow 3.4s ease-in-out calc(var(--d) + 1.4s) infinite;
+}
+.slide.on .doodle .twinkle {
+  animation: idle-twinkle 1.6s ease-in-out 1.8s infinite;
+}
+.slide.on .doodle .beat .ink.dot.march,
+.slide.on .doodle .ink.dot.march {
+  animation:
+    doodle-fade 0.6s ease var(--d, 1.2s) forwards,
+    idle-march 1.4s linear var(--d, 1.2s) infinite;
+}
+@keyframes idle-sway {
+  0%,
+  100% {
+    transform: rotate(-2.5deg);
+  }
+  50% {
+    transform: rotate(2.5deg) translateY(-1px);
+  }
+}
+@keyframes idle-throb {
+  0%,
+  60%,
+  100% {
+    transform: scale(1);
+  }
+  15% {
+    transform: scale(1.25);
+  }
+  30% {
+    transform: scale(1.05);
+  }
+  45% {
+    transform: scale(1.18);
+  }
+}
+@keyframes idle-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-3px);
+  }
+}
+@keyframes idle-drip {
+  0% {
+    transform: translateY(-3px);
+    opacity: 0;
+  }
+  30% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(6px);
+    opacity: 0;
+  }
+}
+@keyframes idle-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes idle-glow {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+}
+@keyframes idle-twinkle {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
+}
+@keyframes idle-march {
+  to {
+    stroke-dashoffset: -0.1;
+  }
+}
+/* The banana phone shakes in short bursts, like it's ringing. */
+.slide.on .doodle.ringing {
+  animation: doodle-ring 2.2s ease-in-out 0.6s infinite;
+}
+@keyframes doodle-ring {
+  0%,
+  36%,
+  100% {
+    transform: rotate(0deg);
+  }
+  4%,
+  12%,
+  20%,
+  28% {
+    transform: rotate(-5deg) translateY(-2px);
+  }
+  8%,
+  16%,
+  24%,
+  32% {
+    transform: rotate(5deg) translateY(-2px);
+  }
+}
+.love-hearts i.banana {
+  color: initial;
+  text-shadow: 0 0 10px rgba(255, 220, 120, 0.5);
+  opacity: 0.85;
+}
 @keyframes doodle-draw {
   to {
     stroke-dashoffset: 0;
@@ -1881,6 +2085,10 @@ body[data-theme="retro"] .popup {
     width: 130px;
     height: 98px;
   }
+  .doodle.scene {
+    width: 270px;
+    height: 169px;
+  }
   .love-nav {
     gap: 8px;
   }
@@ -1891,14 +2099,26 @@ body[data-theme="retro"] .popup {
 @media (prefers-reduced-motion: reduce) {
   .love-hearts i,
   .love-btn,
-  .slide.on .doodle {
+  .slide.on .doodle,
+  .slide.on .doodle.ringing,
+  .slide.on .doodle .sway,
+  .slide.on .doodle .throb,
+  .slide.on .doodle .float,
+  .slide.on .doodle .drip,
+  .slide.on .doodle .spin,
+  .slide.on .doodle .glow,
+  .slide.on .doodle .twinkle {
     animation: none;
   }
   .doodle .ink {
     stroke-dashoffset: 0;
   }
-  .doodle .blush {
+  .doodle .blush,
+  .doodle .label {
     opacity: 1;
+  }
+  .doodle .pop {
+    transform: none;
   }
   .love-card .slide,
   .love-card mark.hl,

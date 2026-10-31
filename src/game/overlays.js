@@ -22,7 +22,14 @@ import {
   collectionSize,
   prizeImg,
 } from "./bag.js";
-import { LEVELS, currentLevel, isUnlocked, pickLevel } from "./levels.js";
+import {
+  LEVELS,
+  currentLevel,
+  isUnlocked,
+  marqueeFor,
+  pickLevel,
+  unlockLove,
+} from "./levels.js";
 import { restock } from "./plushies.js";
 import { drawMarquee } from "./cabinet.js";
 import { applyTheme } from "./settings.js";
@@ -80,7 +87,7 @@ export function chooseLevel(id) {
   if (!pickLevel(id)) return;
   fetchWorld();
   restock();
-  drawMarquee(currentLevel().marquee);
+  drawMarquee(marqueeFor(currentLevel()));
   // Re-styling from the theme puts the cabinet back, then the new level's stage dresses it.
   applyTheme();
   sfx.coinIn();
@@ -200,7 +207,12 @@ panelEl.addEventListener("submit", (e) => {
   submitName();
   renderOver();
   renderHud();
-  if (game.result?.love) setTimeout(openLove, 600);
+  if (game.result?.love) {
+    // From now on every machine is hers; she sees it renamed when the letter closes.
+    unlockLove();
+    drawMarquee(marqueeFor(currentLevel()));
+    setTimeout(openLove, 600);
+  }
 });
 panelEl.addEventListener("click", (e) => {
   if (e.target.closest("[data-action=play]")) startGame();

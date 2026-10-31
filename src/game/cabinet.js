@@ -100,16 +100,35 @@ function paintMarquee(text) {
   c.strokeStyle = m.border;
   c.lineWidth = 12;
   c.strokeRect(10, 10, 1004, 156);
-  c.font = `${m.weight ?? 400} ${m.size}px ${m.font ?? theme().font}`;
   c.textAlign = "center";
   c.textBaseline = "middle";
+  // Fit between the emoji: shrink a long name, and past a point break it onto two lines.
+  const fontAt = (px) => `${m.weight ?? 400} ${px}px ${m.font ?? theme().font}`;
+  const fit = (lines, cap) => {
+    c.font = fontAt(100);
+    const widest = Math.max(...lines.map((l) => c.measureText(l).width));
+    return Math.min(cap, (100 * 780) / widest);
+  };
+  let lines = [text];
+  let size = fit(lines, m.size);
+  const words = text.split(" ");
+  if (size < m.size * 0.75 && words.length > 1) {
+    const cut = Math.ceil(words.length / 2) - (words.length > 2 ? 1 : 0);
+    lines = [words.slice(0, cut).join(" "), words.slice(cut).join(" ")];
+    size = fit(lines, Math.min(m.size, 62));
+  }
+  c.font = fontAt(size);
+  const rows = lines.map((l, i) => [
+    l,
+    90 + (i - (lines.length - 1) / 2) * size * 1.15,
+  ]);
   c.fillStyle = m.shadow;
-  c.fillText(text, 518, 96);
+  for (const [l, y] of rows) c.fillText(l, 518, y + 6);
   // The 4K marquee is a neon sign: the glow comes from a blurred shadow.
   c.shadowColor = m.glow ?? "transparent";
   c.shadowBlur = m.glow ? 24 : 0;
   c.fillStyle = m.text;
-  c.fillText(text, 512, 90);
+  for (const [l, y] of rows) c.fillText(l, 512, y);
   c.shadowBlur = 0;
   c.font = "56px serif";
   c.fillText(m.emoji, 80, 92);

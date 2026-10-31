@@ -22,7 +22,7 @@ import { collect, flyToBag, renderBag } from "./bag.js";
 import { showReel, startReel, stepReel } from "./reel.js";
 import { setMusicLevel, sfx } from "./audio.js";
 import { settings } from "./settings.js";
-import { currentLevel, markCleared } from "./levels.js";
+import { currentLevel, markCleared, marqueeFor } from "./levels.js";
 import {
   cashOutBonus as bonusForLives,
   chuteBusy,
@@ -98,7 +98,7 @@ export function startGame() {
   renderBag();
   resetScore();
   claw.closing = false;
-  drawMarquee(currentLevel().marquee);
+  drawMarquee(marqueeFor(currentLevel()));
   restock();
   setState("home");
   renderHud();

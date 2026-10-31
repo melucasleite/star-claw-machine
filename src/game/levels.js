@@ -35,6 +35,22 @@ export const LEVELS = [
   },
 ];
 
+// Beating the game as Mikaela renames every machine for good, in this browser: her own unlock.
+const LOVE_KEY = "startclaw.love.v1";
+export const love = { unlocked: false };
+try {
+  love.unlocked = localStorage.getItem(LOVE_KEY) === "1";
+} catch {}
+export function unlockLove() {
+  love.unlocked = true;
+  try {
+    localStorage.setItem(LOVE_KEY, "1");
+  } catch {}
+}
+// What the marquee says on a level.
+export const marqueeFor = (level) =>
+  love.unlocked ? "MIKAELA'S CLAW MACHINE" : level.marquee;
+
 // Ids of the levels this browser has cleared in a single run.
 const CLEARED_KEY = "startclaw.levels.v1";
 export let cleared;

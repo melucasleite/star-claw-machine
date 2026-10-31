@@ -23,7 +23,7 @@ import "./love.js";
 import { applyTheme } from "./settings.js";
 import { resize } from "./scene.js";
 import { drawMarquee } from "./cabinet.js";
-import { currentLevel } from "./levels.js";
+import { currentLevel, marqueeFor } from "./levels.js";
 import { restock } from "./plushies.js";
 import { fetchWorld } from "./scores.js";
 import { renderHud } from "./hud.js";
@@ -52,7 +52,7 @@ document.addEventListener("visibilitychange", () => {
 });
 onResize();
 applyTheme();
-drawMarquee(currentLevel().marquee);
+drawMarquee(marqueeFor(currentLevel()));
 document.fonts.ready.then(() => drawMarquee());
 restock();
 setMode("title");

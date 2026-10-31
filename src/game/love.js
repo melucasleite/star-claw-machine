@@ -1,5 +1,5 @@
 import { loveEl, lovePanel } from "./dom.js";
-import { startSong, stopSong } from "./lovesong.js";
+import { ringAgain, startSong, stopSong } from "./lovesong.js";
 import { game } from "./game.js";
 import { hold, release } from "./pause.js";
 
@@ -28,78 +28,140 @@ const star = (x, y, s) => {
   }
   return d + "Z";
 };
-const svg = (body) =>
-  `<svg class="doodle" viewBox="0 0 160 120" aria-hidden="true">${body}</svg>`;
+const svg = (body, cls = "") =>
+  `<svg class="doodle ${cls}" viewBox="0 0 160 120" aria-hidden="true">${body}</svg>`;
 
-const DOODLES = {
-  // A claw machine holding a heart.
-  claw: svg(
-    fill(heart(80, 60, 11)) +
-      ink("M41 21 Q80 18 119 21 Q122 60 119 99 Q80 102 41 99 Q38 60 41 21") +
-      ink("M41 76 Q80 74 119 76") +
+// ----- story scenes: stick figures, in beats -----
+
+// A wider canvas for scenes with people in them.
+const scene = (body) =>
+  `<svg class="doodle scene" viewBox="0 0 240 150" aria-hidden="true">${body}</svg>`;
+// A beat of the story: everything in it draws in `d` seconds after the slide arrives. A `pop`
+// beat springs in instead, like a thought bubble.
+const beat = (d, body, cls = "") =>
+  `<g class="beat ${cls}" style="--d:${d}s">${body}</g>`;
+// A beat with a looping idle motion once it has drawn in (drip, float, spin, glow).
+const beatc = (cls, d, body) => beat(d, body, cls);
+// A heart that keeps beating after it has drawn in.
+const hearty = (x, y, size) =>
+  `<g class="throb">${fill(heart(x, y, size))}${ink(heart(x, y, size))}</g>`;
+const label = (x, y, text) =>
+  `<text class="label" x="${x}" y="${y}" text-anchor="middle">${text}</text>`;
+const scaled = (x, y, k, body) =>
+  `<g transform="translate(${x} ${y}) scale(${k})">${body}</g>`;
+
+// A head centred on (x, y): brunette hair (long, bob or short), dot eyes glancing toward `look`
+// (-1 left, 1 right), rosy cheeks and a smile.
+function head(x, y, o = {}) {
+  const R = 9;
+  const lx = (o.look ?? 0) * 2.5;
+  let s = "";
+  if (o.hair === "long" || o.hair === "bob") {
+    const end = o.hair === "long" ? 24 : 11;
+    s += fill(
+      `M${x - R} ${y} C${x - R - 3} ${y + end * 0.6} ${x - R - 2} ${y + end} ${x - R + 1} ${y + end} L${x + R - 1} ${y + end} C${x + R + 2} ${y + end} ${x + R + 3} ${y + end * 0.6} ${x + R} ${y} A${R} ${R} 0 0 0 ${x - R} ${y}Z`,
+      "hair",
+    );
+  }
+  if (o.veil)
+    s += fill(
+      `M${x - 4} ${y - R} Q${x + R + 12} ${y + 6} ${x + R + 8} ${y + 30} L${x + R - 2} ${y + 8}Z`,
+      "veil",
+    );
+  s += fill(circle(x, y, R), "skin") + ink(circle(x, y, R));
+  s += fill(
+    `M${x - R} ${y - 1} A${R} ${R} 0 0 1 ${x + R} ${y - 1} Q${x + 2} ${y - 6} ${x - R} ${y - 1}Z`,
+    "hair",
+  );
+  s += fill(
+    circle(x - 3 + lx, y + 0.5, 1.1) + circle(x + 3 + lx, y + 0.5, 1.1),
+    "eye",
+  );
+  s += fill(
+    circle(x - 5.5 + lx, y + 3.2, 1.7) + circle(x + 5.5 + lx, y + 3.2, 1.7),
+  );
+  s += ink(
+    `M${x - 3.5 + lx} ${y + 3.5} Q${x + lx} ${y + (o.big ? 8.5 : 6.5)} ${x + 3.5 + lx} ${y + 3.5}`,
+  );
+  return s;
+}
+
+// A stick figure standing on y = base. `arms` are the two hands relative to the shoulder.
+function person(x, base, o = {}) {
+  const hy = base - 60;
+  const top = hy + 9;
+  const hip = base - 20;
+  const sy = top + 7;
+  const [l, r] = o.arms ?? [
+    [-10, 14],
+    [10, 14],
+  ];
+  let s = "";
+  if (o.dress)
+    s +=
+      fill(`M${x} ${top} L${x - 11} ${hip + 4} L${x + 11} ${hip + 4}Z`) +
+      ink(`M${x} ${top} L${x - 11} ${hip + 4} L${x + 11} ${hip + 4}Z`) +
       ink(
-        "M80 21 L80 40 M71 52 Q70 41 80 40 Q90 41 89 52 M71 52 L74 56 M89 52 L86 56",
-      ) +
-      ink(heart(80, 60, 11)) +
-      ink(circle(58, 88, 4) + " M100 93 L100 84" + circle(100, 82, 3)) +
-      ink(sparkle(24, 32, 5) + sparkle(138, 46, 4) + sparkle(30, 80, 3)),
-  ),
-  // Two rings, one with a diamond.
-  rings: svg(
-    fill("M60 40 L66 32 L72 40 L66 47Z", "y") +
-      ink(circle(66, 70, 22)) +
-      ink(circle(94, 70, 22)) +
-      ink("M60 40 L66 32 L72 40 L66 47Z M60 40 L72 40", "y") +
-      ink("M66 24 L66 18 M56 28 L52 24 M76 28 L80 24", "y") +
-      fill(heart(130, 34, 7)) +
-      ink(heart(130, 34, 7)) +
-      ink(heart(28, 44, 5)),
-  ),
-  // A big happy face with rosy cheeks.
-  smile: svg(
-    fill(circle(64, 70, 6) + circle(96, 70, 6)) +
-      ink(circle(80, 60, 34)) +
-      ink("M65 55 Q70 48 75 55 M85 55 Q90 48 95 55") +
-      ink("M62 68 Q80 90 98 68") +
-      ink(star(132, 26, 9), "y") +
-      ink(sparkle(26, 30, 5) + sparkle(138, 90, 4)),
-  ),
-  // A four-leaf clover: the luckiest man alive.
-  clover: svg(
+        `M${x - 4} ${hip + 4} L${x - 5} ${base} M${x + 4} ${hip + 4} L${x + 5} ${base}`,
+      );
+  else
+    s += ink(
+      `M${x} ${top} L${x} ${hip} M${x} ${hip} L${x - 7} ${base} M${x} ${hip} L${x + 7} ${base}`,
+    );
+  s += ink(`M${x} ${sy} l${l[0]} ${l[1]} M${x} ${sy} l${r[0]} ${r[1]}`);
+  if (o.bow)
+    s += ink(
+      `M${x - 4} ${top + 2} L${x + 4} ${top + 6} L${x + 4} ${top + 2} L${x - 4} ${top + 6}Z`,
+    );
+  s += head(x, hy, o);
+  if (o.name) s += label(x, base + 13, o.name);
+  const phase = o.phase ?? (x * 0.37 + base * 0.11) % 2.6;
+  return `<g class="sway" style="--sway:${-phase}s">${s}</g>`;
+}
+
+const cloverAt = (x, y, k) =>
+  scaled(
+    x,
+    y,
+    k,
     [0, 90, 180, 270]
       .map(
         (a) =>
-          `<g transform="rotate(${a} 80 52)">${fill(heart(80, 38, 14), "g")}${ink(heart(80, 38, 14), "g")}</g>`,
+          `<g transform="rotate(${a})">${fill(heart(0, -14, 14), "g")}${ink(heart(0, -14, 14), "g")}</g>`,
       )
-      .join("") +
-      ink("M80 66 Q86 88 76 110", "g") +
-      ink(sparkle(130, 28, 5) + sparkle(30, 92, 4), "y"),
+      .join("") + ink("M0 14 Q6 36 -4 58", "g"),
+  );
+
+const DOODLES = {
+  // A banana phone, ringing: curly cord, ring lines at both ends, a couple of notes.
+  bananaphone: svg(
+    fill(
+      "M30 48 Q78 112 132 46 Q136 40 130 40 Q80 92 36 42 Q28 40 30 48Z",
+      "y",
+    ) +
+      ink(
+        "M30 48 Q78 112 132 46 Q136 40 130 40 Q80 92 36 42 Q28 40 30 48Z",
+        "y",
+      ) +
+      ink("M131 41 L137 33 L141 35 M30 48 Q26 45 31 42", "y") +
+      ink("M44 54 Q80 92 120 52", "y") +
+      ink("M80 80 q-7 5 0 9 q7 4 0 9 q-7 4 0 9 q7 4 0 9") +
+      ink(
+        "M22 30 Q16 38 20 46 M12 24 Q4 38 10 50 M142 24 Q148 32 144 40 M150 16 Q160 30 154 44",
+      ) +
+      ink(
+        "M98 22 L98 8 L110 5 L110 19 M98 8 L110 5" +
+          circle(95, 22, 3) +
+          circle(107, 19, 3),
+      ),
+    "ringing",
   ),
   // Heart eyes and a big grin.
   grin: svg(
-    fill(heart(64, 50, 9) + heart(96, 50, 9)) +
-      ink(heart(64, 50, 9)) +
-      ink(heart(96, 50, 9)) +
+    hearty(64, 50, 9) +
+      hearty(96, 50, 9) +
       ink("M56 70 Q80 98 104 70 Q80 80 56 70") +
       ink(heart(134, 26, 6) + heart(24, 30, 5) + heart(140, 88, 4)),
-  ),
-  // A seedling in a pot.
-  sprout: svg(
-    fill(
-      "M80 60 Q66 58 61 45 Q76 45 80 60Z M80 53 Q95 49 99 36 Q84 36 80 53Z",
-      "g",
-    ) +
-      ink("M58 80 L102 80 M62 80 L67 106 L93 106 L98 80") +
-      ink("M80 80 Q77 64 80 44", "g") +
-      ink(
-        "M80 60 Q66 58 61 45 Q76 45 80 60 M80 53 Q95 49 99 36 Q84 36 80 53",
-        "g",
-      ) +
-      ink(circle(130, 26, 9), "y") +
-      ink(
-        "M130 10 L130 13 M146 26 L143 26 M141 15 L139 17 M119 15 L121 17",
-        "y",
-      ),
   ),
   // A flower in bloom.
   bloom: svg(
@@ -122,8 +184,8 @@ const DOODLES = {
   moon: svg(
     fill("M88 22 A34 34 0 1 0 116 84 A28 28 0 1 1 88 22Z", "y") +
       ink("M88 22 A34 34 0 1 0 116 84 A28 28 0 1 1 88 22Z", "y") +
-      ink(star(128, 30, 8) + star(140, 62, 5) + star(30, 28, 6), "y") +
-      ink("M128 30 L140 62", "dot"),
+      `<g class="twinkle">${ink(star(128, 30, 8) + star(140, 62, 5) + star(30, 28, 6), "y")}</g>` +
+      ink("M128 30 L140 62", "dot march"),
   ),
   // A hot-air balloon, off to chase a dream.
   balloon: svg(
@@ -133,31 +195,27 @@ const DOODLES = {
       ) +
       ink("M80 14 Q68 46 75 80 M80 14 Q92 46 85 80") +
       ink(heart(80, 44, 9)) +
+      scaled(
+        76.5,
+        87,
+        0.36,
+        head(0, 0, { hair: "short", look: 1, big: true }),
+      ) +
+      scaled(
+        83.5,
+        87,
+        0.36,
+        head(0, 0, { hair: "long", look: -1, big: true }),
+      ) +
       ink("M74 80 L74 90 M86 80 L86 90 M72 90 L88 90 L86 102 L74 102Z") +
       ink(
         "M14 96 Q18 86 28 90 Q34 82 42 90 Q50 90 48 98 L14 98Z M116 40 Q120 32 128 36 Q134 30 140 38 Q146 38 144 44 L116 44Z",
         "sky",
       ),
   ),
-  // The two of us, holding hands.
-  us: svg(
-    fill("M100 44 L88 78 L112 78Z") +
-      fill(heart(80, 30, 7)) +
-      ink(circle(60, 35, 9) + circle(100, 35, 9)) +
-      ink(
-        "M60 44 L60 72 M60 72 L53 94 M60 72 L67 94 M60 52 L48 66 M60 52 L80 62",
-      ) +
-      ink(
-        "M100 44 L88 78 L112 78Z M95 78 L93 95 M105 78 L107 95 M100 52 L80 62 M100 52 L112 64",
-      ) +
-      ink("M91 32 Q89 46 87 50 M109 32 Q111 46 113 50") +
-      ink(heart(80, 30, 7)) +
-      ink("M26 104 Q53 99 80 104 T134 104"),
-  ),
   // A heart with Cupid's arrow through it.
   arrow: svg(
-    fill(heart(80, 58, 28)) +
-      ink(heart(80, 58, 28)) +
+    hearty(80, 58, 28) +
       ink(
         "M28 94 L132 26 M132 26 L120 27 M132 26 L128 37 M28 94 L34 84 M28 94 L38 92",
       ) +
@@ -165,22 +223,270 @@ const DOODLES = {
   ),
 };
 
+const SCENES = {
+  // Our wedding: the two of us under one roof, our best friends all around.
+  wedding: scene(
+    beat(0.2, ink("M24 76 L120 22 L216 76") + hearty(120, 12, 6)) +
+      beat(
+        0.7,
+        [
+          [40, "bob", 1],
+          [64, "short", 1],
+          [176, "long", -1],
+          [200, "short", -1],
+        ]
+          .map(([x, hair, look]) =>
+            scaled(
+              x,
+              136,
+              0.62,
+              person(0, 0, {
+                hair,
+                look,
+                dress: hair !== "short",
+                phase: x / 30,
+              }),
+            ),
+          )
+          .join(""),
+      ) +
+      beat(
+        1.1,
+        person(104, 136, {
+          hair: "short",
+          bow: true,
+          look: 1,
+          arms: [
+            [-9, 15],
+            [12, 9],
+          ],
+          name: "me",
+        }) +
+          person(136, 136, {
+            hair: "long",
+            dress: true,
+            veil: true,
+            look: -1,
+            big: true,
+            arms: [
+              [-12, 9],
+              [9, 15],
+            ],
+            name: "you",
+          }),
+      ) +
+      beat(
+        1.9,
+        hearty(120, 52, 6) + ink(heart(96, 44, 3.5) + heart(146, 42, 3.5)),
+        "pop",
+      ),
+  ),
+  // The day we met: you beaming at Sandra, Sandra beaming back, and me, watching you smile.
+  sandra: scene(
+    beat(
+      0.2,
+      person(56, 130, {
+        hair: "long",
+        dress: true,
+        look: 1,
+        big: true,
+        arms: [
+          [-10, 14],
+          [12, 9],
+        ],
+        name: "you",
+      }) +
+        person(104, 130, {
+          hair: "bob",
+          dress: true,
+          look: -1,
+          big: true,
+          arms: [
+            [-12, 9],
+            [10, 14],
+          ],
+          name: "Sandra",
+        }),
+    ) +
+      beat(
+        1.2,
+        hearty(80, 52, 5) + hearty(86, 38, 3.5) + ink(sparkle(70, 60, 2.5)),
+      ) +
+      beat(
+        1.7,
+        person(196, 130, {
+          hair: "short",
+          look: -1,
+          big: true,
+          arms: [
+            [-8, 15],
+            [8, 15],
+          ],
+          name: "me",
+        }),
+      ) +
+      beat(2.4, ink("M184 66 Q120 22 62 58", "dot march")) +
+      beat(
+        2.9,
+        hearty(196, 54, 6) + ink(sparkle(208, 46, 3) + sparkle(184, 44, 2.5)),
+        "pop",
+      ),
+  ),
+  // And I thought: I want her to smile like that for me.
+  thought: scene(
+    beat(
+      0.2,
+      person(52, 132, {
+        hair: "short",
+        look: 1,
+        arms: [
+          [-8, 15],
+          [5, 5],
+        ],
+        name: "me",
+      }),
+    ) +
+      beat(
+        1.0,
+        ink(circle(68, 62, 2.2) + circle(78, 52, 3.2) + circle(91, 42, 4.5)),
+        "pop",
+      ) +
+      beat(
+        1.4,
+        fill(
+          "M112 62 Q100 46 118 38 Q118 18 140 22 Q152 6 172 16 Q194 8 204 28 Q224 30 218 50 Q230 70 208 76 Q200 94 176 84 Q160 98 142 86 Q118 94 116 76 Q100 74 112 62Z",
+          "cloud",
+        ) +
+          ink(
+            "M112 62 Q100 46 118 38 Q118 18 140 22 Q152 6 172 16 Q194 8 204 28 Q224 30 218 50 Q230 70 208 76 Q200 94 176 84 Q160 98 142 86 Q118 94 116 76 Q100 74 112 62Z",
+          ),
+        "pop",
+      ) +
+      beatc(
+        "float",
+        1.9,
+        scaled(
+          142,
+          82,
+          0.5,
+          person(0, 0, { hair: "long", dress: true, look: 1, big: true }),
+        ) +
+          scaled(
+            184,
+            82,
+            0.5,
+            person(0, 0, { hair: "short", look: -1, big: true }),
+          ) +
+          hearty(163, 42, 4),
+      ) +
+      beat(2.6, cloverAt(214, 118, 0.42)),
+  ),
+  // You helped me grow: you with a watering can, me a little sprout.
+  grow: scene(
+    beat(
+      0.2,
+      person(64, 132, {
+        hair: "long",
+        dress: true,
+        look: 1,
+        big: true,
+        arms: [
+          [-10, 14],
+          [16, 2],
+        ],
+        name: "you",
+      }),
+    ) +
+      beat(
+        0.9,
+        fill("M80 82 L98 82 L96 96 L82 96Z", "sky") +
+          ink(
+            "M80 82 L98 82 L96 96 L82 96Z M98 86 L112 76 M80 84 Q74 88 82 94",
+          ),
+      ) +
+      beatc("drip", 1.5, ink("M115 80 l1 5 M120 84 l1 5 M114 90 l1 5", "sky")) +
+      beat(
+        1.2,
+        ink("M138 116 L166 116 M141 116 L144 134 L160 134 L163 116") +
+          fill(
+            "M152 102 Q140 100 136 90 Q148 90 152 102Z M152 96 Q164 92 168 82 Q156 82 152 96Z",
+            "g",
+          ) +
+          ink("M152 116 Q150 104 152 90", "g") +
+          ink(
+            "M152 102 Q140 100 136 90 Q148 90 152 102 M152 96 Q164 92 168 82 Q156 82 152 96",
+            "g",
+          ) +
+          head(152, 76, { hair: "short", look: -1, big: true }) +
+          label(152, 147, "me"),
+      ) +
+      beatc(
+        "spin",
+        2.2,
+        ink(
+          circle(212, 30, 9) +
+            " M212 12 L212 16 M230 30 L226 30 M225 17 L222 20 M199 17 L202 20",
+          "y",
+        ),
+      ),
+  ),
+  // Walking life together, toward the sunrise.
+  walk: scene(
+    beatc(
+      "glow",
+      0.2,
+      fill("M66 104 A54 54 0 0 1 174 104Z", "y") +
+        ink(
+          "M66 104 A54 54 0 0 1 174 104 M120 40 L120 32 M80 58 L74 52 M160 58 L166 52 M58 82 L50 80 M182 82 L190 80",
+          "y",
+        ),
+    ) +
+      beat(0.5, ink("M10 140 Q60 134 120 140 T232 138")) +
+      beat(
+        0.9,
+        person(102, 136, {
+          hair: "short",
+          look: 1,
+          big: true,
+          arms: [
+            [-9, 15],
+            [18, 10],
+          ],
+          name: "me",
+        }) +
+          person(138, 136, {
+            hair: "long",
+            dress: true,
+            look: -1,
+            big: true,
+            arms: [
+              [-18, 10],
+              [9, 15],
+            ],
+            name: "you",
+          }),
+      ) +
+      beat(1.8, hearty(120, 54, 6), "pop"),
+  ),
+};
+Object.assign(DOODLES, SCENES);
+
 // The vows, word for word, a few lines to a slide.
 const SLIDES = [
   [
-    "claw",
+    "bananaphone",
     `<p class="big">A prize for the one who cleared the whole machine.</p><p class="hint">Tap the arrow, my love &rarr;</p>`,
   ],
   [
-    "rings",
+    "wedding",
     `<p>My love, today is our big day. I&rsquo;m marrying my <mark class="hl">best friend</mark>. In front of my best friends, isn&rsquo;t that crazy? We all here under this one roof. There&rsquo;s just so much love in this room. Today is the <mark class="hl y">happiest day of my life</mark>.</p>`,
   ],
   [
-    "smile",
+    "sandra",
     `<p>Let me seize this moment and share this with everyone. The exact moment I fell in love with you. It was when I saw your <mark class="hl">loving smile</mark> for the very first time. Naturally we had just met so you were smiling to <mark class="hl y name">Sandra</mark>. It was a <mark class="hl g">big, beautiful, beautiful smile</mark>.</p>`,
   ],
   [
-    "clover",
+    "thought",
     `<p>It was the most beautiful smile I had ever seen. I immediately thought to myself,</p><blockquote class="pull">I want her to smile like that for me.</blockquote><p>And here you are, smiling now. And I feel like the <mark class="hl y">luckiest man alive</mark>.</p>`,
   ],
   [
@@ -188,7 +494,7 @@ const SLIDES = [
     `<p class="vow"><span class="n">Here is my first vow:</span><q>I will live to make you smile.</q></p>`,
   ],
   [
-    "sprout",
+    "grow",
     `<p>Devotion and love are hard to earn, but you did that. You bring out <mark class="hl">the very best in me</mark>&mdash; I just can&rsquo;t hide from you. You&rsquo;ve seen me at my worst, and at my best, and you didn&rsquo;t just accept me as I am. You insisted on my potential, believed in me, and helped me grow as a person. I saw the man I wanted to be through your eyes and in many ways, <mark class="hl y">you saved my life</mark>.</p>`,
   ],
   [
@@ -204,7 +510,7 @@ const SLIDES = [
     `<p class="vow"><span class="n">Here&rsquo;s my third and final vow:</span><q>I will believe in your dreams, just as you believed in mine. I will live to help fulfill your dreams, especially the one we had to delay.</q></p>`,
   ],
   [
-    "us",
+    "walk",
     `<p>I&rsquo;m here for you, babe. And as God is my witness I will never settle and put you aside&mdash;<mark class="hl">body and soul</mark>. Your partner, your lover, the one you chose to <mark class="hl g">walk life with</mark>.</p>`,
   ],
   [
@@ -254,17 +560,21 @@ function go(i) {
   lovePanel.querySelector("[data-love-step='-1']").disabled = at === 0;
   // On the last slide the next arrow gives way to the heart, which closes.
   lovePanel.querySelector(".love-nav").classList.toggle("end", at === LAST);
+  // The banana phone rings once more after "I love you".
+  if (at === LAST) ringAgain();
 }
 export const stepLove = (d) => go(at + d);
 
-// Hearts drifting up behind the card, each with its own size, speed and sway.
+// Hearts drifting up behind the card, each with its own size, speed and sway, and every third
+// one a little banana.
 function heartsHtml() {
-  return Array.from({ length: 28 }, (_, i) => {
+  return Array.from({ length: 36 }, (_, i) => {
     const left = (i * 37) % 100;
     const size = 12 + ((i * 7) % 22);
     const dur = 9 + ((i * 5) % 9);
     const delay = -((i * 13) % 17);
-    return `<i style="left:${left}%;font-size:${size}px;animation-duration:${dur}s;animation-delay:${delay}s">&#9829;</i>`;
+    const banana = i % 3 === 1;
+    return `<i${banana ? ' class="banana"' : ""} style="left:${left}%;font-size:${banana ? size + 12 : size}px;animation-duration:${dur}s;animation-delay:${delay}s">${banana ? "&#127820;" : "&#9829;"}</i>`;
   }).join("");
 }
 
