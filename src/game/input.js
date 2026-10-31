@@ -10,7 +10,7 @@ import {
 } from "./overlays.js";
 import { closeSettings, openSettings } from "./settingsui.js";
 import { closeHelp, openHelp } from "./help.js";
-import { closeLove } from "./love.js";
+import { closeLove, stepLove } from "./love.js";
 import { game, startGame } from "./game.js";
 import { toggleSound } from "./audio.js";
 
@@ -28,9 +28,15 @@ export const GAME_KEYS = [
 addEventListener("keydown", (e) => {
   if (e.target instanceof HTMLInputElement) return;
   if (GAME_KEYS.includes(e.code)) e.preventDefault();
-  // The letter swallows every key but Escape, so nothing starts a game behind it.
+  // The letter swallows every key, so nothing starts a game behind it. Arrows, Space and Enter
+  // turn the pages; Escape closes it.
   if (!loveEl.hidden) {
     if (e.code === "Escape") closeLove();
+    else if (e.code === "ArrowLeft") stepLove(-1);
+    else if (["ArrowRight", "Space", "Enter"].includes(e.code)) {
+      e.preventDefault();
+      stepLove(1);
+    }
     return;
   }
   if (!howtoEl.hidden) {
