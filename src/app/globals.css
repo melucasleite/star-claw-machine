@@ -116,64 +116,180 @@ body.reeling .carriage {
 }
 
 /* ---------- scoreboard ---------- */
+/* Minimal and loud: a big chunky score, the hearts, two little chips and a streak badge. */
 #scoreboard {
   position: fixed;
-  top: 16px;
-  left: 16px;
+  top: 18px;
+  left: 18px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  align-items: flex-start;
+  gap: 10px;
   text-shadow: 2px 2px 0 var(--wood-dark);
+  animation: hud-in 0.5s cubic-bezier(0.2, 0.9, 0.3, 1.2);
 }
-#bag {
-  pointer-events: none;
-  box-sizing: border-box;
-  width: 196px;
-  min-height: 64px;
+@keyframes hud-in {
+  from {
+    opacity: 0;
+    transform: translateY(-14px);
+  }
+}
+.score-box {
+  position: relative;
+}
+#scoreboard .label {
+  font-size: 9px;
+  letter-spacing: 0.4em;
+  opacity: 0.75;
+}
+#score {
   margin-top: 4px;
-  padding: 6px 8px 10px;
-  color: var(--wood-dark);
+  font-size: 46px;
+  line-height: 1;
+  color: var(--gold);
+  /* Extruded like the logo. */
+  text-shadow:
+    0 2px 0 var(--mustard),
+    0 4px 0 var(--wood-dark),
+    0 6px 0 var(--wood-dark),
+    0 10px 14px rgba(0, 0, 0, 0.45);
+  transform-origin: left 70%;
+  transition: text-shadow 0.2s ease;
+}
+#score.ticking {
+  text-shadow:
+    0 2px 0 var(--mustard),
+    0 4px 0 var(--wood-dark),
+    0 6px 0 var(--wood-dark),
+    0 0 22px rgba(255, 215, 94, 0.75);
+}
+#score.bump {
+  animation: score-bump 0.5s cubic-bezier(0.3, 1.6, 0.5, 1);
+}
+@keyframes score-bump {
+  30% {
+    transform: scale(1.22) rotate(-3deg);
+  }
+  60% {
+    transform: scale(0.96) rotate(1deg);
+  }
+}
+.score-float {
+  position: absolute;
+  top: 10px;
+  left: 100%;
+  margin-left: 6px;
+  font-size: 18px;
+  color: #fff6b0;
+  white-space: nowrap;
+  pointer-events: none;
+  animation: score-float 1.1s ease-out forwards;
+}
+@keyframes score-float {
+  from {
+    opacity: 0;
+    transform: translate(-30px, 20px) scale(0.6);
+  }
+  20% {
+    opacity: 1;
+    transform: translate(0, 0) scale(1.15);
+  }
+  to {
+    opacity: 0;
+    transform: translate(10px, -34px) scale(0.9);
+  }
+}
+.chips {
+  display: flex;
+  gap: 8px;
+}
+.chip {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  padding: 6px 12px;
+  font-size: 9px;
   text-shadow: none;
-  background:
-    repeating-linear-gradient(
-      45deg,
-      rgba(0, 0, 0, 0.05) 0 3px,
-      transparent 3px 6px
-    ),
-    var(--bag);
-  border: 3px solid var(--wood-dark);
-  border-top-width: 6px;
-  border-radius: 8px 8px 28px 28px;
-  transform-origin: top center;
+  color: var(--ink);
+  background: var(--slot-strong);
+  border: 2px solid var(--wood-dark);
+  border-radius: 999px;
 }
-#bag.bump {
-  animation: bag-bump 0.45s ease-out;
+.chip b {
+  font-weight: normal;
+  font-size: 15px;
+  color: var(--gold);
 }
-@keyframes bag-bump {
+.chip.ghost {
+  background: transparent;
+  border-color: transparent;
+  opacity: 0.75;
+}
+.chip.ghost b {
+  font-size: 10px;
+  color: var(--ink);
+}
+#left.bump {
+  animation: chip-bump 0.5s cubic-bezier(0.3, 1.6, 0.5, 1);
+}
+@keyframes chip-bump {
   35% {
-    transform: scale(1.06, 0.94);
-  }
-  70% {
-    transform: scale(0.98, 1.03);
+    transform: scale(1.25);
+    border-color: var(--gold);
   }
 }
-.bag-label {
-  display: flex;
-  justify-content: space-between;
-  font-size: 8px;
-  margin-bottom: 4px;
+/* The streak badge: hidden until a streak starts, then on fire. */
+#streak {
+  padding: 6px 12px;
+  font-size: 9px;
+  text-shadow: 1px 1px 0 rgba(0, 0, 0, 0.4);
+  color: #fff;
+  background: linear-gradient(90deg, #ff7a1a, #ff3d6e, #ffb21a, #ff7a1a);
+  background-size: 300% 100%;
+  border: 2px solid var(--wood-dark);
+  border-radius: 999px;
+  transform: scale(0);
+  transform-origin: left center;
+  transition: transform 0.3s cubic-bezier(0.3, 1.6, 0.5, 1);
 }
-#bag-items {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 1px;
-  min-height: 26px;
+#streak:empty {
+  padding: 0;
+  border: 0;
 }
-#bag-items:empty::after {
-  content: "empty... for now";
-  font-size: 7px;
-  opacity: 0.6;
-  align-self: center;
+#streak.on {
+  transform: scale(1);
+  animation: streak-flow 1.6s linear infinite;
+}
+#streak.fire {
+  animation:
+    streak-flow 0.8s linear infinite,
+    streak-wiggle 0.5s ease-in-out infinite;
+  box-shadow: 0 0 16px rgba(255, 90, 40, 0.7);
+}
+#streak b {
+  font-weight: normal;
+  font-size: 13px;
+}
+@keyframes streak-flow {
+  to {
+    background-position: 300% 0;
+  }
+}
+@keyframes streak-wiggle {
+  25% {
+    transform: rotate(-3deg) scale(1.05);
+  }
+  75% {
+    transform: rotate(3deg) scale(1.05);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  #streak.on,
+  #streak.fire,
+  #score.bump,
+  .score-float {
+    animation: none;
+  }
 }
 .prize-icon {
   width: 26px;
@@ -211,34 +327,33 @@ body.reeling .carriage {
 body[data-mode="title"] #scoreboard {
   visibility: hidden;
 }
-#scoreboard .label {
-  font-size: 10px;
-  opacity: 0.8;
-}
-#score {
-  font-size: 30px;
-  color: var(--gold);
-  transform-origin: left center;
-  transition: transform 0.25s ease-out;
-}
-#score.bump {
-  transform: scale(1.12);
-  transition: none;
-}
-#scoreboard .meta {
-  display: flex;
-  gap: 14px;
-  font-size: 9px;
-  opacity: 0.85;
-}
-#streak {
-  font-size: 10px;
-  color: var(--gold);
-  min-height: 1em;
-}
 #hearts {
   display: flex;
-  gap: 5px;
+  gap: 6px;
+}
+#hearts .heart,
+#hearts .heart svg {
+  width: 28px;
+  height: 24px;
+}
+#hearts .heart {
+  filter: drop-shadow(0 3px 0 var(--wood-dark));
+}
+#hearts.low .heart {
+  animation: heart-race 0.6s ease-in-out infinite;
+}
+@keyframes heart-race {
+  0%,
+  45%,
+  100% {
+    transform: scale(1);
+  }
+  15% {
+    transform: scale(1.25);
+  }
+  30% {
+    transform: scale(1.08);
+  }
 }
 #hearts.hurt {
   animation: hurt 0.6s ease-out;
@@ -673,26 +788,37 @@ form.name .row {
     left: calc(12px + env(safe-area-inset-left));
     gap: 6px;
   }
+  #scoreboard {
+    gap: 7px;
+  }
   #score {
-    font-size: 20px;
+    font-size: 26px;
   }
-  #bag {
-    width: 132px;
-    min-height: 0;
-    padding: 4px 6px 7px;
-    border-top-width: 4px;
-    border-radius: 6px 6px 18px 18px;
+  .score-float {
+    top: 4px;
+    font-size: 13px;
   }
-  #bag-items {
-    min-height: 19px;
+  #hearts {
+    gap: 4px;
   }
-  .bag-label {
+  #hearts .heart,
+  #hearts .heart svg {
+    width: 17px;
+    height: 15px;
+  }
+  .chip {
+    padding: 4px 9px;
     font-size: 7px;
-    margin-bottom: 2px;
   }
-  #bag .prize-icon {
-    width: 19px;
-    height: 19px;
+  .chip b {
+    font-size: 11px;
+  }
+  #streak {
+    padding: 4px 9px;
+    font-size: 7px;
+  }
+  #streak b {
+    font-size: 10px;
   }
   .heart,
   .heart svg {
@@ -1468,7 +1594,6 @@ body[data-theme="retro"] #quit,
 body[data-theme="retro"] #sound button,
 body[data-theme="retro"] .switch,
 body[data-theme="retro"] .switch .knob,
-body[data-theme="retro"] #bag,
 body[data-theme="retro"] .carriage,
 body[data-theme="retro"] .bezel,
 body[data-theme="retro"] .name input,
@@ -1585,10 +1710,6 @@ body[data-theme="real"] .bezel {
 body[data-theme="carousel"] .panel > .actions:last-child {
   background: inherit;
 }
-body[data-theme="real"] #bag {
-  border: 1px solid rgba(255, 255, 255, 0.25);
-  border-top-width: 3px;
-}
 
 body[data-theme="halloween"] {
   --wood: #1c1222;
@@ -1625,14 +1746,6 @@ body[data-theme="halloween"] .panel {
     0 0 0 8px #000,
     0 0 40px rgba(255, 122, 26, 0.35),
     0 18px 40px rgba(0, 0, 0, 0.6);
-}
-/* The prize bag is a trick-or-treat sack: orange, with a black band round the bottom. */
-body[data-theme="halloween"] #bag {
-  color: #000;
-  background:
-    linear-gradient(to top, transparent 0 8px, #000 8px 14px, transparent 14px),
-    var(--bag);
-  border-color: #000;
 }
 
 /* 8-bit: a CRT over everything, scanlines with a faint flicker. */

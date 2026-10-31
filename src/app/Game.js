@@ -13,12 +13,14 @@ export default function Game() {
     <>
       <div id="stage"></div>
       <div id="scoreboard">
-        <div className="label">SCORE</div>
-        <div id="score">0</div>
+        <div className="score-box">
+          <div className="label">SCORE</div>
+          <div id="score">0</div>
+        </div>
         <div id="hearts"></div>
-        <div className="meta">
-          <span id="best">BEST 0</span>
-          <span id="left"></span>
+        <div className="chips">
+          <span id="left" className="chip"></span>
+          <span id="best" className="chip ghost"></span>
         </div>
         <div id="streak"></div>
         <div id="assist-tag" hidden>
@@ -27,12 +29,6 @@ export default function Game() {
         <button id="quit" type="button">
           QUIT &amp; SAVE
         </button>
-        <div id="bag" aria-label="Prize bag">
-          <div className="bag-label">
-            PRIZE BAG <span id="bag-count"></span>
-          </div>
-          <div id="bag-items"></div>
-        </div>
       </div>
       <div id="hud">
         <div className="carriage">

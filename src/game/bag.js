@@ -1,4 +1,4 @@
-import { bagCountEl, bagEl, bagItemsEl } from "./dom.js";
+import { leftEl } from "./dom.js";
 import * as THREE from "three";
 import { CHUTE, TIERS } from "./config.js";
 import { currentLevel } from "./levels.js";
@@ -59,49 +59,39 @@ export function collect(plush) {
 export const collectionHtml = (level = currentLevel()) =>
   `<p class="collection">COLLECTION ${collectedIn(level)}/${collectionSize(level)}</p>`;
 
-export function renderBag() {
-  bagItemsEl.innerHTML = game.bag.map(prizeImg).join("");
-  bagCountEl.textContent = game.bag.length ? `x${game.bag.length}` : "";
-}
-
-// The won plushie pops out of the chute and arcs into the bag.
+// The won plushie pops out of the chute and arcs into the LEFT counter, which ticks down.
 export function flyToBag(plush, prize) {
   const v = new THREE.Vector3(CHUTE.x, 0.5, CHUTE.z).project(camera);
   const x0 = ((v.x + 1) / 2) * innerWidth;
   const y0 = ((1 - v.y) / 2) * innerHeight;
-  bagItemsEl.insertAdjacentHTML("beforeend", prizeImg(prize));
-  const slot = bagItemsEl.lastElementChild;
-  slot.style.visibility = "hidden";
-  bagCountEl.textContent = `x${game.bag.length}`;
-  const r = slot.getBoundingClientRect();
-  const x1 = r.left + r.width / 2;
+  const r = leftEl.getBoundingClientRect();
+  const x1 = r.left + 18;
   const y1 = r.top + r.height / 2;
   const fly = document.createElement("img");
   fly.className = "prize-flyer";
-  fly.src = slot.src;
+  fly.src = plushIconUrl(prize.tier, prize.animal);
   document.body.appendChild(fly);
-  const k = r.width / 44;
   const peak = Math.min(y0, y1) - 120;
   fly
     .animate(
       [
         { transform: `translate(${x0}px, ${y0}px) scale(0.4)` },
         {
-          transform: `translate(${(x0 + x1) / 2}px, ${peak}px) scale(1.5) rotate(-12deg)`,
+          transform: `translate(${(x0 + x1) / 2}px, ${peak}px) scale(1.6) rotate(-14deg)`,
           offset: 0.45,
         },
         {
-          transform: `translate(${x1}px, ${y1}px) scale(${k}) rotate(0deg)`,
+          transform: `translate(${x1}px, ${y1}px) scale(0.45) rotate(0deg)`,
+          opacity: 0.4,
         },
       ],
-      { duration: 900, easing: "cubic-bezier(.3,.7,.4,1)" },
+      { duration: 850, easing: "cubic-bezier(.3,.7,.4,1)" },
     )
     .finished.then(() => {
       fly.remove();
-      slot.style.visibility = "";
       sfx.plop();
-      bagEl.classList.remove("bump");
-      void bagEl.offsetWidth;
-      bagEl.classList.add("bump");
+      leftEl.classList.remove("bump");
+      void leftEl.offsetWidth;
+      leftEl.classList.add("bump");
     });
 }

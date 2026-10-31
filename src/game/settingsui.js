@@ -28,7 +28,6 @@ import { restock } from "./plushies.js";
 import { LOVE_NAME, openLove } from "./love.js";
 import { cleanName } from "./rules.js";
 import { game, startGame } from "./game.js";
-import { renderBag } from "./bag.js";
 import { renderHud } from "./hud.js";
 import { sfx } from "./audio.js";
 
@@ -333,8 +332,6 @@ export function closeSettings() {
 function pickTheme(id) {
   if (id === settings.theme) return;
   applyTheme(id);
-  // Prize icons are drawn per theme.
-  renderBag();
   render();
   sfx.coinIn();
 }

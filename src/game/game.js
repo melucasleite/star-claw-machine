@@ -9,6 +9,7 @@ import { fetchWorld, loadScores, makesBoard, makesWorld } from "./scores.js";
 import { dragTarget, keys, pressed } from "./input.js";
 import {
   bumpScore,
+  floatScore,
   fmt,
   heartSvg,
   popup,
@@ -19,7 +20,7 @@ import {
 import { burst, popupPoint, rain } from "./confetti.js";
 import { renderOver, setMode, submitName } from "./overlays.js";
 import { closeSettings } from "./settingsui.js";
-import { collect, flyToBag, renderBag } from "./bag.js";
+import { collect, flyToBag } from "./bag.js";
 import { showReel, startReel, stepReel } from "./reel.js";
 import { setMusicLevel, sfx } from "./audio.js";
 import { settings } from "./settings.js";
@@ -98,7 +99,6 @@ export function startGame() {
     unlocked: null,
     bag: [],
   });
-  renderBag();
   resetScore();
   claw.closing = false;
   drawMarquee(marqueeFor(currentLevel()));
@@ -159,6 +159,7 @@ export function awardPrize(plush) {
   if (prize.fresh) sfx.fresh();
   if (healed) sfx.heal();
   popup(`+${fmt(pts)}`, tags.join(" · "), plush.tier.ui ?? plush.tier.css);
+  floatScore(`+${fmt(pts)}`);
   const [px, py] = popupPoint();
   burst(px, py, 10 + rank * 8, 0.8);
   bumpScore();
