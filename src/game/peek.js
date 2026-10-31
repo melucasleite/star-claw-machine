@@ -17,7 +17,8 @@ const goal = new THREE.Vector3();
 
 export function setView(view) {
   peek.view = VIEWS[view] ? view : "iso";
-  document.body.dataset.peek = peek.view;
+  // On the body as data-view, not data-peek: [data-peek] is what marks the two buttons.
+  document.body.dataset.view = peek.view;
 }
 export const togglePeek = (view) => setView(peek.view === view ? "iso" : view);
 

@@ -126,7 +126,8 @@ export function endDrag(e) {
 }
 addEventListener("pointerup", endDrag);
 addEventListener("click", (e) => {
-  const b = e.target instanceof Element && e.target.closest("[data-peek]");
+  const b =
+    e.target instanceof Element && e.target.closest("button[data-peek]");
   if (b && game.mode === "play") togglePeek(b.dataset.peek);
 });
 addEventListener("pointercancel", endDrag);
