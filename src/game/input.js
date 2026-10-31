@@ -1,4 +1,4 @@
-import { howtoEl, settingsEl } from "./dom.js";
+import { howtoEl, loveEl, settingsEl } from "./dom.js";
 import { CLAW } from "./config.js";
 import { CAM_OFFSET, camera } from "./scene.js";
 import { hub } from "./claw.js";
@@ -10,6 +10,7 @@ import {
 } from "./overlays.js";
 import { closeSettings, openSettings } from "./settingsui.js";
 import { closeHelp, openHelp } from "./help.js";
+import { closeLove } from "./love.js";
 import { game, startGame } from "./game.js";
 import { toggleSound } from "./audio.js";
 
@@ -27,6 +28,11 @@ export const GAME_KEYS = [
 addEventListener("keydown", (e) => {
   if (e.target instanceof HTMLInputElement) return;
   if (GAME_KEYS.includes(e.code)) e.preventDefault();
+  // The letter swallows every key but Escape, so nothing starts a game behind it.
+  if (!loveEl.hidden) {
+    if (e.code === "Escape") closeLove();
+    return;
+  }
   if (!howtoEl.hidden) {
     if (["Escape", "Enter", "Space", "KeyH"].includes(e.code)) closeHelp();
     return;

@@ -1333,3 +1333,221 @@ body[data-theme="retro"] .popup {
     display: none;
   }
 }
+
+/* ---------- for Mikaela ---------- */
+/* A letter on cream paper, the same in every theme, with hearts drifting up behind it. */
+#love {
+  /* Above the confetti (30) and the 8-bit theme's scanlines (40). */
+  z-index: 50;
+  background: radial-gradient(
+    ellipse at 50% 40%,
+    rgba(120, 40, 70, 0.55),
+    rgba(30, 8, 20, 0.88)
+  );
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  animation: love-fade 0.8s ease-out;
+}
+@keyframes love-fade {
+  from {
+    opacity: 0;
+  }
+}
+.love-hearts {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+.love-hearts i {
+  position: absolute;
+  bottom: -40px;
+  font-style: normal;
+  color: rgba(255, 175, 195, 0.55);
+  text-shadow: 0 0 12px rgba(255, 120, 160, 0.6);
+  animation: love-rise linear infinite;
+}
+@keyframes love-rise {
+  0% {
+    transform: translate(0, 0) rotate(-8deg);
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  50% {
+    transform: translate(24px, -55vh) rotate(8deg);
+  }
+  100% {
+    transform: translate(-12px, -115vh) rotate(-6deg);
+    opacity: 0;
+  }
+}
+.love-card {
+  position: relative;
+  box-sizing: border-box;
+  width: min(580px, 100%);
+  max-height: calc(100dvh - 40px);
+  overflow: auto;
+  overscroll-behavior: contain;
+  padding: 46px 44px 34px;
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-size: 19px;
+  font-weight: 500;
+  font-size-adjust: none;
+  line-height: 1.65;
+  text-align: left;
+  color: #4a2a33;
+  background:
+    radial-gradient(ellipse at top, rgba(255, 255, 255, 0.9), transparent 60%),
+    linear-gradient(#fffaf2, #fbefe6);
+  border-radius: 18px;
+  box-shadow:
+    inset 0 0 0 10px #fffaf2,
+    inset 0 0 0 11px #e6cba3,
+    0 0 0 1px rgba(255, 255, 255, 0.25),
+    0 0 60px rgba(255, 140, 180, 0.35),
+    0 30px 80px rgba(0, 0, 0, 0.5);
+  animation: love-in 1s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+@keyframes love-in {
+  from {
+    opacity: 0;
+    transform: translateY(24px) scale(0.95);
+    filter: blur(6px);
+  }
+}
+.love-card p {
+  margin: 0 0 1em;
+}
+.love-card .eyebrow {
+  margin: 0;
+  font-size: 13px;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  text-align: center;
+  color: #b07a86;
+}
+.love-card h1 {
+  margin: 4px 0 0;
+  font-family: "Great Vibes", "Cormorant Garamond", cursive;
+  font-size: 56px;
+  font-weight: normal;
+  line-height: 1.2;
+  text-align: center;
+  color: #b8455f;
+  text-shadow: none;
+}
+.love-card .flourish {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 10px auto 26px;
+  max-width: 260px;
+  color: #d4a373;
+}
+.love-card .flourish span {
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, #d4a373, transparent);
+}
+.love-card .lead::first-letter {
+  float: left;
+  margin: 6px 8px 0 0;
+  font-family: "Great Vibes", cursive;
+  font-size: 3.4em;
+  line-height: 0.8;
+  color: #b8455f;
+}
+.love-card em {
+  color: #8c2f45;
+}
+.love-card .vow {
+  margin: 1.5em 0;
+  padding: 18px 22px;
+  font-size: 22px;
+  font-style: italic;
+  line-height: 1.5;
+  text-align: center;
+  color: #8c2f45;
+  background: rgba(184, 69, 95, 0.05);
+  border-top: 1px solid #e6cba3;
+  border-bottom: 1px solid #e6cba3;
+}
+.love-card .vow .n {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 13px;
+  font-style: normal;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #b07a86;
+}
+.love-card .close {
+  margin: 0.8em 0 0;
+  font-family: "Great Vibes", cursive;
+  font-size: 48px;
+  line-height: 1.2;
+  text-align: center;
+  color: #b8455f;
+}
+.love-card .sign {
+  margin: 0 0 0.6em;
+  font-style: italic;
+  text-align: center;
+  color: #8a6470;
+}
+.love-card .actions {
+  display: flex;
+  justify-content: center;
+  margin-top: 8px;
+}
+.love-btn {
+  width: 58px;
+  height: 58px;
+  font-size: 26px;
+  line-height: 1;
+  color: #fff;
+  cursor: pointer;
+  background: radial-gradient(circle at 35% 30%, #f28aa4, #b8455f);
+  border: none;
+  border-radius: 50%;
+  box-shadow: 0 8px 24px rgba(184, 69, 95, 0.45);
+  animation: love-beat 1.4s ease-in-out infinite;
+}
+.love-btn:focus-visible {
+  outline: 2px solid #b8455f;
+  outline-offset: 4px;
+}
+@keyframes love-beat {
+  0%,
+  40%,
+  100% {
+    transform: scale(1);
+  }
+  20% {
+    transform: scale(1.12);
+  }
+}
+@media (max-width: 520px) {
+  .love-card {
+    padding: 34px 24px 26px;
+    font-size: 17px;
+  }
+  .love-card h1 {
+    font-size: 44px;
+  }
+  .love-card .vow {
+    padding: 14px 12px;
+    font-size: 19px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .love-hearts i,
+  .love-btn {
+    animation: none;
+  }
+  .love-hearts {
+    display: none;
+  }
+}

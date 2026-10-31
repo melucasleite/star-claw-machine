@@ -119,6 +119,17 @@ export default function Game() {
           </div>
         </div>
       </div>
+      {/* For Mikaela: opens when she clears the machine and signs it with her name. */}
+      <div id="love" className="overlay" hidden>
+        <div className="love-hearts" aria-hidden="true"></div>
+        <div
+          className="love-card"
+          role="dialog"
+          aria-modal="true"
+          aria-label="I made this for you"
+          id="love-panel"
+        ></div>
+      </div>
       <canvas id="fx"></canvas>
       {/* The 4K theme's camcorder viewfinder. Decoration only. */}
       <div id="viewfinder" hidden aria-hidden="true">

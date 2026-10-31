@@ -19,6 +19,7 @@ import "./laser.js";
 import "./photo.js";
 import "./halloween.js";
 import "./settingsui.js";
+import "./love.js";
 import { applyTheme } from "./settings.js";
 import { resize } from "./scene.js";
 import { drawMarquee } from "./cabinet.js";

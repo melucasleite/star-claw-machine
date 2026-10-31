@@ -27,6 +27,7 @@ import { restock } from "./plushies.js";
 import { drawMarquee } from "./cabinet.js";
 import { applyTheme } from "./settings.js";
 import { sfx } from "./audio.js";
+import { LOVE_NAME, openLove } from "./love.js";
 
 // ---------- overlays ----------
 
@@ -146,7 +147,8 @@ export function renderTitle() {
 
 export function renderOver() {
   const r = game.result;
-  const entering = r.highscore && !r.saved;
+  // Clearing the machine always lets you sign it, high score or not.
+  const entering = (r.highscore || r.cleared) && !r.saved;
   const head = r.cleared
     ? `<h1 class="win">MACHINE CLEARED!</h1><p>Every plushie found a home. Clear bonus +${fmt(r.bonus)}</p>${r.unlocked ? `<p class="hey">LEVEL ${r.unlocked.id} UNLOCKED: ${r.unlocked.name}</p>` : ""}`
     : r.quit
@@ -179,7 +181,7 @@ export function renderOver() {
 
 export function submitName(fallback) {
   const r = game.result;
-  if (!r?.highscore || r.saved) return;
+  if (!r || (!r.highscore && !r.cleared) || r.saved) return;
   const input = panelEl.querySelector("input");
   const typed = cleanName(input?.value ?? "");
   const name = typed || fallback || "";
@@ -189,6 +191,8 @@ export function submitName(fallback) {
   if (typed && makesWorld(r.score)) postWorld(name, r.score, r.level);
   if (typed) sfx.saved();
   r.saved = true;
+  // Names are upper-cased and trimmed already; a surname or initial after it still counts.
+  r.love = r.cleared && typed.startsWith(LOVE_NAME);
 }
 
 panelEl.addEventListener("submit", (e) => {
@@ -196,6 +200,7 @@ panelEl.addEventListener("submit", (e) => {
   submitName();
   renderOver();
   renderHud();
+  if (game.result?.love) setTimeout(openLove, 600);
 });
 panelEl.addEventListener("click", (e) => {
   if (e.target.closest("[data-action=play]")) startGame();

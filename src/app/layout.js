@@ -79,7 +79,7 @@ export default function RootLayout({ children }) {
         />
         {/* Canvases draw with these family names, so they load as plain stylesheets, not next/font. */}
         <link
-          href="https://fonts.googleapis.com/css2?family=Creepster&family=Fredoka:wght@400;600&family=Inter:wght@400;600;700&family=Press+Start+2P&display=swap"
+          href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400;1,500&family=Creepster&family=Fredoka:wght@400;600&family=Inter:wght@400;600;700&family=Great+Vibes&family=Press+Start+2P&display=swap"
           rel="stylesheet"
         />
         <script
