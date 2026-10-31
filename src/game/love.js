@@ -1,4 +1,4 @@
-import { loveEl, lovePanel } from "./dom.js";
+import { TOUCH, loveEl, lovePanel } from "./dom.js";
 import { ringAgain, startSong, stopSong } from "./lovesong.js";
 import { game } from "./game.js";
 import { hold, release } from "./pause.js";
@@ -475,7 +475,7 @@ Object.assign(DOODLES, SCENES);
 const SLIDES = [
   [
     "bananaphone",
-    `<p class="big">A prize for the one who cleared the whole machine.</p><p class="hint">Tap the arrow, my love &rarr;</p>`,
+    `<p class="big">A prize for the one who cleared the whole machine.</p><p class="hint">${TOUCH ? "Swipe to turn the page, my love" : "Tap the arrow, my love &rarr;"}</p>`,
   ],
   [
     "wedding",
@@ -545,7 +545,19 @@ function render() {
       <div class="dots">${dots}</div>
       <button type="button" class="love-arrow" data-love-step="1" aria-label="Next">&rsaquo;</button>
       <button type="button" class="love-btn" data-close-love aria-label="Close">&#9829;</button>
-    </nav>`;
+    </nav>
+    <div class="swipe-hint" aria-hidden="true">
+      <svg viewBox="0 0 48 48"><path d="M19 30V13a3 3 0 0 1 6 0v10l7 1.2a4 4 0 0 1 3.2 4.8L33 40H22l-7-7a2.6 2.6 0 0 1 3.6-3.6z"/><path class="trail" d="M8 8h22M8 8l4-3M8 8l4 3"/></svg>
+      <span>swipe</span>
+    </div>`;
+}
+
+// Phones get no arrows or dots: the first slide shows the swipe instead, nudging itself sideways
+// while a finger swipes across, until she turns a page.
+let learned = false;
+function teachSwipe() {
+  if (!TOUCH || learned) return;
+  lovePanel.classList.add("teach");
 }
 
 function go(i) {
@@ -563,7 +575,11 @@ function go(i) {
   // The banana phone rings once more after "I love you".
   if (at === LAST) ringAgain();
 }
-export const stepLove = (d) => go(at + d);
+export function stepLove(d) {
+  learned = true;
+  lovePanel.classList.remove("teach");
+  go(at + d);
+}
 
 // Hearts drifting up behind the card, each with its own size, speed and sway, and every third
 // one a little banana.
@@ -588,6 +604,7 @@ export function openLove() {
   // Our song.
   startSong();
   go(0);
+  teachSwipe();
   lovePanel
     .querySelector("[data-love-step='1']")
     .focus({ preventScroll: true });
@@ -609,7 +626,7 @@ addEventListener("click", (e) => {
   if (dot) go(Number(dot.dataset.loveGo));
 });
 
-// Swipe between slides on a phone.
+// Swipe between slides; on a phone a tap turns the page too (the left third goes back).
 let swipe = null;
 lovePanel.addEventListener("pointerdown", (e) => {
   swipe = { x: e.clientX, y: e.clientY };
@@ -620,5 +637,10 @@ lovePanel.addEventListener("pointerup", (e) => {
   const dy = e.clientY - swipe.y;
   swipe = null;
   if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) * 1.5)
-    stepLove(dx < 0 ? 1 : -1);
+    return stepLove(dx < 0 ? 1 : -1);
+  const tap = Math.abs(dx) < 10 && Math.abs(dy) < 10;
+  if (!tap || e.pointerType !== "touch" || e.target.closest("button")) return;
+  const r = lovePanel.getBoundingClientRect();
+  if (e.clientX < r.left + r.width / 3) stepLove(-1);
+  else if (at < LAST) stepLove(1);
 });

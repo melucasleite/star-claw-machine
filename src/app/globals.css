@@ -2129,3 +2129,155 @@ body[data-theme="retro"] .popup {
     display: none;
   }
 }
+
+/* Phones: no arrows or dots, just swiping (and tapping). The heart still closes the last slide. */
+.swipe-hint {
+  display: none;
+}
+@media (pointer: coarse) {
+  .love-card .love-nav {
+    display: none;
+  }
+  .love-card .love-nav.end {
+    display: flex;
+  }
+  .love-card .love-nav .love-arrow,
+  .love-card .love-nav .dots {
+    display: none;
+  }
+  /* Each slide is as tall as its own words here, so a short one keeps its heart in reach. */
+  .love-card .slides {
+    display: block;
+  }
+  .love-card .slide {
+    display: none;
+    transition: none;
+  }
+  .love-card .slide.on {
+    display: flex;
+    animation: slide-in 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+  /* The lesson: the first slide nudges sideways while a finger swipes across, three times. */
+  .teach .swipe-hint {
+    position: sticky;
+    bottom: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    margin-top: 10px;
+    font-size: 15px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: #b8455f;
+    pointer-events: none;
+    animation: hint-in 0.6s ease 1.6s both;
+  }
+  .teach .swipe-hint svg {
+    width: 44px;
+    height: 44px;
+    fill: #fff;
+    stroke: #b8455f;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    animation: hint-swipe 1.6s ease-in-out 2s 3;
+  }
+  .teach .swipe-hint .trail {
+    fill: none;
+  }
+  .teach .slide.on {
+    animation: hint-nudge 1.6s ease-in-out 2s 3;
+  }
+}
+@keyframes slide-in {
+  from {
+    opacity: 0;
+    transform: translateX(30px);
+  }
+}
+/* The bubble's closing quote mark hangs below it; leave room so it doesn't add a scroll. */
+@media (pointer: coarse) {
+  .love-card .slides {
+    padding-bottom: 12px;
+  }
+}
+/* Shorter phones: everything a size down so most slides fit without scrolling. */
+@media (pointer: coarse) and (max-height: 740px) {
+  .love-card {
+    padding-top: 24px;
+    font-size: 18px;
+  }
+  .love-card .doodle {
+    width: 110px;
+    height: 82px;
+  }
+  .love-card .doodle.scene {
+    width: 230px;
+    height: 144px;
+  }
+  .love-card .vow {
+    font-size: 20px;
+  }
+  .love-card h1 {
+    font-size: 36px;
+  }
+}
+@keyframes hint-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+@keyframes hint-swipe {
+  0%,
+  100% {
+    transform: translateX(26px);
+    opacity: 0.4;
+  }
+  20% {
+    transform: translateX(26px);
+    opacity: 1;
+  }
+  60% {
+    transform: translateX(-26px);
+    opacity: 1;
+  }
+}
+@keyframes hint-nudge {
+  0%,
+  20%,
+  100% {
+    transform: none;
+  }
+  55% {
+    transform: translateX(-26px) rotate(-1deg);
+  }
+}
+
+/* Very short phones (iPhone SE): one more size down. */
+@media (pointer: coarse) and (max-height: 680px) {
+  .love-card {
+    padding: 18px 18px 16px;
+    font-size: 17px;
+  }
+  .love-card .slide {
+    gap: 10px;
+  }
+  .love-card .bubble {
+    padding: 14px 16px;
+  }
+  .love-card .doodle.scene {
+    width: 196px;
+    height: 122px;
+  }
+  .love-card h1 {
+    font-size: 32px;
+  }
+  .love-card .big {
+    font-size: 21px;
+  }
+  .love-card .pull {
+    font-size: 28px;
+  }
+}
