@@ -81,6 +81,27 @@ export function audioOn() {
 for (const ev of ["pointerdown", "pointerup", "keydown", "touchend"])
   addEventListener(ev, audioOn, { capture: true });
 
+// The "playback" session above also lets iPhones keep playing in the background, so leaving the
+// page (app switcher, home screen, lock, another tab) suspends everything and lets the session go;
+// coming back picks up where it left off (if iOS wants a tap first, the next touch resumes it).
+const setSession = (type) => {
+  try {
+    if (navigator.audioSession) navigator.audioSession.type = type;
+  } catch {}
+};
+function followVisibility() {
+  if (!ac) return;
+  if (document.hidden) {
+    ac.suspend();
+    setSession("auto");
+  } else {
+    setSession("playback");
+    ac.resume();
+  }
+}
+document.addEventListener("visibilitychange", followVisibility);
+addEventListener("pagehide", () => ac?.suspend());
+
 export function applySound() {
   if (!ac) return;
   const now = ac.currentTime;
