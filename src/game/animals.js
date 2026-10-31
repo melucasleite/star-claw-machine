@@ -34,35 +34,65 @@ export const ANIMALS = [
     ],
   },
   {
+    // Chibi proportions: a big round head on a small body, big low-set eyes with a shine, a tiny
+    // nose over a puffy muzzle, blush, whiskers and a curly tail.
     name: "Cat",
     icon: "cat",
     parts: [
-      part("fur", 0.38, 0, 0, 0),
-      part("fur", 0.34, 0, 0.6, 0, { s: [1.12, 1, 1] }),
+      part("fur", 0.34, 0, -0.05, 0, { s: [1, 0.95, 0.95] }),
+      part("cream", 0.22, 0, -0.06, 0.2, { s: [1, 1.1, 0.6] }),
+      part("fur", 0.4, 0, 0.55, 0.02, { s: [1.15, 0.95, 1] }),
       ...both((s) =>
-        part("fur", 0.13, 0.2 * s, 0.93, 0, {
+        part("fur", 0.14, 0.27 * s, 0.92, -0.02, {
           cone: true,
-          rot: [0, 0, -0.3 * s],
+          rot: [0, 0, -0.35 * s],
+          s: [1, 0.9, 0.7],
           solid: false,
         }),
       ),
       ...both((s) =>
-        part("pink", 0.07, 0.2 * s, 0.9, 0.07, {
+        part("pink", 0.08, 0.26 * s, 0.89, 0.05, {
           cone: true,
-          rot: [0, 0, -0.3 * s],
-          s: [1, 1, 0.4],
+          rot: [0, 0, -0.35 * s],
+          s: [1, 0.9, 0.35],
         }),
       ),
-      ...both((s) => part("fur", 0.1, 0.2 * s, 0.88, 0, { visible: false })),
-      ...both((s) => part("fur", 0.13, 0.36 * s, 0.1, 0.1)),
-      ...both((s) => part("fur", 0.15, 0.2 * s, -0.36, 0.14)),
-      part("fur", 0.1, 0.2, -0.25, -0.36),
-      part("fur", 0.1, 0.32, -0.05, -0.42),
-      part("fur", 0.09, 0.36, 0.18, -0.38),
-      ...both((s) => part("cream", 0.1, 0.07 * s, 0.52, 0.27, { s: FLAT })),
-      part("pink", 0.045, 0, 0.58, 0.33, { s: FLAT }),
-      ...eyes(0.13, 0.68, 0.28),
-      part("cream", 0.24, 0, -0.02, 0.22, { s: FLAT }),
+      ...both((s) =>
+        part("fur", 0.11, 0.27 * s, 0.86, -0.02, { visible: false }),
+      ),
+      // Big eyes, each with a highlight.
+      ...both((s) =>
+        part("dark", 0.075, 0.15 * s, 0.56, 0.385, { s: [1, 1.15, 0.5] }),
+      ),
+      ...both((s) => part("shine", 0.024, 0.15 * s - 0.025, 0.595, 0.423)),
+      // Muzzle, nose, blush and whiskers.
+      ...both((s) =>
+        part("cream", 0.1, 0.055 * s, 0.44, 0.37, { s: [1, 0.8, 0.6] }),
+      ),
+      part("pink", 0.04, 0, 0.5, 0.415, { s: [1.3, 0.8, 0.6] }),
+      ...both((s) =>
+        part("pink", 0.06, 0.29 * s, 0.47, 0.3, { s: [1, 0.75, 0.6] }),
+      ),
+      ...[0.1, -0.1].flatMap((tilt, i) =>
+        both((s) =>
+          part("nose", 1, 0.25 * s, 0.46 - i * 0.05, 0.36, {
+            box: true,
+            s: [0.12, 0.004, 0.004],
+            rot: [0, 0, tilt * s],
+          }),
+        ),
+      ),
+      // Paws in front, feet below, and a tail that curls up the back.
+      ...both((s) =>
+        part("fur", 0.11, 0.17 * s, -0.28, 0.24, { s: [1, 0.8, 1.1] }),
+      ),
+      ...both((s) =>
+        part("fur", 0.14, 0.2 * s, -0.33, 0.06, { s: [1, 0.8, 1.2] }),
+      ),
+      part("fur", 0.09, 0.18, -0.2, -0.3),
+      part("fur", 0.085, 0.3, -0.02, -0.34),
+      part("fur", 0.08, 0.32, 0.2, -0.3),
+      part("fur", 0.07, 0.25, 0.33, -0.25),
     ],
   },
   {

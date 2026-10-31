@@ -142,6 +142,13 @@ export const DECO = {
   dark: std(0x161616, 0.25),
   // Noses that stay black when a pet's eyes are recoloured.
   nose: std(0x161616, 0.3),
+  // The catchlight in a big plush eye.
+  shine: new THREE.MeshStandardMaterial({
+    color: 0xffffff,
+    emissive: 0xffffff,
+    emissiveIntensity: 0.6,
+    roughness: 0.2,
+  }),
   // A gladiator's helmet: brushed steel.
   helmet: std(0xc3c8cf, 0.35, 0.55),
   // Arcade screens glow a little; glass is barely there.
