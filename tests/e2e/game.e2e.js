@@ -70,6 +70,7 @@ test("aim assist asks first, restarts the run and keeps it off the boards", asyn
   await startAndAim(ctx);
   await g(() => (__claw.game.score = 1234));
   await page.click("[data-settings]");
+  await page.click("[data-settings-page=game]");
   await page.click("[data-assist]");
   assert.equal(await page.textContent("#confirm-title"), "AIM ASSIST?");
   await page.click("#confirm-no");
@@ -78,6 +79,7 @@ test("aim assist asks first, restarts the run and keeps it off the boards", asyn
     1234,
     "cancel changes nothing",
   );
+  await page.click("[data-settings-page=game]");
   await page.click("[data-assist]");
   await page.click("#confirm-yes");
   await page.waitForFunction(() => __claw.game.state === "aim", null, {
@@ -96,6 +98,7 @@ test("aim assist asks first, restarts the run and keeps it off the boards", asyn
   await startAndAim(ctx);
   await g(() => (__claw.game.score = 50));
   await page.click("[data-settings]");
+  await page.click("[data-settings-page=game]");
   await page.click("[data-assist]");
   await page.click("#confirm-yes");
   assert.equal(await g(() => __claw.game.score), 0, "turning it off restarts");

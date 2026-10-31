@@ -16,7 +16,15 @@ import { sfx } from "./audio.js";
 
 // The gear button (or O) opens it. Theme changes apply on the spot and leave the run alone;
 // aim assist asks first, because flipping it either way restarts the run.
-function render() {
+// Settings come in pages, so none of them needs scrolling: the look, the game, and cheats.
+const PAGES = [
+  ["theme", "THEME"],
+  ["game", "GAME"],
+  ["cheats", "CHEATS"],
+];
+let page = "theme";
+
+function themePage() {
   const cards = THEME_IDS.map((id) => {
     const t = THEMES[id];
     const on = settings.theme === id;
@@ -25,26 +33,38 @@ function render() {
       <b>${t.label}</b><small>${t.blurb}</small>
     </button>`;
   }).join("");
-  settingsPanel.innerHTML = `
-    <h1>SETTINGS</h1>
-    <h2>THEME</h2>
-    <div class="themes">${cards}</div>
-    <h2>AIM ASSIST</h2>
-    <button type="button" class="switch${settings.aimAssist ? " on" : ""}" data-assist role="switch" aria-checked="${settings.aimAssist}">
-      <span class="knob"></span><span>${settings.aimAssist ? "ON" : "OFF"}</span>
-    </button>
-    <p class="aside">A laser shows where the claw will land. Scores made with it on stay off the high score boards, and switching it either way restarts the game.</p>
-    ${
-      familyUnlocked()
-        ? `<h2>OUR FAMILY</h2>
+  return `<div class="themes">${cards}</div>`;
+}
+
+function gamePage() {
+  const family = familyUnlocked()
+    ? `<h2>OUR FAMILY</h2>
     <button type="button" class="switch${familyOn() ? " on" : ""}" data-family role="switch" aria-checked="${familyOn()}">
       <span class="knob"></span><span>${familyOn() ? "ON" : "OFF"}</span>
     </button>
     <p class="aside">The first machine is stocked with our pets and our fish, worth the same as the usual plushies.${game.mode === "play" ? " Takes effect on your next run." : ""}</p>`
-        : ""
-    }
-    <h2>CHEATS</h2>
-    <form class="name cheat"><div class="row"><input name="cheat" maxlength="16" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="CODE" aria-label="Cheat code" /><button class="btn" type="submit">ENTER</button></div><p class="aside" aria-live="polite">${cheatNote}</p></form>
+    : "";
+  return `<h2>AIM ASSIST</h2>
+    <button type="button" class="switch${settings.aimAssist ? " on" : ""}" data-assist role="switch" aria-checked="${settings.aimAssist}">
+      <span class="knob"></span><span>${settings.aimAssist ? "ON" : "OFF"}</span>
+    </button>
+    <p class="aside">A laser shows where the claw will land. Scores made with it on stay off the high score boards, and switching it either way restarts the game.</p>
+    ${family}`;
+}
+
+const cheatsPage = () =>
+  `<form class="name cheat"><div class="row"><input name="cheat" maxlength="16" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="CODE" aria-label="Cheat code" /><button class="btn" type="submit">ENTER</button></div><p class="aside" aria-live="polite">${cheatNote || "Know a code? Type it in."}</p></form>`;
+
+function render() {
+  const tabs = PAGES.map(
+    ([id, label]) =>
+      `<button type="button" class="tab${id === page ? " on" : ""}" data-settings-page="${id}" role="tab" aria-selected="${id === page}">${label}</button>`,
+  ).join("");
+  const body = { theme: themePage, game: gamePage, cheats: cheatsPage }[page]();
+  settingsPanel.innerHTML = `
+    <h1>SETTINGS</h1>
+    <div class="tabs" role="tablist">${tabs}</div>
+    <div class="settings-page" role="tabpanel">${body}</div>
     <div class="actions"><button class="btn big" type="button" data-close-settings>DONE</button></div>`;
 }
 
@@ -75,6 +95,7 @@ settingsPanel.addEventListener("submit", (e) => {
 export function openSettings() {
   if (!settingsEl.hidden) return;
   cheatNote = "";
+  page = "theme";
   render();
   settingsEl.hidden = false;
   settingsPanel.scrollTop = 0;
@@ -115,6 +136,14 @@ addEventListener("click", (e) => {
     return closeSettings();
   const card = t.closest("[data-theme-pick]");
   if (card) return pickTheme(card.dataset.themePick);
+  const tab = t.closest("[data-settings-page]");
+  if (tab) {
+    page = tab.dataset.settingsPage;
+    render();
+    if (page === "cheats")
+      settingsPanel.querySelector("form.cheat input").focus();
+    return;
+  }
   if (t.closest("[data-family]")) {
     setFamily(!familyOn());
     // Restock now so the machine behind the dialog shows it; mid-run it waits for the next run.
