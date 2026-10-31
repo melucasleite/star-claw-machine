@@ -1,6 +1,7 @@
 // Stages: the set dressing a level brings to the machine. The default stage is the plain cabinet
 // the themes style; a level with `stage: "arcade"` turns the inside into a tiny arcade (neon carpet,
-// walls lined with glowing cabinets and signs) and the room outside into an arcade floor.
+// walls lined with glowing cabinets and signs) and the room outside into an arcade floor, and
+// `stage: "city"` makes it a night street under a skyline.
 // Adding a stage is adding a builder to STAGES.
 import * as THREE from "three";
 import { M, lamp, scene } from "./scene.js";
@@ -409,6 +410,8 @@ function buildArcade() {
       M.mustard.color.setHex(0x33e6ff);
       M.mustard.emissive.setHex(0x33e6ff);
       M.mustard.emissiveIntensity = 0.45;
+      // The floor's edge, under the carpet.
+      M.felt.color.setHex(0x0d0b1e);
       for (const k of DRESSED) {
         M[k].map = null;
         M[k].needsUpdate = true;
@@ -435,11 +438,403 @@ function buildArcade() {
   };
 }
 
+// ----- the city -----
+
+// The machine's floor as a night street: a crossroads of asphalt with dashed yellow lines and
+// zebra crossings, sidewalk blocks in the four corners, a manhole, a few cracks, and painted
+// street-lamp pools. One canvas for the whole 8 x 8 floor, 64 px a unit.
+function paintStreet(c, w, h, fill) {
+  const u = w / 8;
+  const X = (x) => (x + 4) * u;
+  const r = rng(17);
+  // Asphalt with a little grit.
+  fill("#2a2c33");
+  c.fillRect(0, 0, w, h);
+  for (let i = 0; i < 1600; i++) {
+    fill(r() < 0.5 ? "#33363e" : "#24262c");
+    c.fillRect(r() * w, r() * h, 2, 2);
+  }
+  // Sidewalk blocks, with paving joints and a kerb.
+  const road = 1.1;
+  for (const [x0, x1] of [
+    [-4, -road],
+    [road, 4],
+  ])
+    for (const [z0, z1] of [
+      [-4, -road],
+      [road, 4],
+    ]) {
+      fill("#7d828c");
+      c.fillRect(X(x0), X(z0), (x1 - x0) * u, (z1 - z0) * u);
+      fill("#6c717b");
+      for (let t = x0; t < x1; t += 0.5)
+        c.fillRect(X(t), X(z0), 2, (z1 - z0) * u);
+      for (let t = z0; t < z1; t += 0.5)
+        c.fillRect(X(x0), X(t), (x1 - x0) * u, 2);
+      fill("#b9bdc4");
+      c.lineWidth = 5;
+      c.strokeStyle = "#b9bdc4";
+      c.strokeRect(X(x0), X(z0), (x1 - x0) * u, (z1 - z0) * u);
+    }
+  // Dashed centre lines.
+  fill("#f5c518", true);
+  for (let t = -4; t < 4; t += 0.6) {
+    if (Math.abs(t) < road + 0.6) continue;
+    c.fillRect(X(t), X(0) - 3, 0.35 * u, 6);
+    c.fillRect(X(0) - 3, X(t), 6, 0.35 * u);
+  }
+  // Zebra crossings on all four arms.
+  fill("#e9ecf0");
+  for (let k = -road + 0.15; k < road - 0.1; k += 0.3) {
+    for (const s of [-1, 1]) {
+      c.fillRect(
+        X(k),
+        X(s * (road + 0.15)) - (s < 0 ? 0.45 * u : 0),
+        0.16 * u,
+        0.45 * u,
+      );
+      c.fillRect(
+        X(s * (road + 0.15)) - (s < 0 ? 0.45 * u : 0),
+        X(k),
+        0.45 * u,
+        0.16 * u,
+      );
+    }
+  }
+  // A manhole and a few cracks.
+  fill("#1c1d22");
+  c.beginPath();
+  c.arc(X(0.55), X(-2.6), 0.32 * u, 0, Math.PI * 2);
+  c.fill();
+  c.strokeStyle = "#3b3e46";
+  c.lineWidth = 2;
+  for (let i = 0; i < 4; i++) {
+    c.beginPath();
+    c.arc(X(0.55), X(-2.6), (0.08 + i * 0.07) * u, 0, Math.PI * 2);
+    c.stroke();
+  }
+  c.strokeStyle = "#1d1f24";
+  for (let i = 0; i < 6; i++) {
+    let x = r() * w;
+    let y = X(-0.6 + r() * 1.2);
+    c.beginPath();
+    c.moveTo(x, y);
+    for (let k = 0; k < 5; k++)
+      c.lineTo((x += (r() - 0.5) * 30), (y += (r() - 0.5) * 30));
+    c.stroke();
+  }
+  // Warm pools of lamplight on the sidewalk corners.
+  for (const [x, z] of [
+    [-3.2, -3.2],
+    [3.2, -3.2],
+  ]) {
+    const g = c.createRadialGradient(X(x), X(z), 0, X(x), X(z), 1.4 * u);
+    g.addColorStop(0, "rgba(255,214,140,0.35)");
+    g.addColorStop(1, "rgba(255,214,140,0)");
+    c.fillStyle = g;
+    c.fillRect(0, 0, w, h);
+  }
+}
+
+// A wall seen from inside the machine: night sky with stars, then rows of buildings with lit
+// windows, a couple of signs, and lamp posts along the bottom. `signs` is
+// [text, x (units), y (units), colour, vertical?]; `extra` paints anything else (the moon...).
+function paintSkyline(seed, signs, extra) {
+  return (c, w, h, fill, glow) => {
+    const r = rng(seed);
+    const Y = (u) => h - u * PX;
+    const sky = c.createLinearGradient(0, 0, 0, h);
+    sky.addColorStop(0, "#070b1c");
+    sky.addColorStop(0.6, "#1b1a44");
+    sky.addColorStop(1, "#3a2450");
+    c.fillStyle = glow ? "#000" : sky;
+    c.fillRect(0, 0, w, h);
+    // Stars.
+    for (let i = 0; i < 90; i++) {
+      fill(`rgba(255,255,255,${0.4 + r() * 0.6})`, true);
+      const s = r() < 0.15 ? 4 : 2;
+      c.fillRect(r() * w, r() * Y(4.5), s, s);
+    }
+    extra?.(c, w, h, fill, Y);
+    // Two rows of buildings: far ones dim, near ones taller and brighter.
+    for (const [row, base, top, tint, lit] of [
+      [0, 0, [4.5, 7.5], "#1a1c38", 0.35],
+      [1, 0, [2.5, 5.5], "#23264a", 0.6],
+    ]) {
+      let x = row ? -20 : 0;
+      while (x < w) {
+        const bw = (0.7 + r() * 0.9) * PX;
+        const bh = top[0] + r() * (top[1] - top[0]);
+        fill(tint);
+        c.fillRect(x, Y(bh), bw, Y(base) - Y(bh));
+        // Rooftop bits: a water tower or an antenna now and then.
+        if (r() < 0.3)
+          c.fillRect(x + bw * 0.3, Y(bh + 0.35), bw * 0.25, 0.35 * PX);
+        if (r() < 0.25) c.fillRect(x + bw * 0.7, Y(bh + 0.7), 4, 0.7 * PX);
+        // Windows: a grid, some lit warm, a few cool TV-blue.
+        for (let wy = bh - 0.35; wy > base + 0.3; wy -= 0.32)
+          for (let wx = x + 10; wx < x + bw - 16; wx += 20) {
+            const on = r() < lit;
+            fill(on ? (r() < 0.15 ? "#8fd3ff" : "#ffd98a") : "#14152a", on);
+            c.fillRect(wx, Y(wy), 9, 0.15 * PX);
+          }
+        x += bw + (row ? 6 : 2);
+      }
+    }
+    // Neon signs.
+    c.textAlign = "center";
+    c.textBaseline = "middle";
+    for (const [text, sx, sy, color, vertical] of signs) {
+      c.font = `${0.42 * PX}px "Press Start 2P", monospace`;
+      c.shadowColor = color;
+      c.shadowBlur = 26;
+      fill(color, true);
+      if (vertical)
+        [...text].forEach((ch, i) => c.fillText(ch, sx * PX, Y(sy - i * 0.5)));
+      else {
+        c.lineWidth = 6;
+        c.strokeStyle = color;
+        c.strokeText(text, sx * PX, Y(sy));
+        fill("#ffffff", true);
+        c.fillText(text, sx * PX, Y(sy));
+      }
+      c.shadowBlur = 0;
+    }
+    // Lamp posts along the street.
+    for (let lx = 0.9; lx < 8; lx += 2.4) {
+      fill("#0d0e18");
+      c.fillRect(lx * PX - 4, Y(2.6), 8, 2.6 * PX);
+      c.fillRect(lx * PX - 4, Y(2.6), 0.4 * PX, 6);
+      c.shadowColor = "#ffd98a";
+      c.shadowBlur = 30;
+      fill("#fff1c4", true);
+      c.beginPath();
+      c.arc(lx * PX + 0.4 * PX, Y(2.52), 9, 0, Math.PI * 2);
+      c.fill();
+      c.shadowBlur = 0;
+    }
+  };
+}
+
+// The moon over the back wall.
+function paintMoon(c, w, h, fill, Y) {
+  c.shadowColor = "#fff3c8";
+  c.shadowBlur = 40;
+  fill("#fff6d8", true);
+  c.beginPath();
+  c.arc(6.4 * PX, Y(8.1), 0.55 * PX, 0, Math.PI * 2);
+  c.fill();
+  c.shadowBlur = 0;
+}
+// A little "M+L" heart chalked low on the side wall, painted over the finished skyline.
+function paintChalk(c, w, h, fill, Y) {
+  c.save();
+  c.translate(1.3 * PX, Y(0.75));
+  c.rotate(-0.08);
+  c.strokeStyle = "#f7a8c8";
+  c.lineWidth = 4;
+  c.beginPath();
+  const s = 0.3 * PX;
+  c.moveTo(0, s * 0.9);
+  c.bezierCurveTo(-s * 1.3, 0, -s * 0.8, -s * 0.9, 0, -s * 0.3);
+  c.bezierCurveTo(s * 0.8, -s * 0.9, s * 1.3, 0, 0, s * 0.9);
+  c.stroke();
+  c.font = `${0.16 * PX}px "Press Start 2P", monospace`;
+  c.fillStyle = "#f7a8c8";
+  c.textAlign = "center";
+  c.fillText("M+L", 0, 2);
+  c.restore();
+}
+
+// Hazard stripes for the base of the cabinet, like a loading bay.
+function paintHazard(c, w, h, fill) {
+  fill("#111");
+  c.fillRect(0, 0, w, h);
+  fill("#f5c518");
+  for (let x = -h; x < w; x += h * 1.2) {
+    c.beginPath();
+    c.moveTo(x, h);
+    c.lineTo(x + h * 0.6, h);
+    c.lineTo(x + h * 1.2, 0);
+    c.lineTo(x + h * 0.6, 0);
+    c.fill();
+  }
+}
+
+// Sidewalk paving for the room outside.
+function paintPaving(c, w, h) {
+  c.fillStyle = "#3a3f4a";
+  c.fillRect(0, 0, w, h);
+  c.fillStyle = "#2c3039";
+  c.fillRect(0, 0, w, 3);
+  c.fillRect(0, 0, 3, h);
+  const r = rng(29);
+  for (let i = 0; i < 60; i++) {
+    c.fillStyle = `rgba(0,0,0,${r() * 0.15})`;
+    c.fillRect(r() * w, r() * h, 3, 3);
+  }
+}
+
+function buildCity() {
+  const group = new THREE.Group();
+  // The street, over the two floor slabs; each samples its own patch of the one canvas.
+  const street = litTexture(512, 512, paintStreet);
+  for (const [x0, x1, z0, z1] of [
+    [-4, 4, -4, 1.8],
+    [-1.8, 4, 1.8, 4],
+  ]) {
+    const tex = {
+      map: street.map.clone(),
+      emissiveMap: street.emissiveMap.clone(),
+    };
+    for (const t of Object.values(tex)) {
+      t.repeat.set((x1 - x0) / 8, (z1 - z0) / 8);
+      t.offset.set((x0 + 4) / 8, 1 - (z1 + 4) / 8);
+      t.needsUpdate = true;
+    }
+    const m = new THREE.Mesh(
+      new THREE.PlaneGeometry(x1 - x0, z1 - z0),
+      litMaterial(tex, 0.25),
+    );
+    m.rotation.x = -Math.PI / 2;
+    m.position.set((x0 + x1) / 2, 0.004, (z0 + z1) / 2);
+    m.receiveShadow = true;
+    group.add(m);
+  }
+  // The skyline on the two solid walls.
+  const walls = [
+    {
+      paint: paintSkyline(
+        41,
+        [
+          ["ARCADE", 2.3, 5.2, "#ff4fd8"],
+          ["HOTEL", 6.9, 6.6, "#33e6ff", true],
+        ],
+        paintMoon,
+      ),
+      pos: [0, 4.7, -3.95],
+      rot: 0,
+    },
+    {
+      paint: paintSkyline(
+        53,
+        [
+          ["DINER", 5.6, 4.6, "#ff6b4a"],
+          ["24H", 1.6, 5.9, "#9bff4a"],
+        ],
+        null,
+      ),
+      chalk: true,
+      pos: [-3.95, 4.7, 0],
+      rot: Math.PI / 2,
+    },
+  ];
+  const wallMeshes = walls.map((w) => {
+    const m = new THREE.Mesh(new THREE.PlaneGeometry(8, 9.4));
+    m.position.set(...w.pos);
+    m.rotation.y = w.rot;
+    m.receiveShadow = true;
+    group.add(m);
+    return { ...w, mesh: m };
+  });
+  const paintWalls = () => {
+    for (const w of wallMeshes) {
+      w.mesh.material?.map?.dispose();
+      w.mesh.material?.emissiveMap?.dispose();
+      const paint = w.chalk
+        ? (c, cw, ch, fill, glow) => {
+            w.paint(c, cw, ch, fill, glow);
+            if (!glow) paintChalk(c, cw, ch, fill, (u) => ch - u * PX);
+          }
+        : w.paint;
+      w.mesh.material = litMaterial(litTexture(8 * PX, 9.4 * PX, paint), 1);
+    }
+  };
+  paintWalls();
+  document.fonts.load(`20px "Press Start 2P"`).then(paintWalls);
+  // Hazard stripes round the bottom of the base.
+  const hazard = litTexture(512, 32, paintHazard);
+  for (const [w, x, z, rot] of [
+    [8.8, 4.415, 0, Math.PI / 2],
+    [8.8, 0, 4.415, 0],
+  ]) {
+    const m = new THREE.Mesh(
+      new THREE.PlaneGeometry(w, 0.5),
+      litMaterial(hazard, 0),
+    );
+    m.position.set(x, -3.3, z);
+    m.rotation.y = rot;
+    group.add(m);
+  }
+  // Warm street-lamp light and a cool moonlit fill.
+  const lampLight = new THREE.PointLight(0xffd98a, 6, 10, 2);
+  lampLight.position.set(-3.2, 4.5, -3.2);
+  group.add(lampLight);
+  let paving = null;
+  return {
+    group,
+    dress() {
+      // Slate body, steel posts, taxi-yellow trim.
+      M.walnut.color.setHex(0x2b3340);
+      M.walnut.roughness = 0.5;
+      M.walnutDark.color.setHex(0x1a1f28);
+      M.post.color.setHex(0x9aa3ad);
+      M.post.roughness = 0.35;
+      M.brass.color.setHex(0xa8b0ba);
+      M.teal.color.setHex(0xf5c518);
+      M.mustard.color.setHex(0xf5c518);
+      M.mustard.emissive.setHex(0xf5c518);
+      M.mustard.emissiveIntensity = 0.25;
+      // The floor's edge, under the street: kerb grey.
+      M.felt.color.setHex(0x7d828c);
+      for (const k of DRESSED) {
+        M[k].map = null;
+        M[k].needsUpdate = true;
+      }
+      // A theatre marquee with warm chasing bulbs.
+      stageDecor.marquee = {
+        background: "#111318",
+        border: "#f5c518",
+        shadow: "#000000",
+        text: "#fff6d6",
+        glow: "#ffd27a",
+        emoji: "🏙️",
+      };
+      stageDecor.bulbs = [0xfff2c4, 0xffd27a];
+      bulbs.visible = true;
+      // Outside: sidewalk paving under a night sky.
+      if (!paving) {
+        const cv = document.createElement("canvas");
+        cv.width = cv.height = 64;
+        paintPaving(cv.getContext("2d"), 64, 64);
+        paving = new THREE.CanvasTexture(cv);
+        paving.colorSpace = THREE.SRGBColorSpace;
+        paving.wrapS = paving.wrapT = THREE.RepeatWrapping;
+        paving.repeat.set(40, 40);
+      }
+      ground.material.map = paving;
+      ground.material.color.setHex(0xffffff);
+      ground.material.needsUpdate = true;
+      rug.visible = false;
+      scene.background.setHex(0x0b1020);
+      lamp.intensity = 20;
+    },
+  };
+}
+
 // The shared cabinet materials a stage may restyle. The theme resets their colour and
 // roughness on every change; the glow is put back here.
-const DRESSED = ["walnut", "walnutDark", "post", "brass", "teal", "mustard"];
+const DRESSED = [
+  "walnut",
+  "walnutDark",
+  "post",
+  "brass",
+  "teal",
+  "mustard",
+  "felt",
+];
 
-export const STAGES = { arcade: buildArcade };
+export const STAGES = { arcade: buildArcade, city: buildCity };
 const built = {};
 const LAMP = lamp.intensity;
 

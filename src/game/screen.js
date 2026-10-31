@@ -40,6 +40,50 @@ export const MODE_TEXT = {
 const SKIN = "#d5a07a";
 const GLOW = "#2f7fd8";
 const ARCADE_ICONS = {
+  // Level 3: the city.
+  hall: (d) => {
+    d.rect(-0.9, -0.9, 1.8, 1.9, d.color);
+    d.rect(-0.7, -0.75, 1.4, 0.35, GLOW);
+    d.rect(-0.55, -0.1, 0.35, 0.3, "#fff4e2");
+    d.rect(0.2, -0.1, 0.35, 0.3, "#fff4e2");
+    d.rect(-0.2, 0.45, 0.4, 0.55, d.ink);
+  },
+  tower: (d) => {
+    d.rect(-0.55, -1.3, 1.1, 2.3, d.color);
+    d.rect(-0.03, -1.7, 0.06, 0.4, d.ink);
+    for (let y = -1.05; y < 0.8; y += 0.45)
+      for (const x of [-0.35, 0.1]) d.rect(x, y, 0.25, 0.22, "#fff4e2");
+  },
+  cafe: (d) => {
+    d.rect(-0.9, -0.4, 1.8, 1.4, d.color);
+    for (let i = 0; i < 5; i++)
+      d.rect(-1 + i * 0.4, -0.8, 0.4, 0.4, i % 2 ? d.color : "#fff4e2");
+    d.rect(-0.7, 0.0, 0.8, 0.5, "#d8ecff");
+    d.rect(0.3, 0.2, 0.35, 0.8, d.ink);
+  },
+  taxi: (d) => {
+    d.rect(-0.6, -0.6, 1.2, 0.55, d.color);
+    d.rect(-0.45, -0.5, 0.9, 0.3, GLOW);
+    d.rect(-0.2, -0.8, 0.4, 0.2, "#f2a65a");
+    d.rect(-1.15, -0.1, 2.3, 0.6, d.color);
+    d.blob(-0.6, 0.55, 0.25, 0.25, d.ink);
+    d.blob(0.6, 0.55, 0.25, 0.25, d.ink);
+  },
+  bus: (d) => {
+    d.rect(-1.2, -0.75, 2.4, 1.3, d.color);
+    for (const x of [-1.0, -0.35, 0.3]) d.rect(x, -0.55, 0.5, 0.4, GLOW);
+    d.rect(0.95, -0.55, 0.15, 0.4, GLOW);
+    d.blob(-0.7, 0.6, 0.25, 0.25, d.ink);
+    d.blob(0.7, 0.6, 0.25, 0.25, d.ink);
+  },
+  pigeon: (d) => {
+    d.blob(-0.1, 0.25, 0.85, 0.6, d.color);
+    d.blob(0.55, -0.4, 0.38, 0.38, d.color);
+    d.blob(0.98, -0.32, 0.16, 0.08, "#f2a65a");
+    d.dot(0.62, -0.48, 0.09, d.ink);
+    d.rect(-0.2, 0.8, 0.06, 0.3, "#f2a65a");
+    d.rect(0.15, 0.8, 0.06, 0.3, "#f2a65a");
+  },
   cabinet: (d) => {
     d.rect(-0.75, -1.3, 1.5, 2.3, d.color);
     d.rect(-0.6, -1.15, 1.2, 0.3, "#fff4e2");

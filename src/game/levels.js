@@ -3,12 +3,14 @@
 // it at load time. Adding a level is adding an entry here plus its kinds (see arcade.js).
 import { ANIMALS } from "./animals.js";
 import { ARCADE } from "./arcade.js";
+import { CITY } from "./city.js";
 import { levelUnlocked } from "./rules.js";
 import { setLevel, settings } from "./settings.js";
 
 // `stage` picks the set dressing (see stages.js); without one it's the plain cabinet.
 // `kinds` work like ANIMALS: each is a shape the tiers colour in. A kind can also set `upright`
-// (stocked standing, facing a random way), `walks` (wanders the floor, see walkers.js) and
+// (stocked standing, facing a random way), `walks` (wanders the floor; an object tunes the gait,
+// see walkers.js) and
 // `dress()` (picks per-prize materials, like a customer's skin and hair).
 export const LEVELS = [
   {
@@ -29,9 +31,10 @@ export const LEVELS = [
   {
     id: 3,
     name: "THE CITY",
-    blurb: "The streets around the arcade.",
-    soon: true,
-    kinds: [],
+    blurb: "The streets around the arcade. Traffic drives by and pigeons hop.",
+    marquee: "THE CITY",
+    stage: "city",
+    kinds: CITY,
   },
 ];
 

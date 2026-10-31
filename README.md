@@ -37,7 +37,8 @@ The machine holds 15 plushies: ten animals, five colours. The animal is only the
 - Your top 5 stays in the browser. The world top 10 lives in a Supabase table that anyone can read and add to, and nobody can edit.
 - Every colour and animal pair you win goes into your collection: 50 in all.
 - Clear the machine in one run to open the next level. Level 2, the arcade, is stocked with plush
-  cabinets and customers, and the customers wander the floor. Level 3, the city, is coming.
+  cabinets and customers, and the customers wander the floor. Level 3, the city around it, has
+  plush buildings (the arcade among them), taxis and buses that drive about, and hopping pigeons.
 
 The music speeds up as the machine empties. With one plushie left it's 30% faster than at the start, with double-time hats and the melody doubled an octave up.
 
@@ -72,19 +73,19 @@ yarn format     # prettier
 
 The app is Next.js (App Router), but the game is plain JavaScript that writes to the DOM directly. `src/app/Game.js` renders the markup once, then loads `src/game/main.js`, and the modules under `src/game/` take it from there. They're split by job:
 
-| Module                                              | What it does                                                                                      |
-| --------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
-| `config.js`, `rules.js`                             | Tuning numbers, and the scoring and turn rules as pure functions                                  |
-| `game.js`, `reel.js`                                | The turn state machine (aim, drop, grab, lift, reel, release) and the reel game                   |
-| `scene.js`, `physics.js`                            | Renderer, camera, lights, materials; the cannon-es world                                          |
-| `cabinet.js`, `claw.js`, `plushies.js`              | The machine, the claw and its servo-driven prongs, and the knitted plushies                       |
-| `levels.js`, `stages.js`, `arcade.js`, `walkers.js` | The levels and how they unlock, each level's set dressing, the arcade prizes, the customers' walk |
-| `input.js`, `hud.js`, `overlays.js`, `help.js`      | Keys and touch, the scoreboard, the title and end screens, help                                   |
-| `settings.js`, `settingsui.js`, `themes.js`         | Saved settings, the settings dialog, and every theme's look and sound                             |
-| `textures.js`, `postfx.js`, `photo.js`              | Procedural textures, post-processing passes, the 4K theme's props                                 |
-| `audio.js`, `music.js`                              | Synthesised sound effects and music (Web Audio, no sound files)                                   |
-| `laser.js`, `confetti.js`, `bag.js`, `screen.js`    | Aim assist, confetti, the prize bag, the carriage screen                                          |
-| `loop.js`, `sync.js`, `main.js`, `debug.js`         | Fixed-step loop, physics to mesh sync, boot, and the `window.__claw` console handle               |
+| Module                                                         | What it does                                                                                                   |
+| -------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| `config.js`, `rules.js`                                        | Tuning numbers, and the scoring and turn rules as pure functions                                               |
+| `game.js`, `reel.js`                                           | The turn state machine (aim, drop, grab, lift, reel, release) and the reel game                                |
+| `scene.js`, `physics.js`                                       | Renderer, camera, lights, materials; the cannon-es world                                                       |
+| `cabinet.js`, `claw.js`, `plushies.js`                         | The machine, the claw and its servo-driven prongs, and the knitted plushies                                    |
+| `levels.js`, `stages.js`, `arcade.js`, `city.js`, `walkers.js` | The levels and how they unlock, each level's set dressing, the arcade and city prizes, and how the movers move |
+| `input.js`, `hud.js`, `overlays.js`, `help.js`                 | Keys and touch, the scoreboard, the title and end screens, help                                                |
+| `settings.js`, `settingsui.js`, `themes.js`                    | Saved settings, the settings dialog, and every theme's look and sound                                          |
+| `textures.js`, `postfx.js`, `photo.js`                         | Procedural textures, post-processing passes, the 4K theme's props                                              |
+| `audio.js`, `music.js`                                         | Synthesised sound effects and music (Web Audio, no sound files)                                                |
+| `laser.js`, `confetti.js`, `bag.js`, `screen.js`               | Aim assist, confetti, the prize bag, the carriage screen                                                       |
+| `loop.js`, `sync.js`, `main.js`, `debug.js`                    | Fixed-step loop, physics to mesh sync, boot, and the `window.__claw` console handle                            |
 
 Pushes to `main` deploy to [starclawmachine.com](https://starclawmachine.com) on Vercel.
 
