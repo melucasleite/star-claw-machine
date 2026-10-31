@@ -1641,9 +1641,15 @@ body[data-theme="retro"] .popup {
 .love-card .bubble q {
   quotes: none;
 }
-/* The pull quote keeps its own marks inside the bubble; give it room. */
+/* Inside a bubble the pull quote is already quoted: keep the script, drop its own marks. */
+.love-card .bubble .pull {
+  padding: 4px 0;
+  /* Even lines, so "me." never ends up alone. */
+  text-wrap: balance;
+}
+.love-card .bubble .pull::before,
 .love-card .bubble .pull::after {
-  bottom: -30px;
+  content: none;
 }
 .love-card .love-title {
   margin-bottom: 4px;
