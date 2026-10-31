@@ -44,7 +44,7 @@ settingsPanel.addEventListener("submit", (e) => {
   e.preventDefault();
   const code = e.target.elements.cheat.value;
   // Her name opens the letter straight away, no machine to clear.
-  if (cleanName(code).startsWith(LOVE_NAME)) {
+  if (cleanName(code) === LOVE_NAME) {
     closeSettings();
     return openLove();
   }

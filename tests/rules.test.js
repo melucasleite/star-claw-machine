@@ -94,6 +94,8 @@ test("a late drop only counts within the grace window", () => {
 test("names are cleaned for the boards", () => {
   assert.equal(cleanName("  ada <3 lovelace!!  "), "ADA 3 LOVE");
   assert.equal(cleanName("<script>"), "SCRIPT");
+  for (const typed of ["mikaela", "MIKAELA", "Mikaela", "mIkAeLa", " Mikaéla "])
+    assert.equal(cleanName(typed), "MIKAELA");
 });
 
 test("a score makes a list when there is room or it beats the last", () => {

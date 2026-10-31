@@ -191,8 +191,8 @@ export function submitName(fallback) {
   if (typed && makesWorld(r.score)) postWorld(name, r.score, r.level);
   if (typed) sfx.saved();
   r.saved = true;
-  // Names are upper-cased and trimmed already; a surname or initial after it still counts.
-  r.love = r.cleared && typed.startsWith(LOVE_NAME);
+  // Names are upper-cased and trimmed already, so any casing of her name counts.
+  r.love = r.cleared && typed === LOVE_NAME;
 }
 
 panelEl.addEventListener("submit", (e) => {

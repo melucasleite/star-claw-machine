@@ -41,8 +41,11 @@ export function chuteBusy(bodies) {
 export const lateDropCounts = (late, clock) =>
   !!late && clock - late.at <= RULES.lateGrace;
 
+// Any casing, and accents fold to the plain letter (é -> E) rather than vanishing.
 export const cleanName = (s) =>
   s
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
     .toUpperCase()
     .replace(/[^A-Z0-9 ._!?-]/g, "")
     .trim()
