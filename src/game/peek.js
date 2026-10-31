@@ -31,9 +31,12 @@ export function stepCamera(dt) {
   camera.lookAt(CAM_TARGET);
 }
 
-// Arrow keys follow the view: right is always screen-right, down always toward you.
+// Arrow keys follow the view: right is always screen-right, down always toward you. While
+// peeking, only the axis that view can judge moves (left/right from the front, near/far from the
+// side), so lining up can't nudge the other one by accident.
 export function viewAxes(ix, iz) {
-  if (peek.view === "side") return [iz, -ix];
+  if (peek.view === "side") return [0, -ix];
+  if (peek.view === "front") return [ix, 0];
   return [ix, iz];
 }
 
@@ -48,7 +51,8 @@ export function screenDeltaToGround(dx, dy) {
   const sinElev = Math.max(0.45, toward.y / toward.length());
   toward.setY(0).normalize();
   const r = dx * s;
-  const t = (dy * s) / sinElev;
+  // Peeking, a drag only slides along the screen: up and down do nothing.
+  const t = peek.view === "iso" ? (dy * s) / sinElev : 0;
   return {
     x: right.x * r + toward.x * t,
     z: right.z * r + toward.z * t,

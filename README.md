@@ -57,7 +57,7 @@ Settings has seven themes. They change how the game looks and sounds: the cabine
 - **Desktop 2001**: the machine stands on a lawn on a painted green hill under a big blue sky with drifting clouds. Dialogs are blue title-bar windows, the main buttons are chunky and green, and the music is a sunny electric piano.
 - **Deep Space**: a chrome ship of a cabinet on a glowing launch pad over a starfield, with asteroids tumbling past, a ringed planet and its moon, shooting stars, Orbitron type and a floaty synth tune.
 
-**Peek** (FRONT and SIDE, or F and R): like leaning round a real machine, the camera swings to look straight through the front or side glass so you can line the claw up. Arrow keys and dragging follow the view. Tap again to come back.
+**Peek** (FRONT and SIDE, or F and R): like leaning round a real machine, the camera swings to look straight through the front or side glass so you can line the claw up. While peeking, the claw only slides along the one axis that view can judge (left/right from the front, near/far from the side) and a tap won't drop it; Space still does. Tap the button again to come back.
 
 **Aim assist** draws a laser from the claw to whatever it would land on. Runs played with it on stay off both high score boards, and switching it on or off restarts the current run, so you can't switch it mid-game.
 

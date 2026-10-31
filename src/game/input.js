@@ -1,6 +1,6 @@
 import { loveEl, settingsEl } from "./dom.js";
 import { CLAW } from "./config.js";
-import { screenDeltaToGround, togglePeek } from "./peek.js";
+import { peek, screenDeltaToGround, togglePeek } from "./peek.js";
 import { hub } from "./claw.js";
 import {
   answerConfirm,
@@ -119,7 +119,8 @@ addEventListener("pointermove", (e) => {
 export function endDrag(e) {
   if (!drag || e.pointerId !== drag.id) return;
   const tap = !drag.moved && performance.now() - drag.t < TAP.maxMs;
-  if (tap && game.state === "aim") pressed.Space = true;
+  // No tap-to-drop while peeking, so lining up can't drop the claw by accident (Space still does).
+  if (tap && game.state === "aim" && peek.view === "iso") pressed.Space = true;
   keys.Space = false;
   drag = null;
   dragTarget = null;
