@@ -1528,51 +1528,10 @@ body[data-theme="retro"] .popup {
   color: #8a6470;
 }
 
-/* Highlighter pen: each mark sweeps across once the slide has settled, a beat apart. */
+/* Key phrases are marked in the markup, but read as plain text: only Sandra gets a flourish. */
 .love-card mark.hl {
-  padding: 0 2px;
-  margin: 0 -2px;
   color: inherit;
-  background: linear-gradient(
-      100deg,
-      rgba(247, 168, 190, 0) 0.6%,
-      rgba(247, 168, 190, 0.7) 2%,
-      rgba(247, 168, 190, 0.55) 96%,
-      rgba(247, 168, 190, 0) 99%
-    )
-    no-repeat 0 72% / 0% 58%;
-  border-radius: 3px;
-  -webkit-box-decoration-break: clone;
-  box-decoration-break: clone;
-  transition: background-size 0.9s cubic-bezier(0.3, 0.7, 0.3, 1);
-}
-.love-card mark.hl.y {
-  background-image: linear-gradient(
-    100deg,
-    rgba(255, 214, 102, 0) 0.6%,
-    rgba(255, 214, 102, 0.75) 2%,
-    rgba(255, 214, 102, 0.6) 96%,
-    rgba(255, 214, 102, 0) 99%
-  );
-}
-.love-card mark.hl.g {
-  background-image: linear-gradient(
-    100deg,
-    rgba(170, 222, 170, 0) 0.6%,
-    rgba(170, 222, 170, 0.75) 2%,
-    rgba(170, 222, 170, 0.6) 96%,
-    rgba(170, 222, 170, 0) 99%
-  );
-}
-.love-card .slide.on mark.hl {
-  background-size: 100% 58%;
-  transition-delay: 1.3s;
-}
-.love-card .slide.on mark.hl:nth-of-type(2) {
-  transition-delay: 1.9s;
-}
-.love-card .slide.on mark.hl:nth-of-type(3) {
-  transition-delay: 2.5s;
+  background: none;
 }
 /* Sandra gets a name tag: bold, with a hand-drawn squiggle underneath. */
 .love-card mark.name {
@@ -1714,6 +1673,17 @@ body[data-theme="retro"] .popup {
 }
 .doodle .ink.sky {
   stroke: #8fb4d8;
+}
+.doodle .ink.mouth {
+  stroke-width: 1.7;
+}
+.doodle .ink.lash {
+  stroke: #3a2228;
+  stroke-width: 1;
+}
+.doodle .ink.hairline {
+  stroke: #5a3420;
+  stroke-width: 1.8;
 }
 .doodle .ink.dot {
   stroke: #d49a3a;

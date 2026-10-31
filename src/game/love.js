@@ -50,41 +50,96 @@ const label = (x, y, text) =>
 const scaled = (x, y, k, body) =>
   `<g transform="translate(${x} ${y}) scale(${k})">${body}</g>`;
 
-// A head centred on (x, y): brunette hair (long, bob or short), dot eyes glancing toward `look`
-// (-1 left, 1 right), rosy cheeks and a smile.
-function head(x, y, o = {}) {
+// Heads centred on (x, y), with brunette hair: long, bob or short. The back of the hair is drawn
+// separately so a figure can put it behind its body.
+function hairBack(x, y, o = {}) {
+  const R = 9;
+  if (o.hair !== "long" && o.hair !== "bob") return "";
+  // Falls behind the head and shoulders, with soft rounded ends.
+  const end = o.hair === "long" ? 26 : 12;
+  return (
+    fill(
+      `M${x - R - 1} ${y - 1} C${x - R - 4} ${y + end * 0.45} ${x - R - 4} ${y + end * 0.85} ${x - R + 1} ${y + end} Q${x - 4} ${y + end + 2} ${x} ${y + end - 3} Q${x + 4} ${y + end + 2} ${x + R - 1} ${y + end} C${x + R + 4} ${y + end * 0.85} ${x + R + 4} ${y + end * 0.45} ${x + R + 1} ${y - 1} A${R + 1} ${R + 1} 0 0 0 ${x - R - 1} ${y - 1}Z`,
+      "hair",
+    ) +
+    (o.cute
+      ? fill(
+          circle(x - R + 1, y + end - 1, 3) + circle(x + R - 1, y + end - 1, 3),
+          "hair",
+        )
+      : "")
+  );
+}
+
+// The face: skin, hair on top (side-swept bangs, or a short crop with a few tufts), dot eyes
+// glancing toward \`look\` (-1 left, 1 right), rosy cheeks and a smile.
+function face(x, y, o = {}) {
   const R = 9;
   const lx = (o.look ?? 0) * 2.5;
+  // The parting sits on the side she's looking away from.
+  const side = o.look < 0 ? 1 : -1;
   let s = "";
-  if (o.hair === "long" || o.hair === "bob") {
-    const end = o.hair === "long" ? 24 : 11;
-    s += fill(
-      `M${x - R} ${y} C${x - R - 3} ${y + end * 0.6} ${x - R - 2} ${y + end} ${x - R + 1} ${y + end} L${x + R - 1} ${y + end} C${x + R + 2} ${y + end} ${x + R + 3} ${y + end * 0.6} ${x + R} ${y} A${R} ${R} 0 0 0 ${x - R} ${y}Z`,
-      "hair",
-    );
-  }
   if (o.veil)
     s += fill(
       `M${x - 4} ${y - R} Q${x + R + 12} ${y + 6} ${x + R + 8} ${y + 30} L${x + R - 2} ${y + 8}Z`,
       "veil",
     );
   s += fill(circle(x, y, R), "skin") + ink(circle(x, y, R));
+  if (o.hair === "short")
+    s +=
+      fill(
+        `M${x - R - 0.5} ${y - 1} A${R + 0.5} ${R + 0.5} 0 0 1 ${x + R + 0.5} ${y - 1} Q${x + 5} ${y - 5} ${x} ${y - 4.5} Q${x - 5} ${y - 5} ${x - R - 0.5} ${y - 1}Z`,
+        "hair",
+      ) +
+      ink(
+        `M${x - 3} ${y - R} l-1.5 -3 M${x + 1} ${y - R - 0.5} l0.5 -3.5 M${x + 4.5} ${y - R + 0.5} l2 -2.5`,
+        "hairline",
+      );
+  else if (o.hair) {
+    // Drawn sweeping down on one side, then mirrored to the other: m is +1 or -1.
+    const m = side;
+    const X = (dx) => x + m * dx;
+    s += fill(
+      `M${X(-R - 0.5)} ${y} A${R + 0.5} ${R + 0.5} 0 0 ${m > 0 ? 1 : 0} ${X(R + 0.5)} ${y - 2} Q${X(4)} ${y - 6} ${X(0)} ${y - 5} Q${X(-5)} ${y - 4.5} ${X(-R - 0.5)} ${y}Z`,
+      "hair",
+    );
+  }
+  const eye = o.cute ? 1.45 : 1.1;
   s += fill(
-    `M${x - R} ${y - 1} A${R} ${R} 0 0 1 ${x + R} ${y - 1} Q${x + 2} ${y - 6} ${x - R} ${y - 1}Z`,
-    "hair",
-  );
-  s += fill(
-    circle(x - 3 + lx, y + 0.5, 1.1) + circle(x + 3 + lx, y + 0.5, 1.1),
+    circle(x - 3 + lx, y + 0.5, eye) + circle(x + 3 + lx, y + 0.5, eye),
     "eye",
   );
+  if (o.cute)
+    s +=
+      ink(
+        `M${x - 4.3 + lx} ${y + 0.2} l-1.3 -0.5 M${x - 3.6 + lx} ${y - 0.8} l-0.9 -0.9 M${x + 4.3 + lx} ${y + 0.2} l1.3 -0.5 M${x + 3.6 + lx} ${y - 0.8} l0.9 -0.9`,
+        "lash",
+      ) +
+      // A little flower clip in her hair, on the side of the parting.
+      `<g class="clip">${fill(
+        [0, 72, 144, 216, 288]
+          .map((a) => {
+            const r = (a * Math.PI) / 180;
+            return circle(
+              x - side * 6 + Math.cos(r) * 2.2,
+              y - 6.5 + Math.sin(r) * 2.2,
+              1.6,
+            );
+          })
+          .join(""),
+      )}${fill(circle(x - side * 6, y - 6.5, 1.1), "y")}</g>`;
   s += fill(
     circle(x - 5.5 + lx, y + 3.2, 1.7) + circle(x + 5.5 + lx, y + 3.2, 1.7),
   );
   s += ink(
-    `M${x - 3.5 + lx} ${y + 3.5} Q${x + lx} ${y + (o.big ? 8.5 : 6.5)} ${x + 3.5 + lx} ${y + 3.5}`,
+    `M${x - 3.2 + lx} ${y + 3.6} Q${x + lx} ${y + (o.big ? 7.6 : 6.2)} ${x + 3.2 + lx} ${y + 3.6}`,
+    "mouth",
   );
   return s;
 }
+
+// A head on its own (the sprout, the balloon basket).
+const head = (x, y, o = {}) => hairBack(x, y, o) + face(x, y, o);
 
 // A stick figure standing on y = base. `arms` are the two hands relative to the shoulder.
 function person(x, base, o = {}) {
@@ -96,7 +151,7 @@ function person(x, base, o = {}) {
     [-10, 14],
     [10, 14],
   ];
-  let s = "";
+  let s = hairBack(x, hy, o);
   if (o.dress)
     s +=
       fill(`M${x} ${top} L${x - 11} ${hip + 4} L${x + 11} ${hip + 4}Z`) +
@@ -113,7 +168,7 @@ function person(x, base, o = {}) {
     s += ink(
       `M${x - 4} ${top + 2} L${x + 4} ${top + 6} L${x + 4} ${top + 2} L${x - 4} ${top + 6}Z`,
     );
-  s += head(x, hy, o);
+  s += face(x, hy, o);
   if (o.name) s += label(x, base + 13, o.name);
   const phase = o.phase ?? (x * 0.37 + base * 0.11) % 2.6;
   return `<g class="sway" style="--sway:${-phase}s">${s}</g>`;
@@ -155,13 +210,6 @@ const DOODLES = {
           circle(107, 19, 3),
       ),
     "ringing",
-  ),
-  // Heart eyes and a big grin.
-  grin: svg(
-    hearty(64, 50, 9) +
-      hearty(96, 50, 9) +
-      ink("M56 70 Q80 98 104 70 Q80 80 56 70") +
-      ink(heart(134, 26, 6) + heart(24, 30, 5) + heart(140, 88, 4)),
   ),
   // A flower in bloom.
   bloom: svg(
@@ -205,7 +253,7 @@ const DOODLES = {
         83.5,
         87,
         0.36,
-        head(0, 0, { hair: "long", look: -1, big: true }),
+        head(0, 0, { hair: "long", look: -1, big: true, cute: true }),
       ) +
       ink("M74 80 L74 90 M86 80 L86 90 M72 90 L88 90 L86 102 L74 102Z") +
       ink(
@@ -273,6 +321,7 @@ const SCENES = {
               [9, 15],
             ],
             name: "you",
+            cute: true,
           }),
       ) +
       beat(
@@ -295,6 +344,7 @@ const SCENES = {
           [12, 9],
         ],
         name: "you",
+        cute: true,
       }) +
         person(104, 130, {
           hair: "bob",
@@ -369,7 +419,13 @@ const SCENES = {
           142,
           82,
           0.5,
-          person(0, 0, { hair: "long", dress: true, look: 1, big: true }),
+          person(0, 0, {
+            hair: "long",
+            dress: true,
+            look: 1,
+            big: true,
+            cute: true,
+          }),
         ) +
           scaled(
             184,
@@ -395,6 +451,7 @@ const SCENES = {
           [16, 2],
         ],
         name: "you",
+        cute: true,
       }),
     ) +
       beat(
@@ -430,6 +487,56 @@ const SCENES = {
         ),
       ),
   ),
+  // I will live to make you smile: me handing you a flower, you beaming.
+  smile: scene(
+    beat(
+      0.2,
+      person(150, 132, {
+        hair: "long",
+        dress: true,
+        look: -1,
+        big: true,
+        arms: [
+          [-12, 6],
+          [10, 14],
+        ],
+        name: "you",
+        cute: true,
+      }),
+    ) +
+      beat(
+        0.6,
+        person(92, 132, {
+          hair: "short",
+          look: 1,
+          big: true,
+          arms: [
+            [-9, 15],
+            [20, -2],
+          ],
+          name: "me",
+        }),
+      ) +
+      beat(
+        1.2,
+        ink("M112 86 L124 70", "g") +
+          fill(
+            "M124 70 Q118 62 124 56 Q130 62 124 70Z M124 70 Q130 64 136 66 Q132 74 124 70Z M124 70 Q118 72 112 66 Q118 62 124 70Z",
+          ) +
+          ink(
+            "M124 70 Q118 62 124 56 Q130 62 124 70Z M124 70 Q130 64 136 66 Q132 74 124 70Z M124 70 Q118 72 112 66 Q118 62 124 70Z",
+          ) +
+          fill(circle(124, 66, 2.2), "y"),
+      ) +
+      beat(
+        1.9,
+        ink(
+          sparkle(170, 58, 4) + sparkle(132, 46, 3) + sparkle(178, 80, 2.5),
+          "y",
+        ),
+      ) +
+      beat(2.3, hearty(156, 44, 5) + hearty(172, 36, 3.5), "pop"),
+  ),
   // Walking life together, toward the sunrise.
   walk: scene(
     beatc(
@@ -464,6 +571,7 @@ const SCENES = {
               [9, 15],
             ],
             name: "you",
+            cute: true,
           }),
       ) +
       beat(1.8, hearty(120, 54, 6), "pop"),
@@ -490,7 +598,7 @@ const SLIDES = [
     `<p>It was the most beautiful smile I had ever seen. I immediately thought to myself,</p><blockquote class="pull">I want her to smile like that for me.</blockquote><p>And here you are, smiling now. And I feel like the <mark class="hl y">luckiest man alive</mark>.</p>`,
   ],
   [
-    "grin",
+    "smile",
     `<p class="vow"><span class="n">Here is my first vow:</span><q>I will live to make you smile.</q></p>`,
   ],
   [
