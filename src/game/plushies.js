@@ -260,23 +260,13 @@ export const pick = (list) => list[Math.floor(Math.random() * list.length)];
 // Squash-and-stretch spring: impacts flatten it, then it puffs back up slowly, with barely a wobble.
 export const SQUISH = { stiffness: 150, damping: 20, kick: 0.75, max: 0.25 };
 
-// `animal` is any level's kind (see levels.js), not only an animal.
-export function addPlush(tier, animal, x, y, z) {
-  const body = new CANNON.Body({
-    mass: 1,
-    material: mats.prize,
-    collisionFilterGroup: G_PRIZE,
-    collisionFilterMask: PRIZE_MASK,
-    // Cotton drags: plushies slump and settle instead of rolling around.
-    linearDamping: 0.22,
-    angularDamping: 0.55,
-  });
+// The visible plushie: one mesh per part, in the tier's colours. The machine uses it, and so does
+// the collection's 3D viewer (showcase.js).
+export function buildPlushGroup(tier, animal) {
   const group = new THREE.Group();
   // Per-prize materials, e.g. { skin: "skin2", hair: "hair4" }.
   const look = animal.dress?.() ?? {};
   for (const p of animal.parts) {
-    if (p.solid)
-      body.addShape(new CANNON.Sphere(p.r), new CANNON.Vec3(p.x, p.y, p.z));
     if (!p.visible) continue;
     const mat = look[p.mat] ?? p.mat;
     const m = new THREE.Mesh(partGeo(p), tier.mats[mat] ?? DECO[mat]);
@@ -288,6 +278,24 @@ export function addPlush(tier, animal, x, y, z) {
     m.receiveShadow = true;
     group.add(m);
   }
+  return group;
+}
+
+// `animal` is any level's kind (see levels.js), not only an animal.
+export function addPlush(tier, animal, x, y, z) {
+  const body = new CANNON.Body({
+    mass: 1,
+    material: mats.prize,
+    collisionFilterGroup: G_PRIZE,
+    collisionFilterMask: PRIZE_MASK,
+    // Cotton drags: plushies slump and settle instead of rolling around.
+    linearDamping: 0.22,
+    angularDamping: 0.55,
+  });
+  for (const p of animal.parts)
+    if (p.solid)
+      body.addShape(new CANNON.Sphere(p.r), new CANNON.Vec3(p.x, p.y, p.z));
+  const group = buildPlushGroup(tier, animal);
   body.position.set(x, y, z);
   // Upright kinds are stocked standing, facing any way; the rest land however they tumble.
   if (animal.upright) body.quaternion.setFromEuler(0, Math.random() * 6.28, 0);

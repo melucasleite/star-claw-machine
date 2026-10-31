@@ -8,7 +8,7 @@ import {
   chooseLevel,
   pendingConfirm,
 } from "./overlays.js";
-import { closeSettings, openSettings } from "./settingsui.js";
+import { closeSettings, menuBack, openSettings } from "./settingsui.js";
 import { closeHelp, openHelp } from "./help.js";
 import { closeLove, stepLove } from "./love.js";
 import { game, startGame } from "./game.js";
@@ -52,7 +52,8 @@ addEventListener("keydown", (e) => {
     return;
   }
   if (!settingsEl.hidden) {
-    if (["Escape", "Enter", "KeyO"].includes(e.code)) closeSettings();
+    if (e.code === "Escape") menuBack();
+    else if (e.code === "KeyO") closeSettings();
     return;
   }
   if (e.code === "KeyO" && !e.repeat) return openSettings();

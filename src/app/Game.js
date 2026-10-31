@@ -53,18 +53,15 @@ export default function Game() {
         <button
           type="button"
           data-settings=""
-          aria-label="Settings"
-          title="Settings (O)"
+          aria-label="Menu"
+          title="Menu (O)"
         >
           <svg
             viewBox="0 0 12 12"
             shapeRendering="crispEdges"
             aria-hidden="true"
           >
-            <path
-              fillRule="evenodd"
-              d="M3 2h6v1h1v6H9v1H3V9H2V3h1zM5 0h2v2H5zM5 10h2v2H5zM0 5h2v2H0zM10 5h2v2h-2zM1 1h2v2H1zM9 1h2v2H9zM1 9h2v2H1zM9 9h2v2H9zM4 4v4h4V4z"
-            />
+            <path d="M1 2h10v2H1zM1 5h10v2H1zM1 8h10v2H1z" />
           </svg>
         </button>
         <button type="button" data-sound="music" aria-label="Music">

@@ -53,8 +53,12 @@ export const tiersHtml = () =>
 const LOCK_SVG = `<svg viewBox="0 0 12 12" shape-rendering="crispEdges" role="img" aria-label="Locked"><path fill-rule="evenodd" d="M4 1h4v1h1v3h1v6H2V5h1V2h1zM4 2h4v3H4zM5 7h2v2H5z"/></svg>`;
 
 // One card per level: open ones can be picked, locked ones say what opens them.
-export function levelsHtml() {
-  const current = currentLevel();
+// `selected` is the highlighted card; the menu's NEW GAME page passes its own pick and attribute.
+export function levelsHtml(
+  selected = currentLevel(),
+  attr = "data-level-pick",
+) {
+  const current = selected;
   const cards = LEVELS.map((l, i) => {
     const open = isUnlocked(l);
     const prev = LEVELS[i - 1];
@@ -71,7 +75,7 @@ export function levelsHtml() {
     ]
       .filter(Boolean)
       .join(" ");
-    return `<button type="button" class="${cls}" data-level-pick="${l.id}" aria-pressed="${l === current}"${open ? "" : " disabled"}>
+    return `<button type="button" class="${cls}" ${attr}="${l.id}" aria-pressed="${l === current}"${open ? "" : " disabled"}>
       <span class="num">${open ? l.id : LOCK_SVG}</span>
       <b>${l.name}</b><small>${l.blurb}</small><em>${state}</em>
     </button>`;
@@ -93,6 +97,13 @@ export function chooseLevel(id) {
   sfx.coinIn();
   if (game.mode === "over") renderOver();
   else renderTitle();
+}
+
+// Start a run on a level, from the menu: mid-run too (the current run is abandoned).
+export function playLevel(id) {
+  // A new level brings its own stage; re-styling from the theme dresses it.
+  if (pickLevel(id)) applyTheme();
+  startGame();
 }
 
 export function listHtml(rows, size, pending, isMine) {

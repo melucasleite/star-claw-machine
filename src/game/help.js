@@ -38,15 +38,15 @@ export function stepsHtml() {
     )
     .join("")}</div>`;
 }
-export function openHelp() {
-  if (!howtoEl.hidden || pendingConfirm) return;
+// The rules, shared by the help sheet and the menu's HOW TO PLAY page.
+export function helpBodyHtml() {
   const heart = heartSvg("inline");
   // Kept short enough to fit a phone screen without scrolling; GOT IT also sticks to the bottom.
   const tiers = TIERS.map(
     (t) =>
       `<div><i class="dot" style="background:${t.css}"></i>${t.name.toUpperCase()}<b>${t.points}</b></div>`,
   ).join("");
-  howtoPanel.innerHTML = `
+  return `
     <h1>HOW TO PLAY</h1>
     <p>Drop the claw on a plushie, then keep it in the green bar to reel it into the chute.</p>
     ${stepsHtml()}
@@ -56,7 +56,12 @@ export function openHelp() {
     <p>Perfect reel x1.5 &middot; streaks up to x${RULES.streakMax}</p>
     <h2>HEARTS</h2>
     <p>Miss or drop -&frac12;${heart} &middot; lost reel -1${heart} &middot; catch +&frac12;${heart}<br />Cash out +${RULES.cashOutPerHalf} per &frac12;${heart} &middot; clear it all +${RULES.clearBonus}</p>
-    <p>Clear the machine in one run to open the next level. Collect all ${collectionSize(currentLevel())} and top the world board.</p>
+    <p>Clear the machine in one run to open the next level. Collect all ${collectionSize(currentLevel())} and top the world board.</p>`;
+}
+
+export function openHelp() {
+  if (!howtoEl.hidden || pendingConfirm) return;
+  howtoPanel.innerHTML = `${helpBodyHtml()}
     <div class="actions"><button class="btn big" type="button" data-close-help>GOT IT</button></div>`;
   howtoEl.hidden = false;
   howtoPanel.scrollTop = 0;

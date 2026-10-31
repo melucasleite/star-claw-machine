@@ -38,6 +38,13 @@ async function open(settings) {
   await page.click("[data-close-help]");
   return { page, errors, g: (expr, arg) => page.evaluate(expr, arg) };
 }
+// Menu > SETTINGS > GAME, from wherever the menu is (or isn't).
+async function gameSettings(page) {
+  if (await page.isHidden("#settings")) await page.click("[data-settings]");
+  if (await page.isVisible("[data-menu=settings]"))
+    await page.click("[data-menu=settings]");
+  await page.click("[data-settings-page=game]");
+}
 const startAndAim = async ({ page, g }) => {
   await g(() => __claw.startGame());
   await page.waitForFunction(() => __claw.game.state === "aim", null, {
@@ -69,8 +76,7 @@ test("aim assist asks first, restarts the run and keeps it off the boards", asyn
   const { page, g } = ctx;
   await startAndAim(ctx);
   await g(() => (__claw.game.score = 1234));
-  await page.click("[data-settings]");
-  await page.click("[data-settings-page=game]");
+  await gameSettings(page);
   await page.click("[data-assist]");
   assert.equal(await page.textContent("#confirm-title"), "AIM ASSIST?");
   await page.click("#confirm-no");
@@ -79,7 +85,7 @@ test("aim assist asks first, restarts the run and keeps it off the boards", asyn
     1234,
     "cancel changes nothing",
   );
-  await page.click("[data-settings-page=game]");
+  await gameSettings(page);
   await page.click("[data-assist]");
   await page.click("#confirm-yes");
   await page.waitForFunction(() => __claw.game.state === "aim", null, {
@@ -97,8 +103,7 @@ test("aim assist asks first, restarts the run and keeps it off the boards", asyn
   // Off mid-run restarts too.
   await startAndAim(ctx);
   await g(() => (__claw.game.score = 50));
-  await page.click("[data-settings]");
-  await page.click("[data-settings-page=game]");
+  await gameSettings(page);
   await page.click("[data-assist]");
   await page.click("#confirm-yes");
   assert.equal(await g(() => __claw.game.score), 0, "turning it off restarts");
