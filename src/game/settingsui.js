@@ -158,7 +158,11 @@ function collectionView() {
 }
 const itemView = () => `<h1 class="item-name">${item.name.toUpperCase()}</h1>
   <p class="item-facts"><i class="dot" style="background:${item.tier.css}"></i>${item.tier.pet ? `Plays like ${item.tier.as}` : item.tier.name} &middot; ${item.tier.points} PTS</p>
-  <div class="showcase" id="showcase"></div>
+  <div class="showcase-row">
+    <button type="button" class="love-arrow item-arrow" data-item-step="-1" aria-label="Previous">&lsaquo;</button>
+    <div class="showcase" id="showcase"></div>
+    <button type="button" class="love-arrow item-arrow" data-item-step="1" aria-label="Next">&rsaquo;</button>
+  </div>
   <p class="aside">Drag to spin &middot; tap to poke &middot; scroll or pinch to zoom</p>`;
 
 const BACK = {
@@ -202,6 +206,16 @@ function go(next) {
   render();
   settingsPanel.scrollTop = 0;
 }
+// Arrows on the close-up: the previous or next prize you've caught in this gallery, wrapping.
+export function stepItem(d) {
+  if (view !== "item") return;
+  const got = shownItems.filter(caught);
+  if (got.length < 2) return;
+  item = got[(got.indexOf(item) + d + got.length) % got.length];
+  sfx.blip();
+  render();
+}
+
 export function menuBack() {
   if (BACK[view]) go(BACK[view]);
   else closeSettings();
@@ -294,6 +308,8 @@ addEventListener("click", (e) => {
     gallery = gal.dataset.gallery;
     return render();
   }
+  const step = t.closest("[data-item-step]");
+  if (step) return stepItem(Number(step.dataset.itemStep));
   const pick = t.closest("[data-item]");
   if (pick) {
     item = shownItems[Number(pick.dataset.item)];

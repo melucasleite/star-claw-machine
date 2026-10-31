@@ -964,6 +964,24 @@ body.spanned #screen {
   opacity: 0.28;
 }
 /* The close-up: a studio canvas you can spin, zoom and poke. */
+.showcase-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+.showcase-row .showcase {
+  flex: 1;
+  min-width: 0;
+}
+/* The letter's round arrows, in the menu's colours. */
+.showcase-row .item-arrow {
+  flex: none;
+  color: var(--gold);
+  background: var(--slot-strong);
+  border-color: transparent;
+  box-shadow: none;
+}
 .item-facts {
   font-size: 9px;
 }

@@ -118,7 +118,10 @@ test("a plushie that teeters on the chute guard and drops in counts as a catch",
   const result = await ctx.g(async () => {
     const { game, plushies } = __claw;
     game.lives = 3;
-    const p = plushies[0];
+    // Always a bear, tilted toward the hole: a random shape at a random angle made this flaky
+    // (some land across the guard and stay). This one teeters, then tips in every time.
+    const p = plushies.find((x) => x.animal.name === "Bear") ?? plushies[0];
+    p.body.quaternion.set(0, 0, Math.sin(0.6), Math.cos(0.6));
     // Released just past the guard: it lands on the edge, hesitates, then tips into the hole.
     p.body.position.set(-1.5, 2.2, 2.7);
     p.body.velocity.set(-0.9, 0, 0);

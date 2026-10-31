@@ -126,10 +126,16 @@ export const PETS = [
     animal: "Cat",
     color: 0x2a262e,
     belly: 0x3d3843,
-    eyes: 0xd8e04a,
+    eyes: 0xc9dd3a,
     ui: "#c9c4d4",
   },
-  { name: "Jo Jo", as: "Lilac", animal: "Cat", color: 0x8d939b },
+  {
+    name: "Jo Jo",
+    as: "Lilac",
+    animal: "Cat",
+    color: 0x8d939b,
+    eyes: 0xc9dd3a,
+  },
   {
     name: "Mojo",
     as: "Mint",
