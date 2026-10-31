@@ -166,7 +166,7 @@ export const PETS = [
     white: true,
   },
   {
-    name: "Clownfish",
+    name: "Moo Moo",
     as: "Lilac",
     animal: "Banded Fish",
     color: 0xff7417,
@@ -175,7 +175,7 @@ export const PETS = [
     white: true,
   },
   {
-    name: "Clownfish",
+    name: "Mia",
     as: "Lilac",
     animal: "Banded Fish",
     color: 0xff7f24,
@@ -184,14 +184,14 @@ export const PETS = [
     white: true,
   },
   {
-    name: "Yellow Fish",
+    name: "Go Go",
     as: "Peach",
     animal: "Fish",
     color: 0xffd21f,
     accent: 0xf2b705,
   },
   {
-    name: "Tiger Shrimp",
+    name: "Mr Tiger",
     as: "Sky",
     animal: "Tiger Shrimp",
     color: 0xe9a35f,
