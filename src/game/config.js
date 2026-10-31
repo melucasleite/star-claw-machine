@@ -109,12 +109,15 @@ export const TIERS = [
 ];
 for (const t of TIERS) t.css = `#${t.color.toString(16).padStart(6, "0")}`;
 
-// Mikaela's unlock: once she has beaten the game, every level-1 machine has our four pets in it
-// (Ray Ray, Jo Jo and Tom Tom the cats, and Mojo the husky). Each stands in for one of the usual
+// Our family, for Mikaela's machine: with "OUR FAMILY" on in settings (on once she beats the game,
+// or with the FAMILY cheat), level 1 is stocked with nothing but our pets (Ray Ray, Jo Jo and Tom
+// Tom the cats, Mojo the husky, Loly and Axis the axolotls) and our fish tank. Each
+// stands in for one of the usual
 // plushies (`as`) and plays exactly like it, same points and same reel, so the machine is worth
 // the same. Their own colours: `belly` and `eyes` override the usual cream and button eyes, `white`
-// brightens the belly past the grey the knit texture lays over it, and `ui` is a colour light
-// enough for text on the dark screens.
+// brightens the belly past the grey the knit texture lays over it, `bright` does the same for the
+// fur, `accent` sets the trim (an axolotl's gills), `glow` makes it glow in the dark, and `ui` is a
+// colour light enough for text on the dark screens.
 export const PETS = [
   { name: "Ray Ray", as: "Mint", animal: "Cat", color: 0xe58a3a },
   {
@@ -136,6 +139,81 @@ export const PETS = [
     white: true,
     eyes: 0x7cc4ff,
   },
+  {
+    name: "Loly",
+    as: "Sky",
+    animal: "Axolotl",
+    color: 0xf4c6de,
+    bright: 1.2,
+    accent: 0xff6fae,
+  },
+  {
+    name: "Axis",
+    as: "Peach",
+    animal: "Axolotl",
+    color: 0xf7eef2,
+    bright: 1.2,
+    accent: 0xff8fc0,
+    glow: 0xffc4dc,
+  },
+  // The fish tank fills the rest of the machine.
+  {
+    name: "Pom Pom",
+    as: "Cherry",
+    animal: "Shrimp",
+    color: 0xd61f2c,
+    belly: 0xffffff,
+    white: true,
+  },
+  {
+    name: "Clownfish",
+    as: "Lilac",
+    animal: "Banded Fish",
+    color: 0xff7417,
+    accent: 0xe8650f,
+    belly: 0xffffff,
+    white: true,
+  },
+  {
+    name: "Clownfish",
+    as: "Lilac",
+    animal: "Banded Fish",
+    color: 0xff7f24,
+    accent: 0xe8650f,
+    belly: 0xffffff,
+    white: true,
+  },
+  {
+    name: "Yellow Fish",
+    as: "Peach",
+    animal: "Fish",
+    color: 0xffd21f,
+    accent: 0xf2b705,
+  },
+  {
+    name: "Tiger Shrimp",
+    as: "Sky",
+    animal: "Tiger Shrimp",
+    color: 0xe9a35f,
+    accent: 0x4a2a1a,
+  },
+  ...[
+    ["Sky", 0x1f1d22, 0xffffff],
+    ["Mint", 0x1f1d22, 0xffffff],
+    ["Mint", 0xf4f2ee, 0x1f1d22],
+    ["Mint", 0xf4f2ee, 0x1f1d22],
+  ].map(([as, color, bands]) => ({
+    name: "Fish",
+    as,
+    animal: "Banded Fish",
+    color,
+    accent: color === 0x1f1d22 ? 0x2c2a30 : 0xd9d6d0,
+    belly: bands,
+    white: bands === 0xffffff,
+    bright: color === 0xf4f2ee ? 1.15 : undefined,
+    eyes: color === 0x1f1d22 ? 0xf2f0e6 : undefined,
+    ui: "#e8e6e1",
+  })),
 ];
 for (const t of PETS) {
   const like = TIERS.find((tier) => tier.name === t.as);

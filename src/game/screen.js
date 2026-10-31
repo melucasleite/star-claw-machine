@@ -40,6 +40,30 @@ export const MODE_TEXT = {
 const SKIN = "#d5a07a";
 const GLOW = "#2f7fd8";
 const ARCADE_ICONS = {
+  // Mikaela's fish tank.
+  fish: (d) => {
+    d.blob(-1.05, 0, 0.35, 0.55, d.color);
+    d.blob(0.1, 0, 1.0, 0.7, d.color);
+    d.dot(0.6, -0.15, 0.13, d.ink);
+  },
+  clownfish: (d) => {
+    d.blob(-1.05, 0, 0.35, 0.55, d.color);
+    d.blob(0.1, 0, 1.0, 0.7, d.color);
+    for (const x of [-0.45, 0.05, 0.5]) d.rect(x, -0.62, 0.16, 1.24, "#fff4e2");
+    d.dot(0.7, -0.15, 0.12, d.ink);
+  },
+  shrimp: (d) => {
+    for (let i = 0; i < 5; i++)
+      d.blob(
+        0.8 - i * 0.42,
+        -0.2 + Math.sin((Math.PI * i) / 4) * -0.35,
+        0.36 - i * 0.04,
+        0.32 - i * 0.03,
+        d.color,
+      );
+    d.dot(0.95, -0.35, 0.09, d.ink);
+    d.rect(1.0, -0.9, 0.05, 0.6, d.ink);
+  },
   // Level 3: the city.
   hall: (d) => {
     d.rect(-0.9, -0.9, 1.8, 1.9, d.color);

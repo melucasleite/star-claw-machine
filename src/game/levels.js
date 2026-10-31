@@ -5,7 +5,7 @@ import { ANIMALS } from "./animals.js";
 import { ARCADE } from "./arcade.js";
 import { CITY } from "./city.js";
 import { levelUnlocked } from "./rules.js";
-import { setLevel, settings } from "./settings.js";
+import { setFamily, setLevel, settings } from "./settings.js";
 
 // `stage` picks the set dressing (see stages.js); without one it's the plain cabinet.
 // `kinds` work like ANIMALS: each is a shape the tiers colour in. A kind can also set `upright`
@@ -50,6 +50,11 @@ export function unlockLove() {
     localStorage.setItem(LOVE_KEY, "1");
   } catch {}
 }
+// The OUR FAMILY setting: hers once she beats the game (or with the FAMILY cheat), on unless she
+// switches it off. With it on, level 1 holds our pets and fish (PETS in config.js).
+export const familyUnlocked = () => love.unlocked || cheat.family;
+export const familyOn = () => familyUnlocked() && settings.family !== false;
+
 // What the marquee says on a level.
 export const marqueeFor = (level) =>
   love.unlocked ? "MIKAELA'S CLAW MACHINE" : level.marquee;
@@ -66,8 +71,13 @@ try {
 const CHEATS_KEY = "startclaw.cheats.v1";
 export const CHEATS = {
   FART: { flag: "unlockAll", message: "ALL LEVELS UNLOCKED" },
+  FAMILY: {
+    flag: "family",
+    message: "OUR FAMILY UNLOCKED",
+    then: () => setFamily(true),
+  },
 };
-export const cheat = { unlockAll: false };
+export const cheat = { unlockAll: false, family: false };
 try {
   Object.assign(cheat, JSON.parse(localStorage.getItem(CHEATS_KEY)));
 } catch {}
@@ -79,6 +89,7 @@ export function enterCheat(code) {
   try {
     localStorage.setItem(CHEATS_KEY, JSON.stringify(cheat));
   } catch {}
+  c.then?.();
   return c.message;
 }
 

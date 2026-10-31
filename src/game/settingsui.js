@@ -1,9 +1,10 @@
 import { settingsEl, settingsPanel } from "./dom.js";
 import { THEMES, THEME_IDS } from "./themes.js";
-import { applyTheme, setAimAssist, settings } from "./settings.js";
+import { applyTheme, setAimAssist, setFamily, settings } from "./settings.js";
 import { hold, release } from "./pause.js";
 import { askConfirm, renderOver, renderTitle } from "./overlays.js";
-import { enterCheat } from "./levels.js";
+import { enterCheat, familyOn, familyUnlocked } from "./levels.js";
+import { restock } from "./plushies.js";
 import { LOVE_NAME, openLove } from "./love.js";
 import { cleanName } from "./rules.js";
 import { game, startGame } from "./game.js";
@@ -33,6 +34,15 @@ function render() {
       <span class="knob"></span><span>${settings.aimAssist ? "ON" : "OFF"}</span>
     </button>
     <p class="aside">A laser shows where the claw will land. Scores made with it on stay off the high score boards, and switching it either way restarts the game.</p>
+    ${
+      familyUnlocked()
+        ? `<h2>OUR FAMILY</h2>
+    <button type="button" class="switch${familyOn() ? " on" : ""}" data-family role="switch" aria-checked="${familyOn()}">
+      <span class="knob"></span><span>${familyOn() ? "ON" : "OFF"}</span>
+    </button>
+    <p class="aside">The first machine is stocked with our pets and our fish, worth the same as the usual plushies.${game.mode === "play" ? " Takes effect on your next run." : ""}</p>`
+        : ""
+    }
     <h2>CHEATS</h2>
     <form class="name cheat"><div class="row"><input name="cheat" maxlength="16" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="CODE" aria-label="Cheat code" /><button class="btn" type="submit">ENTER</button></div><p class="aside" aria-live="polite">${cheatNote}</p></form>
     <div class="actions"><button class="btn big" type="button" data-close-settings>DONE</button></div>`;
@@ -52,6 +62,8 @@ settingsPanel.addEventListener("submit", (e) => {
   cheatNote = message ?? "NOTHING HAPPENS.";
   if (message) {
     sfx.fresh();
+    // A cheat can change what's in the machine (FAMILY); restock it unless a run is on.
+    if (game.mode !== "play") restock();
     // The level picker behind the dialog shows the newly opened levels.
     if (game.mode === "title") renderTitle();
     else if (game.mode === "over") renderOver();
@@ -103,6 +115,13 @@ addEventListener("click", (e) => {
     return closeSettings();
   const card = t.closest("[data-theme-pick]");
   if (card) return pickTheme(card.dataset.themePick);
+  if (t.closest("[data-family]")) {
+    setFamily(!familyOn());
+    // Restock now so the machine behind the dialog shows it; mid-run it waits for the next run.
+    if (game.mode !== "play") restock();
+    sfx.coinIn();
+    return render();
+  }
   if (t.closest("[data-assist]"))
     askConfirm(settings.aimAssist ? "assistOff" : "assistOn");
 });

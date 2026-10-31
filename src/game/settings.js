@@ -1,10 +1,16 @@
-// Player settings that outlive a run: the theme, aim assist and the picked level. A leaf module: it only stores
+// Player settings that outlive a run: the theme, aim assist, the picked level, and whether
+// Mikaela's machine is stocked with our family (null until she switches it; on by default). A leaf module: it only stores
 // values and tells subscribers when the theme changes, so anything can import it at load time.
 import { THEMES } from "./themes.js";
 
 const SETTINGS_KEY = "startclaw.settings.v1";
 
-export const settings = { theme: "default", aimAssist: false, level: 1 };
+export const settings = {
+  theme: "default",
+  aimAssist: false,
+  level: 1,
+  family: null,
+};
 try {
   const saved = JSON.parse(localStorage.getItem(SETTINGS_KEY));
   if (saved && THEMES[saved.theme]) settings.theme = saved.theme;
@@ -12,6 +18,8 @@ try {
     settings.aimAssist = saved.aimAssist;
   // Whether it is still open is checked in levels.js.
   if (saved && Number.isInteger(saved.level)) settings.level = saved.level;
+  if (saved && typeof saved.family === "boolean")
+    settings.family = saved.family;
 } catch {}
 
 function save() {
@@ -37,6 +45,11 @@ export function applyTheme(id = settings.theme) {
 
 export function setAimAssist(on) {
   settings.aimAssist = on;
+  save();
+}
+
+export function setFamily(on) {
+  settings.family = on;
   save();
 }
 

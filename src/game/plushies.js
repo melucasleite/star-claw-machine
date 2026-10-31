@@ -2,8 +2,9 @@ import * as THREE from "three";
 import * as CANNON from "cannon-es";
 import { CHUTE, DISH, PETS, TIERS } from "./config.js";
 import { LOOKS } from "./arcade.js";
-import { currentLevel, love } from "./levels.js";
+import { currentLevel, familyOn } from "./levels.js";
 import { HUSKY } from "./animals.js";
+import { TANK } from "./tank.js";
 import { scene, std } from "./scene.js";
 import { G_PRIZE, PRIZE_MASK, mats, world } from "./physics.js";
 import { onTheme, theme } from "./settings.js";
@@ -168,9 +169,18 @@ for (const t of [...TIERS, ...PETS]) {
     // The warm lamp and tone mapping wash pastels out, so the 3D fur gets a little extra saturation.
     fur: yarn(new THREE.Color(t.color).offsetHSL(0, 0.28, 0)),
     accent: yarn(
-      new THREE.Color(t.color).lerp(new THREE.Color(0x3a2a1a), 0.22),
+      t.accent ??
+        new THREE.Color(t.color).lerp(new THREE.Color(0x3a2a1a), 0.22),
     ),
   };
+  // Pale pets skip the saturation boost (it turns white-pink peach) and get brightened instead.
+  if (t.bright) t.mats.fur.color.set(t.color).multiplyScalar(t.bright);
+  // Glow in the dark: the body and gills light up (see glowPets for the slow pulse).
+  if (t.glow)
+    for (const m of [t.mats.fur, t.mats.accent]) {
+      m.emissive.set(t.glow);
+      m.emissiveIntensity = 0.45;
+    }
   // A pet's own belly and eyes (a black cat's eyes would vanish into black yarn).
   if (t.belly) t.mats.cream = yarn(t.belly);
   if (t.white) t.mats.cream.color.setScalar(1.3);
@@ -223,7 +233,9 @@ onTheme((t) => {
   const look = YARN_STYLES[style];
   for (const tier of [...TIERS, ...PETS]) {
     // The warm lamp and tone mapping wash pastels out, so the 3D fur gets a little extra saturation.
-    tier.mats.fur.color.set(tier.color).offsetHSL(0, t.plush.saturation, 0);
+    tier.mats.fur.color.set(tier.color);
+    if (tier.bright) tier.mats.fur.color.multiplyScalar(tier.bright);
+    else tier.mats.fur.color.offsetHSL(0, t.plush.saturation, 0);
     styleYarn(tier.mats.fur, look);
     styleYarn(tier.mats.accent, look);
     if (tier.mats.cream) styleYarn(tier.mats.cream, look);
@@ -297,6 +309,14 @@ export function addPlush(tier, animal, x, y, z) {
   plushies.push(plush);
 }
 
+// Glow-in-the-dark pets breathe light, slowly.
+const GLOWING = PETS.filter((t) => t.glow);
+export function glowPets(now) {
+  for (const t of GLOWING)
+    for (const m of [t.mats.fur, t.mats.accent])
+      m.emissiveIntensity = 0.35 + 0.25 * Math.sin(now / 900);
+}
+
 export function jiggle(dt) {
   for (const { squash: q } of plushies) {
     q.v += (-SQUISH.stiffness * q.a - SQUISH.damping * q.v) * dt;
@@ -329,8 +349,8 @@ export function restock() {
   while (plushies.length) removePlush(plushies[0]);
   const level = currentLevel();
   let stock = TIERS.flatMap((t) => Array(t.count).fill(t));
-  // Mikaela's machine: our pets take the place of a few of the usual plushies on level 1.
-  const pets = love.unlocked && level.id === 1 ? PETS : [];
+  // Mikaela's machine: with OUR FAMILY on, level 1 holds our pets and fish instead.
+  const pets = familyOn() && level.id === 1 ? PETS : [];
   for (const pet of pets)
     stock.splice(
       stock.findIndex((t) => t.name === pet.as),
@@ -361,7 +381,7 @@ export function restock() {
     addPlush(
       tier,
       tier.pet
-        ? [...kinds, HUSKY].find((k) => k.name === tier.animal)
+        ? [...kinds, HUSKY, ...TANK].find((k) => k.name === tier.animal)
         : nextAnimal(),
       cx + j(),
       1.0 + layer * 1.5 + Math.random() * 0.5,

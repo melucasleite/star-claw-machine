@@ -12,7 +12,7 @@ import {
   stick,
 } from "./cabinet.js";
 import { hub, hubMesh, prongs } from "./claw.js";
-import { plushies } from "./plushies.js";
+import { glowPets, plushies } from "./plushies.js";
 import { keys } from "./input.js";
 import { game } from "./game.js";
 
@@ -51,6 +51,7 @@ export function sync(now) {
   animateDecor(now);
   updateLaser(now);
   animatePhoto(now);
+  glowPets(now);
   animateHalloween(now);
 
   const ix = (keys.ArrowRight ? 1 : 0) - (keys.ArrowLeft ? 1 : 0);
