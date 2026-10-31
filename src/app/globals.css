@@ -1386,13 +1386,13 @@ body[data-theme="retro"] .popup {
 .love-card {
   position: relative;
   box-sizing: border-box;
-  width: min(580px, 100%);
+  width: min(680px, 100%);
   max-height: calc(100dvh - 40px);
   overflow: auto;
   overscroll-behavior: contain;
   padding: 46px 44px 34px;
   font-family: "Cormorant Garamond", Georgia, serif;
-  font-size: 19px;
+  font-size: 23px;
   font-weight: 500;
   font-size-adjust: none;
   line-height: 1.65;
@@ -1487,21 +1487,21 @@ body[data-theme="retro"] .popup {
   color: #8c2f45;
 }
 .love-card .big {
-  font-size: 24px;
+  font-size: 30px;
   font-style: italic;
   line-height: 1.45;
   color: #8c2f45;
 }
 .love-card .hint {
-  font-size: 15px;
+  font-size: 18px;
   letter-spacing: 0.08em;
   color: #b07a86;
 }
 .love-card .vow {
   padding: 16px 20px;
-  font-size: 23px;
+  font-size: 27px;
   font-style: italic;
-  line-height: 1.5;
+  line-height: 1.45;
   color: #8c2f45;
   background: rgba(184, 69, 95, 0.05);
   border-top: 1px solid #e6cba3;
@@ -1518,7 +1518,7 @@ body[data-theme="retro"] .popup {
 }
 .love-card .close {
   font-family: "Great Vibes", cursive;
-  font-size: 58px;
+  font-size: 68px;
   line-height: 1.1;
   color: #b8455f;
 }
@@ -1526,6 +1526,168 @@ body[data-theme="retro"] .popup {
   margin-top: -6px;
   font-style: italic;
   color: #8a6470;
+}
+
+/* Highlighter pen: each mark sweeps across once the slide has settled, a beat apart. */
+.love-card mark.hl {
+  padding: 0 2px;
+  margin: 0 -2px;
+  color: inherit;
+  background: linear-gradient(
+      100deg,
+      rgba(247, 168, 190, 0) 0.6%,
+      rgba(247, 168, 190, 0.7) 2%,
+      rgba(247, 168, 190, 0.55) 96%,
+      rgba(247, 168, 190, 0) 99%
+    )
+    no-repeat 0 72% / 0% 58%;
+  border-radius: 3px;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+  transition: background-size 0.9s cubic-bezier(0.3, 0.7, 0.3, 1);
+}
+.love-card mark.hl.y {
+  background-image: linear-gradient(
+    100deg,
+    rgba(255, 214, 102, 0) 0.6%,
+    rgba(255, 214, 102, 0.75) 2%,
+    rgba(255, 214, 102, 0.6) 96%,
+    rgba(255, 214, 102, 0) 99%
+  );
+}
+.love-card mark.hl.g {
+  background-image: linear-gradient(
+    100deg,
+    rgba(170, 222, 170, 0) 0.6%,
+    rgba(170, 222, 170, 0.75) 2%,
+    rgba(170, 222, 170, 0.6) 96%,
+    rgba(170, 222, 170, 0) 99%
+  );
+}
+.love-card .slide.on mark.hl {
+  background-size: 100% 58%;
+  transition-delay: 1.3s;
+}
+.love-card .slide.on mark.hl:nth-of-type(2) {
+  transition-delay: 1.9s;
+}
+.love-card .slide.on mark.hl:nth-of-type(3) {
+  transition-delay: 2.5s;
+}
+/* Sandra gets a name tag: bold, with a hand-drawn squiggle underneath. */
+.love-card mark.name {
+  position: relative;
+  font-weight: 700;
+  font-style: italic;
+  color: #8c2f45;
+}
+.love-card mark.name::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -6px;
+  height: 6px;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 6'%3E%3Cpath d='M1 4 Q5 0 9 3 T17 3 T25 3 T33 3 T39 2' fill='none' stroke='%23b8455f' stroke-width='1.6' stroke-linecap='round'/%3E%3C/svg%3E")
+    no-repeat center / 100% 100%;
+  clip-path: inset(0 100% 0 0);
+  transition: clip-path 0.7s ease;
+}
+.love-card .slide.on mark.name::after {
+  clip-path: inset(0 0 0 0);
+  transition-delay: 2.2s;
+}
+/* Pull quote: the thought that started everything, between two big script quote marks. */
+.love-card .pull {
+  position: relative;
+  margin: 2px 0;
+  padding: 10px 34px;
+  font-family: "Great Vibes", "Cormorant Garamond", cursive;
+  font-size: 42px;
+  line-height: 1.15;
+  color: #b8455f;
+}
+.love-card .pull::before,
+.love-card .pull::after {
+  position: absolute;
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-size: 72px;
+  font-style: normal;
+  line-height: 1;
+  color: #e6b8a0;
+}
+.love-card .pull::before {
+  content: "\201C";
+  top: -8px;
+  left: -2px;
+}
+.love-card .pull::after {
+  content: "\201D";
+  right: -2px;
+  bottom: -34px;
+}
+/* Each slide's words sit in a speech bubble, its tail pointing up at the doodle, with big
+   quote marks around the lot: he's saying it to her. */
+.love-card .bubble {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 26px 38px;
+  background: #fff;
+  border: 1.5px solid #ecd0b4;
+  border-radius: 26px;
+  box-shadow: 0 6px 20px rgba(184, 69, 95, 0.1);
+}
+.love-card .bubble::before {
+  content: "";
+  position: absolute;
+  top: -11px;
+  left: 50%;
+  width: 20px;
+  height: 20px;
+  background: #fff;
+  border-top: 1.5px solid #ecd0b4;
+  border-left: 1.5px solid #ecd0b4;
+  transform: translateX(-50%) rotate(45deg);
+}
+.love-card .bubble::after {
+  content: "\201C";
+  position: absolute;
+  top: 4px;
+  left: 10px;
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-size: 64px;
+  font-style: normal;
+  line-height: 1;
+  color: #e6b8a0;
+}
+.love-card .bubble > :last-child::after {
+  content: "\201D";
+  position: absolute;
+  right: 10px;
+  bottom: -26px;
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-size: 64px;
+  font-style: normal;
+  line-height: 1;
+  color: #e6b8a0;
+}
+.love-card .vow {
+  background: transparent;
+}
+/* The bubble already quotes the vow; no second set of marks inside it. */
+.love-card .bubble q {
+  quotes: none;
+}
+/* The pull quote keeps its own marks inside the bubble; give it room. */
+.love-card .bubble .pull::after {
+  bottom: -30px;
+}
+.love-card .love-title {
+  margin-bottom: 4px;
 }
 
 /* Doodles: hand-drawn strokes that draw themselves in, then the colour washes in behind. */
@@ -1691,22 +1853,33 @@ body[data-theme="retro"] .popup {
 }
 @media (max-width: 520px) {
   .love-card {
-    padding: 34px 32px 28px;
-    font-size: 17px;
+    padding: 30px 24px 24px;
+    font-size: 19px;
+  }
+  .love-card .bubble {
+    padding: 20px 22px;
+  }
+  .love-card .bubble::after,
+  .love-card .bubble > :last-child::after {
+    font-size: 48px;
   }
   .love-card h1 {
     font-size: 40px;
   }
   .love-card .vow {
-    padding: 14px 12px;
-    font-size: 20px;
+    padding: 10px 0;
+    font-size: 22px;
   }
   .love-card .big {
-    font-size: 21px;
+    font-size: 24px;
+  }
+  .love-card .pull {
+    padding: 8px 26px;
+    font-size: 34px;
   }
   .doodle {
-    width: 150px;
-    height: 112px;
+    width: 130px;
+    height: 98px;
   }
   .love-nav {
     gap: 8px;
@@ -1727,7 +1900,9 @@ body[data-theme="retro"] .popup {
   .doodle .blush {
     opacity: 1;
   }
-  .love-card .slide {
+  .love-card .slide,
+  .love-card mark.hl,
+  .love-card mark.name::after {
     transition: none;
   }
   .love-hearts {

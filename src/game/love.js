@@ -1,5 +1,5 @@
 import { loveEl, lovePanel } from "./dom.js";
-import { notes } from "./audio.js";
+import { startSong, stopSong } from "./lovesong.js";
 import { game } from "./game.js";
 import { hold, release } from "./pause.js";
 
@@ -173,39 +173,39 @@ const SLIDES = [
   ],
   [
     "rings",
-    `<p>My love, today is our big day. I&rsquo;m marrying my best friend. In front of my best friends, isn&rsquo;t that crazy? We all here under this one roof. There&rsquo;s just so much love in this room. Today is the happiest day of my life.</p>`,
+    `<p>My love, today is our big day. I&rsquo;m marrying my <mark class="hl">best friend</mark>. In front of my best friends, isn&rsquo;t that crazy? We all here under this one roof. There&rsquo;s just so much love in this room. Today is the <mark class="hl y">happiest day of my life</mark>.</p>`,
   ],
   [
     "smile",
-    `<p>Let me seize this moment and share this with everyone. The exact moment I fell in love with you. It was when I saw your loving smile for the very first time. Naturally we had just met so you were smiling to Sandra. It was a big, beautiful, beautiful smile.</p>`,
+    `<p>Let me seize this moment and share this with everyone. The exact moment I fell in love with you. It was when I saw your <mark class="hl">loving smile</mark> for the very first time. Naturally we had just met so you were smiling to <mark class="hl y name">Sandra</mark>. It was a <mark class="hl g">big, beautiful, beautiful smile</mark>.</p>`,
   ],
   [
     "clover",
-    `<p>It was the most beautiful smile I had ever seen. I immediately thought to myself, <em>I want her to smile like that for me.</em> And here you are, smiling now. And I feel like the luckiest man alive.</p>`,
+    `<p>It was the most beautiful smile I had ever seen. I immediately thought to myself,</p><blockquote class="pull">I want her to smile like that for me.</blockquote><p>And here you are, smiling now. And I feel like the <mark class="hl y">luckiest man alive</mark>.</p>`,
   ],
   [
     "grin",
-    `<p class="vow"><span class="n">Here is my first vow:</span>I will live to make you smile.</p>`,
+    `<p class="vow"><span class="n">Here is my first vow:</span><q>I will live to make you smile.</q></p>`,
   ],
   [
     "sprout",
-    `<p>Devotion and love are hard to earn, but you did that. You bring out the very best in me&mdash; I just can&rsquo;t hide from you. You&rsquo;ve seen me at my worst, and at my best, and you didn&rsquo;t just accept me as I am. You insisted on my potential, believed in me, and helped me grow as a person. I saw the man I wanted to be through your eyes and in many ways, you saved my life.</p>`,
+    `<p>Devotion and love are hard to earn, but you did that. You bring out <mark class="hl">the very best in me</mark>&mdash; I just can&rsquo;t hide from you. You&rsquo;ve seen me at my worst, and at my best, and you didn&rsquo;t just accept me as I am. You insisted on my potential, believed in me, and helped me grow as a person. I saw the man I wanted to be through your eyes and in many ways, <mark class="hl y">you saved my life</mark>.</p>`,
   ],
   [
     "bloom",
-    `<p class="vow"><span class="n">So here&rsquo;s my second vow:</span>I will always grow, and I will keep stepping it up, day after day, so you can continuously fall in love with me, and so our marriage can always flourish.</p>`,
+    `<p class="vow"><span class="n">So here&rsquo;s my second vow:</span><q>I will always grow, and I will keep stepping it up, day after day, so you can continuously fall in love with me, and so our marriage can always flourish.</q></p>`,
   ],
   [
     "moon",
-    `<p class="big">Finally, I want to say that I&rsquo;m living my biggest dreams with you.</p>`,
+    `<p class="big">Finally, I want to say that I&rsquo;m living my <mark class="hl y">biggest dreams</mark> with you.</p>`,
   ],
   [
     "balloon",
-    `<p class="vow"><span class="n">Here&rsquo;s my third and final vow:</span>I will believe in your dreams, just as you believed in mine. I will live to help fulfill your dreams, especially the one we had to delay.</p>`,
+    `<p class="vow"><span class="n">Here&rsquo;s my third and final vow:</span><q>I will believe in your dreams, just as you believed in mine. I will live to help fulfill your dreams, especially the one we had to delay.</q></p>`,
   ],
   [
     "us",
-    `<p>I&rsquo;m here for you, babe. And as God is my witness I will never settle and put you aside&mdash;body and soul. Your partner, your lover, the one you chose to walk life with.</p>`,
+    `<p>I&rsquo;m here for you, babe. And as God is my witness I will never settle and put you aside&mdash;<mark class="hl">body and soul</mark>. Your partner, your lover, the one you chose to <mark class="hl g">walk life with</mark>.</p>`,
   ],
   [
     "arrow",
@@ -213,22 +213,26 @@ const SLIDES = [
   ],
 ];
 
+// The title opens the first slide only.
+const TITLE = `<header class="love-title">
+    <p class="eyebrow">for Mikaela</p>
+    <h1>I made this for you</h1>
+    <div class="flourish" aria-hidden="true"><span></span>&#9829;<span></span></div>
+  </header>`;
+
 const LAST = SLIDES.length - 1;
 let at = 0;
 
 function render() {
   const slides = SLIDES.map(
     ([doodle, html], i) =>
-      `<section class="slide" aria-roledescription="slide" aria-label="${i + 1} of ${SLIDES.length}">${DOODLES[doodle]}${html}</section>`,
+      `<section class="slide" aria-roledescription="slide" aria-label="${i + 1} of ${SLIDES.length}">${i === 0 ? TITLE : ""}${DOODLES[doodle]}<div class="bubble">${html}</div></section>`,
   ).join("");
   const dots = SLIDES.map(
     (_, i) =>
       `<button type="button" class="dot-btn" data-love-go="${i}" aria-label="Slide ${i + 1}"></button>`,
   ).join("");
   lovePanel.innerHTML = `
-    <p class="eyebrow">for Mikaela</p>
-    <h1>I made this for you</h1>
-    <div class="flourish" aria-hidden="true"><span></span>&#9829;<span></span></div>
     <div class="slides" aria-live="polite">${slides}</div>
     <nav class="love-nav">
       <button type="button" class="love-arrow" data-love-step="-1" aria-label="Back">&lsaquo;</button>
@@ -250,12 +254,6 @@ function go(i) {
   lovePanel.querySelector("[data-love-step='-1']").disabled = at === 0;
   // On the last slide the next arrow gives way to the heart, which closes.
   lovePanel.querySelector(".love-nav").classList.toggle("end", at === LAST);
-  // Each slide gets a little two-note chime, rising toward the end.
-  notes([72 + at * 2, 79 + at * 2], 0.09, {
-    vol: 0.035,
-    type: "sine",
-    dur: 0.6,
-  });
 }
 export const stepLove = (d) => go(at + d);
 
@@ -277,12 +275,8 @@ export function openLove() {
   loveEl.querySelector(".love-hearts").innerHTML = heartsHtml();
   loveEl.hidden = false;
   lovePanel.scrollTop = 0;
-  // A soft music-box rise.
-  notes([72, 76, 79, 84, 88, 91, 96], 0.14, {
-    vol: 0.05,
-    type: "sine",
-    dur: 0.9,
-  });
+  // Our song.
+  startSong();
   go(0);
   lovePanel
     .querySelector("[data-love-step='1']")
@@ -291,6 +285,7 @@ export function openLove() {
 export function closeLove() {
   if (loveEl.hidden) return;
   loveEl.hidden = true;
+  stopSong();
   release("love");
 }
 

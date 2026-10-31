@@ -28,6 +28,8 @@ const drive = () =>
 
 export function scheduleMusic() {
   if (ac.state !== "running") return;
+  // Hushed while the letter's song plays; pick up from here afterwards.
+  if (music.hush) return void (music.next = ac.currentTime + 0.05);
   // Behind (tab was hidden): skip ahead instead of firing a burst of notes.
   if (music.next < ac.currentTime) music.next = ac.currentTime + 0.05;
   while (music.next < ac.currentTime + 0.12) {
