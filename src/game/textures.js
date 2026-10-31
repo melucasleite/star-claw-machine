@@ -128,6 +128,34 @@ export function arcadeCarpet() {
   );
 }
 
+// Desktop: a mown lawn, light and dark stripes with blades and the odd little yellow flower.
+export function grass() {
+  return canvasTexture(
+    "grass",
+    256,
+    256,
+    (c, w, h) => {
+      const r = rng(37);
+      c.fillStyle = "#4f9a2c";
+      c.fillRect(0, 0, w, h);
+      for (let i = 0; i < 4; i++) {
+        c.fillStyle = i % 2 ? "rgba(255,255,140,0.07)" : "rgba(0,40,0,0.06)";
+        c.fillRect(0, (i * h) / 4, w, h / 4);
+      }
+      for (let i = 0; i < 2600; i++) {
+        c.fillStyle =
+          r() < 0.5 ? "rgba(140,210,70,0.5)" : "rgba(30,90,20,0.45)";
+        c.fillRect(r() * w, r() * h, 1, 2 + r() * 3);
+      }
+      for (let i = 0; i < 14; i++) {
+        c.fillStyle = "#ffe14a";
+        c.fillRect(r() * w, r() * h, 2, 2);
+      }
+    },
+    { repeat: [5, 5] },
+  );
+}
+
 // Halloween: a dark purple floor with fallen leaves in orange, rust and brown.
 export function leaves() {
   return canvasTexture(

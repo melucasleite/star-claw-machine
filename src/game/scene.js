@@ -4,7 +4,11 @@ import { onTheme, theme } from "./settings.js";
 
 // ---------- renderer / camera ----------
 
-export const renderer = new THREE.WebGLRenderer({ antialias: true });
+// Alpha, so a theme without a scene background (desktop) shows the page's painted sky behind.
+export const renderer = new THREE.WebGLRenderer({
+  antialias: true,
+  alpha: true,
+});
 renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
@@ -142,7 +146,10 @@ export function box(
 let roomEnv = null;
 onTheme((t) => {
   const s = t.scene;
-  scene.background.setHex(s.background);
+  scene.background =
+    s.background === null
+      ? null
+      : (scene.background ?? new THREE.Color()).setHex(s.background);
   hemi.color.setHex(s.hemi[0]);
   hemi.groundColor.setHex(s.hemi[1]);
   hemi.intensity = s.hemi[2];

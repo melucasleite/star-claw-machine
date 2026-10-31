@@ -9,6 +9,7 @@ import {
   arcadeCarpet,
   candy,
   floorboards,
+  grass,
   harlequin,
   leaves,
   wedges,
@@ -291,14 +292,20 @@ onTheme((t) => {
             ? harlequin()
             : null;
   if (ground.material.map) ground.material.color.setHex(0xffffff);
+  // Desktop: no floor, the page's sky and hill show through; the machine stands on a lawn.
+  ground.visible = decor !== "desktop";
+  rug.scale.setScalar(decor === "desktop" ? 1.35 : 1);
   rug.material.color.setHex(s.rug);
   rug.material.map =
     decor === "carousel"
       ? wedges("#f7a8c8", "#fff0f6")
       : decor === "real"
         ? wool()
-        : null;
-  if (decor === "carousel") rug.material.color.setHex(0xffffff);
+        : decor === "desktop"
+          ? grass()
+          : null;
+  if (decor === "carousel" || decor === "desktop")
+    rug.material.color.setHex(0xffffff);
   for (const m of [ground.material, rug.material]) {
     m.flatShading = !!s.flat;
     m.needsUpdate = true;

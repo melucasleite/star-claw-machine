@@ -2797,3 +2797,268 @@ body[data-theme="retro"] .popup {
     font-size: 28px;
   }
 }
+
+/* ---------- desktop 2001 ---------- */
+/* A painted sky over a rolling green hill, behind a transparent 3D view; dialogs are blue
+   title-bar windows on beige, the main buttons green and chunky like a start button. */
+body[data-theme="desktop"] {
+  --wood: #ece9d8;
+  --wood-dark: #0a246a;
+  --teal: #245edb;
+  --mustard: #3a9a2e;
+  --gold: #0a246a;
+  --heart: #ff5c7a;
+  --danger: #c42b1c;
+  --bg: #3a6ea5;
+  --ink: #1a1a1a;
+  --font: "Tahoma", "Verdana", "Segoe UI", sans-serif;
+  --panel: #ece9d8;
+  --button: #245edb;
+  --slot: rgba(10, 36, 106, 0.06);
+  --slot-strong: rgba(10, 36, 106, 0.12);
+  --input: #ffffff;
+  --off: #aca899;
+  --scrim: rgba(10, 36, 106, 0.3);
+  --radius: 8px;
+  font-size-adjust: 0.62;
+  background:
+    /* Clouds, drifting. */
+    radial-gradient(
+      ellipse 9% 4% at 18% 14%,
+      rgba(255, 255, 255, 0.95),
+      transparent 70%
+    ),
+    radial-gradient(
+      ellipse 6% 3% at 24% 16%,
+      rgba(255, 255, 255, 0.9),
+      transparent 70%
+    ),
+    radial-gradient(
+      ellipse 14% 4% at 70% 9%,
+      rgba(255, 255, 255, 0.85),
+      transparent 70%
+    ),
+    radial-gradient(
+      ellipse 7% 3% at 62% 30%,
+      rgba(255, 255, 255, 0.9),
+      transparent 70%
+    ),
+    radial-gradient(
+      ellipse 10% 3.5% at 86% 34%,
+      rgba(255, 255, 255, 0.9),
+      transparent 70%
+    ),
+    radial-gradient(
+      ellipse 18% 2.5% at 40% 26%,
+      rgba(255, 255, 255, 0.55),
+      transparent 70%
+    ),
+    /* The hill: lit on top, shadowed down the slope, then the meadow in front. */
+    radial-gradient(
+        ellipse 95% 55% at 35% 100%,
+        #6dbf3a 0 48%,
+        #3f8f22 70%,
+        transparent 71%
+      ),
+    radial-gradient(
+      ellipse 120% 40% at 70% 108%,
+      #4c9a2a 0 60%,
+      transparent 61%
+    ),
+    /* The sky. */
+    linear-gradient(180deg, #1a5fd6 0%, #3b86ef 45%, #8cc2f7 72%, #cfe6fb 80%);
+  background-attachment: fixed;
+  animation: desktop-clouds 160s linear infinite alternate;
+}
+@keyframes desktop-clouds {
+  to {
+    background-position:
+      18vw 0,
+      18vw 0,
+      -14vw 0,
+      10vw 0,
+      -10vw 0,
+      22vw 0,
+      0 0,
+      0 0,
+      0 0;
+  }
+}
+/* Windows: a beige body with a blue title bar and a red close box across the top. */
+body[data-theme="desktop"] .panel {
+  --pad-y: 40px;
+  color: var(--ink);
+  background:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 21 21'%3E%3Crect x='.5' y='.5' width='20' height='20' rx='3' fill='%23e0532f' stroke='%23fff'/%3E%3Cpath d='M6 6l9 9M15 6l-9 9' stroke='%23fff' stroke-width='2.2'/%3E%3C/svg%3E")
+      right 7px top 4px / 21px 21px no-repeat,
+    linear-gradient(180deg, #3c8cf8 0, #0a5ae6 30%, #0848d8 80%, #0a3fbf 100%)
+      top / 100% 29px no-repeat,
+    #ece9d8;
+  border: 3px solid #0831d9;
+  border-radius: 9px 9px 4px 4px;
+  box-shadow: 0 16px 40px rgba(10, 36, 106, 0.45);
+}
+body[data-theme="desktop"] .panel h1,
+body[data-theme="desktop"] .panel h2 {
+  font-weight: bold;
+  text-shadow: none;
+}
+body[data-theme="desktop"] .panel h1 {
+  color: #0a246a;
+}
+body[data-theme="desktop"] .panel h2 {
+  color: #245edb;
+}
+body[data-theme="desktop"] .panel > .actions:last-child {
+  background: #ece9d8;
+}
+/* The main buttons: green and chunky. Ghost buttons: plain grey-white push buttons. */
+body[data-theme="desktop"] .btn {
+  font-weight: bold;
+  font-style: italic;
+  color: #fff;
+  text-shadow: 1px 1px 0 rgba(0, 0, 0, 0.35);
+  background: linear-gradient(180deg, #6ad15a 0%, #33a127 50%, #278a1d 100%);
+  border: 1px solid #1d6d16;
+  border-radius: 6px 16px 16px 6px;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.55),
+    0 2px 4px rgba(0, 0, 0, 0.25);
+}
+body[data-theme="desktop"] .btn.ghost {
+  font-style: normal;
+  color: #1a1a1a;
+  text-shadow: none;
+  background: linear-gradient(180deg, #ffffff, #ece9d8 85%, #d6d2c2);
+  border: 1px solid #003c74;
+  border-radius: 4px;
+}
+/* The menu: start-menu rows, white, turning blue under the pointer. */
+body[data-theme="desktop"] .menu-item {
+  color: #1a1a1a;
+  background: #ffffff;
+  border: 1px solid #c8c5b8;
+  border-radius: 6px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.12);
+}
+body[data-theme="desktop"] .menu-item b {
+  color: #0a246a;
+  font-weight: bold;
+  text-shadow: none;
+}
+body[data-theme="desktop"] .menu-item:hover,
+body[data-theme="desktop"] .menu-item:focus-visible {
+  color: #fff;
+  background: #316ac5;
+  border-color: #0a246a;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+body[data-theme="desktop"] .menu-item:hover b,
+body[data-theme="desktop"] .menu-item:focus-visible b {
+  color: #fff;
+}
+body[data-theme="desktop"] .menu-icon {
+  color: #fff;
+  background: linear-gradient(180deg, #5aa0f7, #245edb);
+  border: 1px solid #0a246a;
+  border-radius: 6px;
+}
+body[data-theme="desktop"] .menu-item[data-menu="new"] {
+  color: #fff;
+  background: linear-gradient(180deg, #6ad15a 0%, #33a127 50%, #278a1d 100%);
+  border: 1px solid #1d6d16;
+  border-radius: 6px 22px 22px 6px;
+}
+body[data-theme="desktop"] .menu-item[data-menu="new"] b {
+  color: #fff;
+  font-style: italic;
+  text-shadow: 1px 1px 0 rgba(0, 0, 0, 0.35);
+}
+body[data-theme="desktop"] .menu-item[data-menu="new"] .menu-icon {
+  color: #33a127;
+  background: #fff;
+}
+body[data-theme="desktop"] .menu-logo {
+  font-family: var(--font);
+  font-size: 58px;
+  font-style: italic;
+}
+body[data-theme="desktop"] .menu-logo b {
+  font-weight: bold;
+  color: #fff;
+  -webkit-text-stroke: 2px #0a246a;
+  text-shadow:
+    0 3px 0 #3c8cf8,
+    0 6px 0 #0831d9,
+    0 10px 16px rgba(10, 36, 106, 0.35);
+}
+body[data-theme="desktop"] .menu-logo .star {
+  color: #ffc21a;
+}
+body[data-theme="desktop"] .menu-foot .blink {
+  color: #245edb;
+}
+/* HUD over the sky: white numbers outlined in blue, chips like tray balloons. */
+body[data-theme="desktop"] #scoreboard {
+  text-shadow: 1px 1px 0 #0a246a;
+}
+body[data-theme="desktop"] #scoreboard .label {
+  color: #fff;
+  font-weight: bold;
+}
+body[data-theme="desktop"] #score {
+  font-weight: bold;
+  color: #fff;
+  text-shadow:
+    0 2px 0 #3c8cf8,
+    0 4px 0 #0831d9,
+    0 8px 14px rgba(10, 36, 106, 0.4);
+}
+body[data-theme="desktop"] .chip {
+  color: #1a1a1a;
+  background: #ffffe1;
+  border: 1px solid #0a246a;
+}
+body[data-theme="desktop"] .chip b {
+  color: #245edb;
+  font-weight: bold;
+}
+body[data-theme="desktop"] .chip.ghost {
+  color: #fff;
+  background: transparent;
+  border-color: transparent;
+}
+body[data-theme="desktop"] .chip.ghost b {
+  color: #fff;
+}
+body[data-theme="desktop"] #sound button,
+body[data-theme="desktop"] #quit {
+  color: #fff;
+  background: linear-gradient(180deg, #5aa0f7, #245edb 60%, #1941a5);
+  border: 1px solid #0a246a;
+}
+@media (prefers-reduced-motion: reduce) {
+  body[data-theme="desktop"] {
+    animation: none;
+  }
+}
+/* The streak badge as a little yellow tooltip; the multiplier heats from blue to red. */
+body[data-theme="desktop"] #streak {
+  --heat: #245edb;
+  background: #ffffe1;
+  border: 1px solid #0a246a;
+  border-left: 5px solid var(--heat);
+}
+body[data-theme="desktop"] #streak[data-heat="2"] {
+  --heat: #e58a00;
+}
+body[data-theme="desktop"] #streak[data-heat="3"] {
+  --heat: #e0532f;
+}
+body[data-theme="desktop"] #streak[data-heat="4"] {
+  --heat: #c42b1c;
+}
+body[data-theme="desktop"] #streak b {
+  font-weight: bold;
+  text-shadow: none;
+}

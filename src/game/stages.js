@@ -432,7 +432,8 @@ function buildArcade() {
       ground.material.color.setHex(0x8a8a8a);
       ground.material.needsUpdate = true;
       rug.visible = false;
-      scene.background.setHex(0x120a20);
+      scene.background = new THREE.Color(0x120a20);
+      ground.visible = true;
       lamp.intensity = 18;
     },
   };
@@ -816,7 +817,8 @@ function buildCity() {
       ground.material.color.setHex(0xffffff);
       ground.material.needsUpdate = true;
       rug.visible = false;
-      scene.background.setHex(0x0b1020);
+      scene.background = new THREE.Color(0x0b1020);
+      ground.visible = true;
       lamp.intensity = 20;
     },
   };
