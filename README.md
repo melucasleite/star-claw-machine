@@ -44,7 +44,7 @@ The music speeds up as the machine empties. With one plushie left it's 30% faste
 
 ## Themes
 
-Settings has six themes. They change how the game looks and sounds: the cabinet, the floor, the plushies, the menus, the reel screen, the music and the sound effects. The physics and the scoring are the same in all six.
+Settings has seven themes. They change how the game looks and sounds: the cabinet, the floor, the plushies, the menus, the reel screen, the music and the sound effects. The physics and the scoring are the same in all seven.
 
 | 8-bit                                      | Pink carousel                                         | Ultra real 4K                                     | Halloween                                          |
 | ------------------------------------------ | ----------------------------------------------------- | ------------------------------------------------- | -------------------------------------------------- |
@@ -55,6 +55,9 @@ Settings has six themes. They change how the game looks and sounds: the cabinet,
 - **Ultra real 4K**: chrome, wood grain, glass with fingerprints on it, dust in the lamp light, tilt-shift and film grain. Somebody left their coffee on the floor, and a camcorder is recording the whole thing. It renders at up to 3x the screen's pixels with a 4096px shadow map and seven post-processing passes, so older phones will stutter.
 - **Halloween**: a black and orange cabinet with candle-flicker bulbs, jack-o'-lanterns on a floor of fallen leaves, a skeleton sitting against the machine with a pumpkin on its lap, a cobweb in the corner, bats across a full moon, and a haunted organ in D minor.
 - **Desktop 2001**: the machine stands on a lawn on a painted green hill under a big blue sky with drifting clouds. Dialogs are blue title-bar windows, the main buttons are chunky and green, and the music is a sunny electric piano.
+- **Deep Space**: a chrome ship of a cabinet on a glowing launch pad over a starfield, with asteroids tumbling past, a ringed planet and its moon, shooting stars, Orbitron type and a floaty synth tune.
+
+**Peek** (FRONT and SIDE, or F and R): like leaning round a real machine, the camera swings to look straight through the front or side glass so you can line the claw up. Arrow keys and dragging follow the view. Tap again to come back.
 
 **Aim assist** draws a laser from the claw to whatever it would land on. Runs played with it on stay off both high score boards, and switching it on or off restarts the current run, so you can't switch it mid-game.
 

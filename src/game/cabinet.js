@@ -11,6 +11,8 @@ import {
   floorboards,
   grass,
   harlequin,
+  launchPad,
+  starfield,
   leaves,
   wedges,
   woodGrain,
@@ -286,11 +288,13 @@ onTheme((t) => {
       ? floorboards()
       : decor === "halloween"
         ? leaves()
-        : t.id === "retro"
-          ? arcadeCarpet()
-          : decor === "carousel"
-            ? harlequin()
-            : null;
+        : decor === "space"
+          ? starfield()
+          : t.id === "retro"
+            ? arcadeCarpet()
+            : decor === "carousel"
+              ? harlequin()
+              : null;
   if (ground.material.map) ground.material.color.setHex(0xffffff);
   // Desktop: no floor, the page's sky and hill show through; the machine stands on a lawn.
   ground.visible = decor !== "desktop";
@@ -303,8 +307,10 @@ onTheme((t) => {
         ? wool()
         : decor === "desktop"
           ? grass()
-          : null;
-  if (decor === "carousel" || decor === "desktop")
+          : decor === "space"
+            ? launchPad()
+            : null;
+  if (decor === "carousel" || decor === "desktop" || decor === "space")
     rug.material.color.setHex(0xffffff);
   for (const m of [ground.material, rug.material]) {
     m.flatShading = !!s.flat;

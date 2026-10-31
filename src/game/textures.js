@@ -128,6 +128,95 @@ export function arcadeCarpet() {
   );
 }
 
+// Space: deep navy with stars of every size, a few tinted, and soft nebula clouds.
+export function starfield() {
+  return canvasTexture(
+    "starfield",
+    512,
+    512,
+    (c, w, h) => {
+      const r = rng(43);
+      c.fillStyle = "#04061a";
+      c.fillRect(0, 0, w, h);
+      for (const [x, y, rad, col] of [
+        [0.25, 0.3, 0.35, "rgba(120,60,200,0.22)"],
+        [0.75, 0.7, 0.3, "rgba(30,140,220,0.18)"],
+        [0.6, 0.15, 0.2, "rgba(220,70,160,0.14)"],
+      ])
+        for (const dx of [-w, 0, w])
+          for (const dy of [-h, 0, h]) {
+            const g = c.createRadialGradient(
+              x * w + dx,
+              y * h + dy,
+              0,
+              x * w + dx,
+              y * h + dy,
+              rad * w,
+            );
+            g.addColorStop(0, col);
+            g.addColorStop(1, "rgba(0,0,0,0)");
+            c.fillStyle = g;
+            c.fillRect(0, 0, w, h);
+          }
+      const tints = [
+        "#ffffff",
+        "#ffffff",
+        "#ffffff",
+        "#bcd8ff",
+        "#ffe2b8",
+        "#ffc4e6",
+      ];
+      for (let i = 0; i < 700; i++) {
+        c.fillStyle = tints[Math.floor(r() * tints.length)];
+        c.globalAlpha = 0.3 + r() * 0.7;
+        const s = r() < 0.06 ? 2.5 : r() < 0.3 ? 1.5 : 1;
+        c.fillRect(r() * w, r() * h, s, s);
+      }
+      c.globalAlpha = 1;
+    },
+    { repeat: [8, 8] },
+  );
+}
+
+// Space: a round launch pad, steel with hazard rings, a glowing landing circle and an H.
+export function launchPad() {
+  return canvasTexture("launchpad", 512, 512, (c, w) => {
+    const m = w / 2;
+    c.fillStyle = "#2a2f3c";
+    c.fillRect(0, 0, w, w);
+    for (let k = 0; k < 24; k++) {
+      c.strokeStyle = k % 2 ? "#323848" : "#262b37";
+      c.lineWidth = 10;
+      c.beginPath();
+      c.arc(m, m, 20 + k * 10, 0, Math.PI * 2);
+      c.stroke();
+    }
+    // Hazard ring.
+    for (let a = 0; a < 24; a++) {
+      c.fillStyle = a % 2 ? "#ffb21a" : "#15171d";
+      c.beginPath();
+      c.arc(m, m, 240, (a / 24) * Math.PI * 2, ((a + 1) / 24) * Math.PI * 2);
+      c.arc(
+        m,
+        m,
+        214,
+        ((a + 1) / 24) * Math.PI * 2,
+        (a / 24) * Math.PI * 2,
+        true,
+      );
+      c.fill();
+    }
+    c.strokeStyle = "#4df3ff";
+    c.lineWidth = 6;
+    c.shadowColor = "#4df3ff";
+    c.shadowBlur = 16;
+    c.beginPath();
+    c.arc(m, m, 170, 0, Math.PI * 2);
+    c.stroke();
+    c.shadowBlur = 0;
+  });
+}
+
 // Desktop: a mown lawn, light and dark stripes with blades and the odd little yellow flower.
 export function grass() {
   return canvasTexture(

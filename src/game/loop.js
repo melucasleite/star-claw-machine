@@ -9,6 +9,7 @@ import { game, tick } from "./game.js";
 import { drawScreen } from "./screen.js";
 import { setMotor } from "./audio.js";
 import { sync } from "./sync.js";
+import { stepCamera } from "./peek.js";
 
 // ---------- loop ----------
 
@@ -30,6 +31,7 @@ export function frame(now) {
       acc -= FIXED;
     }
   }
+  stepCamera(dt);
   sync(now);
   const hv = hub.velocity;
   setMotor(game.paused ? 0 : Math.hypot(hv.x, hv.z) + Math.abs(hv.y) * 0.5);

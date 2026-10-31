@@ -43,7 +43,7 @@ export function helpBodyHtml() {
     <h1>HOW TO PLAY</h1>
     <p>Drop the claw on a plushie, then keep it in the green bar to reel it into the chute.</p>
     ${stepsHtml()}
-    <p class="aside">${TOUCH ? "QUIT &amp; SAVE cashes out &middot; &#9835; / &#128264; toggle sound" : "Q cashes out &middot; M / S toggle sound &middot; H opens this page"}</p>
+    <p class="aside">${TOUCH ? "FRONT / SIDE peek through the glass &middot; QUIT &amp; SAVE cashes out" : "F / R peek from the front or side &middot; Q cashes out &middot; M / S sound &middot; H help"}</p>
     <h2>POINTS</h2>
     <div class="tiers">${tiers}</div>
     <p>Perfect reel x1.5 &middot; streaks up to x${RULES.streakMax}</p>

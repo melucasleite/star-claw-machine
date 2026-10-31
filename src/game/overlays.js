@@ -21,6 +21,7 @@ import {
   LEVELS,
   currentLevel,
   isUnlocked,
+  love,
   marqueeFor,
   pickLevel,
   unlockLove,
@@ -29,11 +30,14 @@ import { restock } from "./plushies.js";
 import { drawMarquee } from "./cabinet.js";
 import { applyTheme } from "./settings.js";
 import { sfx } from "./audio.js";
+import { setView } from "./peek.js";
 import { LOVE_NAME, openLove } from "./love.js";
 
 // ---------- overlays ----------
 
 export function setMode(mode) {
+  // A peek lasts for the run; anything else starts from the usual view.
+  if (mode !== "play") setView("iso");
   game.mode = mode;
   game.modeAt = performance.now();
   document.body.dataset.mode = mode;
@@ -214,10 +218,12 @@ panelEl.addEventListener("submit", (e) => {
   renderOver();
   renderHud();
   if (game.result?.love) {
+    // The letter pops up the first time she earns it; after that it lives in her menu.
+    const first = !love.unlocked;
     // From now on every machine is hers; she sees it renamed when the letter closes.
     unlockLove();
     drawMarquee(marqueeFor(currentLevel()));
-    setTimeout(openLove, 600);
+    if (first) setTimeout(openLove, 600);
   }
 });
 panelEl.addEventListener("click", (e) => {

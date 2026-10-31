@@ -71,6 +71,15 @@ export default function Game() {
           </svg>
         </button>
       </div>
+      {/* Peek through the glass, like leaning round a real machine to line up the claw. */}
+      <div id="peek">
+        <button type="button" data-peek="front" title="Peek from the front (F)">
+          FRONT
+        </button>
+        <button type="button" data-peek="side" title="Peek from the side (R)">
+          SIDE
+        </button>
+      </div>
       <div id="popups"></div>
       {/* The end-of-run screen; the menu is the first screen now. */}
       <div id="overlay" className="overlay" hidden>

@@ -1,6 +1,6 @@
 import { loveEl, settingsEl } from "./dom.js";
 import { CLAW } from "./config.js";
-import { CAM_OFFSET, camera } from "./scene.js";
+import { screenDeltaToGround, togglePeek } from "./peek.js";
 import { hub } from "./claw.js";
 import {
   answerConfirm,
@@ -78,26 +78,16 @@ addEventListener("keydown", (e) => {
   if (!e.repeat) pressed[e.code] = true;
   keys[e.code] = true;
   if (e.code === "KeyQ" && !e.repeat) askConfirm("quit");
+  // F peeks through the front glass, R through the right side; again to come back.
+  if (e.code === "KeyF" && !e.repeat) togglePeek("front");
+  if (e.code === "KeyR" && !e.repeat) togglePeek("side");
 });
 addEventListener("keyup", (e) => (keys[e.code] = false));
 
 // Touch and mouse: drag to move the claw, tap to drop, hold anywhere to reel.
 export const TAP = { maxMove: 10, maxMs: 350 };
-export const SIN_ELEV = CAM_OFFSET.y / CAM_OFFSET.length();
 export let drag = null;
 export let dragTarget = null;
-
-// Converts a screen-space drag (CSS px) into a move on the floor plane.
-export function screenDeltaToGround(dx, dy) {
-  const s = (camera.right - camera.left) / innerWidth;
-  const right = dx * s; // along (1, 0, -1)
-  const toward = (dy * s) / SIN_ELEV; // along (1, 0, 1)
-  return {
-    x: (right + toward) / Math.SQRT2,
-    z: (toward - right) / Math.SQRT2,
-  };
-}
-
 export const isUi = (t) =>
   t instanceof Element && t.closest("button, input, .overlay");
 
@@ -135,6 +125,10 @@ export function endDrag(e) {
   dragTarget = null;
 }
 addEventListener("pointerup", endDrag);
+addEventListener("click", (e) => {
+  const b = e.target instanceof Element && e.target.closest("[data-peek]");
+  if (b && game.mode === "play") togglePeek(b.dataset.peek);
+});
 addEventListener("pointercancel", endDrag);
 
 // iOS Safari ignores user-scalable=no, so quick taps double-tap-zoom and two fingers pinch.

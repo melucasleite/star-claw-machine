@@ -18,6 +18,7 @@ import "./plushies.js";
 import "./laser.js";
 import "./photo.js";
 import "./halloween.js";
+import "./space.js";
 import "./settingsui.js";
 import "./love.js";
 import { applyTheme } from "./settings.js";

@@ -717,11 +717,14 @@ export function openLove() {
     .querySelector("[data-love-step='1']")
     .focus({ preventScroll: true });
 }
+// Set by the menu, which reopens itself on the first screen once the letter closes.
+export const loveHooks = { afterClose: null };
 export function closeLove() {
   if (loveEl.hidden) return;
   loveEl.hidden = true;
   stopSong();
   release("love");
+  loveHooks.afterClose?.();
 }
 
 addEventListener("click", (e) => {

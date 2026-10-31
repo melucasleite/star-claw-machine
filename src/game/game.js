@@ -7,6 +7,7 @@ import { claw, hub, prongBodies, prongs } from "./claw.js";
 import { plushies, removePlush, restock } from "./plushies.js";
 import { fetchWorld, loadScores, makesBoard, makesWorld } from "./scores.js";
 import { dragTarget, keys, pressed } from "./input.js";
+import { viewAxes } from "./peek.js";
 import {
   bumpScore,
   floatScore,
@@ -369,8 +370,11 @@ export function tick(dt) {
       if (game.t > 1.5 && game.mode === "play") setState("aim");
       break;
     case "aim": {
-      const ix = (keys.ArrowRight ? 1 : 0) - (keys.ArrowLeft ? 1 : 0);
-      const iz = (keys.ArrowDown ? 1 : 0) - (keys.ArrowUp ? 1 : 0);
+      // Arrows follow the camera, so a peek through the side glass still feels right.
+      const [ix, iz] = viewAxes(
+        (keys.ArrowRight ? 1 : 0) - (keys.ArrowLeft ? 1 : 0),
+        (keys.ArrowDown ? 1 : 0) - (keys.ArrowUp ? 1 : 0),
+      );
       const clampAxis = (pos, vel) =>
         Math.max(
           (-CLAW.reach - pos) / dt,

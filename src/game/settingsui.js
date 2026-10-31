@@ -12,6 +12,7 @@ import {
 import {
   LEVELS,
   currentLevel,
+  love,
   enterCheat,
   familyOn,
   familyUnlocked,
@@ -25,7 +26,7 @@ import { helpBodyHtml } from "./help.js";
 import { closeDetail, fillThumbs, showDetail } from "./showcase.js";
 import { fetchWorld } from "./scores.js";
 import { restock } from "./plushies.js";
-import { LOVE_NAME, openLove } from "./love.js";
+import { LOVE_NAME, loveHooks, openLove } from "./love.js";
 import { cleanName } from "./rules.js";
 import { game, startGame } from "./game.js";
 import { renderHud } from "./hud.js";
@@ -46,16 +47,31 @@ const PAGES = [
 ];
 let page = "theme";
 
+// Four themes to a page, so the picker never scrolls; it opens on the current theme's page.
+const PER_PAGE = 4;
+let themePageAt = null;
 function themePage() {
-  const cards = THEME_IDS.map((id) => {
-    const t = THEMES[id];
-    const on = settings.theme === id;
-    return `<button type="button" class="theme-card${on ? " on" : ""}" data-theme-pick="${id}" aria-pressed="${on}">
+  const pages = Math.ceil(THEME_IDS.length / PER_PAGE);
+  themePageAt ??= Math.floor(THEME_IDS.indexOf(settings.theme) / PER_PAGE);
+  const ids = THEME_IDS.slice(
+    themePageAt * PER_PAGE,
+    (themePageAt + 1) * PER_PAGE,
+  );
+  const cards = ids
+    .map((id) => {
+      const t = THEMES[id];
+      const on = settings.theme === id;
+      return `<button type="button" class="theme-card${on ? " on" : ""}" data-theme-pick="${id}" aria-pressed="${on}">
       <span class="swatch">${t.swatch.map((c) => `<i style="background:${c}"></i>`).join("")}</span>
       <b>${t.label}</b><small>${t.blurb}</small>
     </button>`;
-  }).join("");
-  return `<div class="themes">${cards}</div>`;
+    })
+    .join("");
+  const pager =
+    pages > 1
+      ? `<div class="pager"><button type="button" class="love-arrow item-arrow" data-theme-page="-1" aria-label="Previous themes">&lsaquo;</button><span>${themePageAt + 1} / ${pages}</span><button type="button" class="love-arrow item-arrow" data-theme-page="1" aria-label="More themes">&rsaquo;</button></div>`
+      : "";
+  return `<div class="themes">${cards}</div>${pager}`;
 }
 
 function gamePage() {
@@ -127,14 +143,24 @@ const MENU = [
   ],
 ];
 // The first screen: the logo over the live machine, then the menu, arcade style.
+// Mikaela's own entry, once she has beaten the game and signed it: the letter, any time.
+const VOWS_ITEM = [
+  "vows",
+  ICON("M2 2h3v1h2V2h3v1h1v4h-1v1H9v1H8v1H7v1H5v-1H4V9H3V8H2V7H1V3h1z"),
+  "OUR VOWS",
+  "Your letter, whenever you like",
+];
+const menuItems = () => (love.unlocked ? [VOWS_ITEM, ...MENU] : MENU);
 const homeView = () => `<header class="menu-hero">
     <div class="menu-logo" aria-label="Star Claw"><span class="star s1">&#9733;</span><span class="star s2">&#10022;</span><span class="star s3">&#10022;</span><b>STAR</b><b>CLAW</b></div>
     <p class="menu-tag">${game.mode === "play" ? "PAUSED" : "GRAB &middot; REEL &middot; WIN"}</p>
   </header>
-  <nav class="menu-list" aria-label="Menu">${MENU.map(
-    ([id, icon, label, sub], i) =>
-      `<button type="button" class="menu-item" data-menu="${id}" style="--i:${i}"><span class="menu-icon">${icon}</span><b>${label}</b><small>${sub}</small></button>`,
-  ).join("")}</nav>
+  <nav class="menu-list" aria-label="Menu">${menuItems()
+    .map(
+      ([id, icon, label, sub], i) =>
+        `<button type="button" class="menu-item" data-menu="${id}" style="--i:${i}"><span class="menu-icon">${icon}</span><b>${label}</b><small>${sub}</small></button>`,
+    )
+    .join("")}</nav>
   <p class="menu-foot"><span class="blink">INSERT COIN</span><span class="keys">&uarr;&darr; + ENTER</span></p>`;
 
 // NEW GAME: the level cards, then PLAY.
@@ -316,6 +342,7 @@ export function openSettings(start = "home") {
   if (!settingsEl.hidden) return;
   cheatNote = "";
   page = "theme";
+  themePageAt = null;
   go(start);
   settingsEl.hidden = false;
   settingsPanel.scrollTop = 0;
@@ -360,14 +387,25 @@ export function setFamilyChoice(on) {
   renderHud();
 }
 
+// The letter opened over the first screen (from the menu or the cheats box) comes back to it.
+loveHooks.afterClose = () => {
+  if (game.mode === "title") openSettings();
+};
+
 addEventListener("click", (e) => {
   if (!(e.target instanceof Element)) return;
   const t = e.target;
   if (t.closest("[data-settings]")) return openSettings();
-  if (t.closest("[data-close-settings]")) return closeSettings();
+  // On the first screen there's nothing behind the menu: DONE goes back to its home page.
+  if (t.closest("[data-close-settings]"))
+    return game.mode === "title" ? go("home") : closeSettings();
   // Clicking outside closes it, except on the first screen.
   if (t === settingsEl && game.mode !== "title") return closeSettings();
   const to = t.closest("[data-menu]");
+  if (to?.dataset.menu === "vows") {
+    closeSettings();
+    return openLove();
+  }
   if (to) return go(to.dataset.menu);
   if (t.closest("[data-menu-back]")) return menuBack();
   const lv = t.closest("[data-menu-level]");
@@ -396,6 +434,12 @@ addEventListener("click", (e) => {
   if (pick) {
     item = shownItems[Number(pick.dataset.item)];
     return go("item");
+  }
+  const tp = t.closest("[data-theme-page]");
+  if (tp) {
+    const pages = Math.ceil(THEME_IDS.length / PER_PAGE);
+    themePageAt = (themePageAt + Number(tp.dataset.themePage) + pages) % pages;
+    return render();
   }
   const card = t.closest("[data-theme-pick]");
   if (card) return pickTheme(card.dataset.themePick);
