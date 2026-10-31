@@ -63,7 +63,11 @@ export function renderHud() {
   bestEl.innerHTML = `BEST <b>${fmt(best)}</b>`;
   leftEl.innerHTML = `<b>${plushies.length}</b> LEFT`;
   renderStreak();
-  assistTagEl.hidden = !(game.mode === "play" && game.assisted);
+  const why = [game.assisted && "AIM ASSIST", game.family && "OUR FAMILY"]
+    .filter(Boolean)
+    .join(" + ");
+  assistTagEl.hidden = !(game.mode === "play" && why);
+  if (why) assistTagEl.innerHTML = `${why} &middot; UNRANKED`;
 }
 
 // "+250" floating up off the score.

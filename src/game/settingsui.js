@@ -64,7 +64,7 @@ function gamePage() {
     <button type="button" class="switch${familyOn() ? " on" : ""}" data-family role="switch" aria-checked="${familyOn()}">
       <span class="knob"></span><span>${familyOn() ? "ON" : "OFF"}</span>
     </button>
-    <p class="aside">The first machine is stocked with our pets and our fish, worth the same as the usual plushies.${game.mode === "play" ? " Takes effect on your next run." : ""}</p>`
+    <p class="aside">Our pets and our fish fill the first machine. Runs with it on stay off the high score boards, and switching it mid-run on that machine restarts the game.</p>`
     : "";
   return `<h2>AIM ASSIST</h2>
     <button type="button" class="switch${settings.aimAssist ? " on" : ""}" data-assist role="switch" aria-checked="${settings.aimAssist}">
@@ -347,6 +347,18 @@ export function setAssist(on) {
   renderHud();
 }
 
+// Called once the player confirms OUR FAMILY either way. Like aim assist, a run in progress on
+// the first machine restarts so it can't switch mid-way; otherwise the machine restocks now.
+export function setFamilyChoice(on) {
+  setFamily(on);
+  render();
+  if (game.mode === "play" && currentLevel().id === 1) {
+    closeSettings();
+    startGame();
+  } else if (game.mode !== "play") restock();
+  renderHud();
+}
+
 addEventListener("click", (e) => {
   if (!(e.target instanceof Element)) return;
   const t = e.target;
@@ -394,13 +406,8 @@ addEventListener("click", (e) => {
       settingsPanel.querySelector("form.cheat input").focus();
     return;
   }
-  if (t.closest("[data-family]")) {
-    setFamily(!familyOn());
-    // Restock now so the machine behind the dialog shows it; mid-run it waits for the next run.
-    if (game.mode !== "play") restock();
-    sfx.coinIn();
-    return render();
-  }
+  if (t.closest("[data-family]"))
+    return askConfirm(familyOn() ? "familyOff" : "familyOn");
   if (t.closest("[data-assist]"))
     askConfirm(settings.aimAssist ? "assistOff" : "assistOn");
 });

@@ -15,7 +15,7 @@ import { esc, fmt, renderHud } from "./hud.js";
 import { cashOutBonus, game, gameOver, startGame } from "./game.js";
 import { cleanName } from "./rules.js";
 import { hold, release } from "./pause.js";
-import { setAssist } from "./settingsui.js";
+import { setAssist, setFamilyChoice } from "./settingsui.js";
 import { collectedIn, collectionSize, prizeImg } from "./bag.js";
 import {
   LEVELS,
@@ -159,8 +159,11 @@ export function renderOver() {
       : r.highscore
         ? `<h1 class="lost">YOU LOST THE GAME,</h1><p class="hey">but hey this is a highscore</p>`
         : `<h1 class="lost">YOU LOST THE GAME</h1>`;
-  const assisted = r.assisted
-    ? `<p class="aside">Aim assist was on, so this run stays off the high score boards.</p>`
+  const why = [r.assisted && "Aim assist", r.family && "Our family"].filter(
+    Boolean,
+  );
+  const assisted = why.length
+    ? `<p class="aside">${why.join(" and ")} ${why.length > 1 ? "were" : "was"} on, so this run stays off the high score boards.</p>`
     : "";
   const form = entering
     ? `<form class="name"><label for="name">PUT YOUR NAME ON THE LIST</label><div class="row"><input id="name" name="name" maxlength="10" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="NAME" /><button class="btn" type="submit">SAVE</button></div></form>`
@@ -250,7 +253,29 @@ export const CONFIRMS = {
     no: "CANCEL",
     run: () => setAssist(false),
   },
+  // OUR FAMILY works like aim assist: the first machine holds our pets and fish instead, those
+  // runs stay off the boards, and a level-1 run in progress restarts when it's switched.
+  familyOn: {
+    title: "OUR FAMILY?",
+    text: () =>
+      `Our pets and our fish fill the first machine. While it is on, those runs stay off the high score boards.${familyRestarts() ? " Turning it on restarts the game." : ""}`,
+    yes: "TURN ON",
+    no: "CANCEL",
+    run: () => setFamilyChoice(true),
+  },
+  familyOff: {
+    title: "OUR FAMILY OFF?",
+    text: () =>
+      familyRestarts()
+        ? "Back to the usual plushies. Turning it off restarts the game, so the next run counts for high scores again."
+        : "Back to the usual plushies. Your next run on the first machine counts for high scores again.",
+    yes: "TURN OFF",
+    no: "CANCEL",
+    run: () => setFamilyChoice(false),
+  },
 };
+// Switching OUR FAMILY mid-run restarts it only on the first machine, the one it changes.
+const familyRestarts = () => game.mode === "play" && currentLevel().id === 1;
 export let pendingConfirm = null;
 export function askConfirm(kind) {
   const c = CONFIRMS[kind];

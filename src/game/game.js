@@ -24,7 +24,7 @@ import { collect, flyToBag } from "./bag.js";
 import { showReel, startReel, stepReel } from "./reel.js";
 import { setMusicLevel, sfx } from "./audio.js";
 import { settings } from "./settings.js";
-import { currentLevel, markCleared, marqueeFor } from "./levels.js";
+import { currentLevel, familyOn, markCleared, marqueeFor } from "./levels.js";
 import {
   cashOutBonus as bonusForLives,
   chuteBusy,
@@ -53,12 +53,17 @@ export const game = {
   // The last turn that cost a heart, kept for a moment in case its plushie drops in late.
   late: null,
   assisted: false,
+  // Our family stocked this run's machine (level 1 with OUR FAMILY on).
+  family: false,
   result: null,
   level: 1,
   // The level a clear in this run opened, if any.
   unlocked: null,
   bag: [],
 };
+
+// Runs with aim assist, or with our family in the machine, stay off the high score boards.
+export const unranked = () => game.assisted || game.family;
 
 export const STATE_SFX = {
   drop: () => sfx.drop(),
@@ -93,6 +98,7 @@ export function startGame() {
     late: null,
     // Fixed for the whole run: switching aim assist restarts the run.
     assisted: settings.aimAssist,
+    family: familyOn() && currentLevel().id === 1,
     // The level this run is played on; its scores go on that level's boards.
     level: currentLevel().id,
     result: null,
@@ -256,6 +262,7 @@ export function gameOver(end, bonus = 0) {
     quit: end === "quit",
     bonus,
     assisted: game.assisted,
+    family: game.family,
     score: game.score,
     highscore: makesBoard(game.score) || makesWorld(game.score),
     top: game.score > (loadScores()[0]?.score ?? 0),
